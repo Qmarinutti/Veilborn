@@ -129,6 +129,7 @@ async function loadDex() {
   const discovered = new Set(STATE?.discovered || []);
   const total = Object.keys(species).length;
   let html = `<p class="hint">Decouverts : <b>${discovered.size}</b> / ${total}</p>`;
+  let num = 0; // numero Pokedex sequentiel (suit l'ordre des especes)
   for (const ln of order) {
     const arr = lines[ln].sort((a, b) => (a.stage || 1) - (b.stage || 1));
     if (!arr.length) continue;
@@ -137,9 +138,11 @@ async function loadDex() {
     const title = baseSeen ? `${TYPE_EMOJI[base.type] || ''} ${base.name}`.trim() : '❔ ???';
     html += `<div class="dexline"><div class="dexline-title">${title}</div><div class="dexchain">`;
     arr.forEach((sp, i) => {
+      num++;
       const locked = !discovered.has(sp.id);
       const cr = { species: sp.id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: 0 };
       html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.rarity}">
+        <div class="dexnum">N°${String(num).padStart(3, '0')}</div>
         <div class="avatar">${creatureVisual(cr, 58)}</div>
         <div class="rarity-dots">${RARITY_DOTS(sp.rarity)}</div>
         <div class="name">${locked ? '???' : sp.name}</div>
