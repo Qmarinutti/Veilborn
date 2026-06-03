@@ -294,6 +294,21 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* Tutoriel */
+.tuto {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 70;
+  width: min(440px, 92vw); background: var(--panel-solid); border: 1px solid var(--line-strong);
+  border-radius: 20px; padding: 26px; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+}
+.tuto-icon { font-size: 50px; line-height: 1; }
+.tuto h3 { margin: 10px 0 8px; font-size: 22px; font-family: 'Fredoka', sans-serif; }
+.tuto p { color: var(--text); opacity: .9; font-size: 15px; line-height: 1.5; margin: 0 0 18px; min-height: 72px; }
+.tuto-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 18px; }
+.tuto-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); transition: .15s; }
+.tuto-dots .dot.on { background: var(--primary); transform: scale(1.2); }
+.tuto-actions { display: flex; gap: 8px; justify-content: center; align-items: center; }
+.tuto-actions #tuto-skip { margin-right: auto; }
+
 /* ---------- Prairie ---------- */
 .meadow {
   position: relative; width: 100%; height: 480px; border-radius: 18px; overflow: hidden;
@@ -349,6 +364,9 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .dexline { margin-bottom: 24px; }
 .dexline:last-child { margin-bottom: 4px; }
 .dexline-title { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 16px; color: var(--text); margin-bottom: 12px; }
+/* Grille continue : tous les Glumps a la suite, qui reviennent a la ligne */
+.dexgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; }
+.dexgrid .dexmon { width: auto; }
 .dexchain { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dexmon {
   --rc: var(--r1);

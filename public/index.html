@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=12" />
+  <link rel="stylesheet" href="css/style.css?v=13" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -170,12 +170,27 @@
         </div>
         <div id="drawer-settings" class="drawer-section hidden">
           <p class="hint">Connecte en tant que <b id="settings-who">—</b></p>
+          <button id="replay-tuto" class="btn">❓ Revoir le tutoriel</button>
           <button id="logout" class="btn">Se deconnecter</button>
         </div>
       </div>
     </aside>
+
+    <!-- Tutoriel -->
+    <div id="tuto-overlay" class="overlay hidden"></div>
+    <div id="tutorial" class="tuto hidden">
+      <div class="tuto-icon" id="tuto-icon">🥚</div>
+      <h3 id="tuto-title"></h3>
+      <p id="tuto-text"></p>
+      <div class="tuto-dots" id="tuto-dots"></div>
+      <div class="tuto-actions">
+        <button id="tuto-skip" class="btn small">Passer</button>
+        <button id="tuto-prev" class="btn small">← Precedent</button>
+        <button id="tuto-next" class="btn primary">Suivant →</button>
+      </div>
+    </div>
   </div>
 
-  <script src="js/app.js?v=14" type="module"></script>
+  <script src="js/app.js?v=16" type="module"></script>
 </body>
 </html>

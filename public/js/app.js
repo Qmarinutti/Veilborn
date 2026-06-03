@@ -118,40 +118,25 @@ $$('.navbtn').forEach(b => b.addEventListener('click', () => {
 const TYPE_EMOJI = { Feu: '🔥', Eau: '💧', Plante: '🌿', Foudre: '⚡', Roche: '🪨', Glace: '❄️', Ombre: '🌑', Lumiere: '✨', Mystique: '🔮', Acier: '⚙️', Poison: '☠️', Vent: '🌪️', Insecte: '🐛', Dragon: '🐉' };
 async function loadDex() {
   const { species } = await api('/species');
-  // Regroupe par lignee (l'id de lignee = l'id du Glump de base), ordre d'apparition.
-  const lines = {};
-  const order = [];
-  for (const [id, sp] of Object.entries(species)) {
-    const ln = sp.line || id;
-    if (!lines[ln]) { lines[ln] = []; order.push(ln); }
-    lines[ln].push({ id, ...sp });
-  }
   const discovered = new Set(STATE?.discovered || []);
-  const total = Object.keys(species).length;
-  let html = `<p class="hint">Decouverts : <b>${discovered.size}</b> / ${total}</p>`;
-  let num = 0; // numero Pokedex sequentiel (suit l'ordre des especes)
-  for (const ln of order) {
-    const arr = lines[ln].sort((a, b) => (a.stage || 1) - (b.stage || 1));
-    if (!arr.length) continue;
-    const base = arr[0];
-    const baseSeen = discovered.has(base.id);
-    const title = baseSeen ? `${TYPE_EMOJI[base.type] || ''} ${base.name}`.trim() : '❔ ???';
-    html += `<div class="dexline"><div class="dexline-title">${title}</div><div class="dexchain">`;
-    arr.forEach((sp, i) => {
-      num++;
-      const locked = !discovered.has(sp.id);
-      const cr = { species: sp.id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: 0 };
-      html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.rarity}">
-        <div class="dexnum">N°${String(num).padStart(3, '0')}</div>
-        <div class="avatar">${creatureVisual(cr, 58)}</div>
-        <div class="rarity-dots">${RARITY_DOTS(sp.rarity)}</div>
-        <div class="name">${locked ? '???' : sp.name}</div>
-        <div class="sub">${locked ? '—' : sp.type}</div>
-      </div>`;
-      if (i < arr.length - 1) html += `<div class="dexarrow">→</div>`;
-    });
-    html += `</div></div>`;
+  const entries = Object.entries(species); // ordre du species.json (familles a la suite)
+  const total = entries.length;
+
+  // Grille continue : tous les Glumps a la suite (N°001, 002, 003...), qui reviennent a la ligne.
+  let html = `<p class="hint">Decouverts : <b>${discovered.size}</b> / ${total}</p><div class="dexgrid">`;
+  let num = 0;
+  for (const [id, sp] of entries) {
+    num++;
+    const locked = !discovered.has(id);
+    const cr = { species: id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: 0 };
+    html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.rarity}">
+      <div class="dexnum">N°${String(num).padStart(3, '0')}</div>
+      <div class="avatar">${creatureVisual(cr, 52)}</div>
+      <div class="name">${locked ? '???' : sp.name}</div>
+      <div class="sub">${locked ? '—' : sp.type}</div>
+    </div>`;
   }
+  html += '</div>';
   $('#dex').innerHTML = html;
 }
 
@@ -165,6 +150,7 @@ async function enterGame() {
   clearInterval(pollTimer);
   pollTimer = setInterval(refresh, 4000); // resync serveur
   requestAnimationFrame(tickLoop);        // animation des comptes a rebours + essence
+  if (!localStorage.getItem('veilborn_tuto')) showTuto(0); // tuto au 1er passage
 }
 
 async function refresh() {
@@ -606,6 +592,37 @@ function closeDrawer() {
 $$('.railbtn').forEach(b => b.addEventListener('click', () => openDrawer(b.dataset.drawer)));
 $('#drawer-close').addEventListener('click', closeDrawer);
 $('#drawer-overlay').addEventListener('click', closeDrawer);
+
+// ============================================================
+//  Tutoriel
+// ============================================================
+const TUTO = [
+  { icon: '🥚', title: 'Bienvenue dans Veilborn !', text: "Tu eleves des creatures appelees Glumps : fais-les eclore, grandir, evoluer, et complete ton Glumpdex de 300 Glumps. Tu demarres avec ton starter." },
+  { icon: '📦', title: 'Collection', text: "Tous tes Glumps sont ici. Tu peux les renommer, les relacher contre de l'essence, ou les faire evoluer (bouton vert) quand ils sont adultes." },
+  { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs." },
+  { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare." },
+  { icon: '🌳', title: 'Prairie', text: "Place tes Glumps ici : ce sont eux qui farment l'essence ✨ (la monnaie du jeu). Max 4 emplacements au depart, achetables. Choisis tes meilleurs farmeurs !" },
+  { icon: '📖', title: 'Glumpdex', text: "Les 300 Glumps numerotes. Ceux que tu n'as pas encore eus sont en silhouette. Objectif : tous les decouvrir en faisant eclore et reproduire !" },
+  { icon: '🏆', title: 'Rang & Visite', text: "Compare la valeur de ta collection aux autres eleveurs (Rang), et visite leurs elevages (Visite)." },
+  { icon: '🚀', title: "C'est parti !", text: "L'essence monte toute seule tant que tu as des Glumps en prairie. Reviens regulierement faire eclore, reproduire et evoluer. Tu peux revoir ce tuto dans Reglages ⚙️." },
+];
+let tutoStep = 0;
+function showTuto(step = 0) { tutoStep = step; renderTuto(); $('#tutorial').classList.remove('hidden'); $('#tuto-overlay').classList.remove('hidden'); }
+function hideTuto() { $('#tutorial').classList.add('hidden'); $('#tuto-overlay').classList.add('hidden'); try { localStorage.setItem('veilborn_tuto', '1'); } catch {} }
+function renderTuto() {
+  const s = TUTO[tutoStep];
+  $('#tuto-icon').textContent = s.icon;
+  $('#tuto-title').textContent = s.title;
+  $('#tuto-text').textContent = s.text;
+  $('#tuto-dots').innerHTML = TUTO.map((_, i) => `<span class="dot ${i === tutoStep ? 'on' : ''}"></span>`).join('');
+  $('#tuto-prev').style.visibility = tutoStep === 0 ? 'hidden' : 'visible';
+  $('#tuto-next').textContent = tutoStep === TUTO.length - 1 ? 'Terminer ✓' : 'Suivant →';
+}
+$('#tuto-next').addEventListener('click', () => { if (tutoStep < TUTO.length - 1) { tutoStep++; renderTuto(); } else hideTuto(); });
+$('#tuto-prev').addEventListener('click', () => { if (tutoStep > 0) { tutoStep--; renderTuto(); } });
+$('#tuto-skip').addEventListener('click', hideTuto);
+$('#tuto-overlay').addEventListener('click', hideTuto);
+$('#replay-tuto').addEventListener('click', () => { closeDrawer(); showTuto(0); });
 
 // ============================================================
 //  Demarrage
