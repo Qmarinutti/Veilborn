@@ -28,17 +28,22 @@ export const BALANCE = {
 // rarity 1..5 : 1 commun -> 5 legendaire
 // base : stats de base de l'espece. types : pour les combats plus tard.
 // shape = silhouette dessinee cote client (voir public/js/sprites.js)
+// line/stage/evolvesTo = lignee d'evolution (pour le Glumpdex).
 export const SPECIES = {
-  flammkit:   { name: 'Flammkit',   type: 'Feu',     rarity: 1, base: { force: 10, vita: 8,  speed: 9  }, color: '#e8623a', shape: 'beast' },
-  aquolet:    { name: 'Aquolet',    type: 'Eau',     rarity: 1, base: { force: 8,  vita: 11, speed: 8  }, color: '#3a9be8', shape: 'blob' },
-  sprouty:    { name: 'Sprouty',    type: 'Plante',  rarity: 1, base: { force: 7,  vita: 12, speed: 7  }, color: '#4caf50', shape: 'sprout' },
-  zappup:     { name: 'Zappup',     type: 'Foudre',  rarity: 2, base: { force: 11, vita: 7,  speed: 13 }, color: '#f2c037', shape: 'beast' },
-  rockling:   { name: 'Rockling',   type: 'Roche',   rarity: 2, base: { force: 13, vita: 14, speed: 4  }, color: '#9b7a55', shape: 'rock' },
-  frostnip:   { name: 'Frostnip',   type: 'Glace',   rarity: 3, base: { force: 12, vita: 11, speed: 10 }, color: '#7ed4e6', shape: 'blob' },
-  shadepaw:   { name: 'Shadepaw',   type: 'Ombre',   rarity: 3, base: { force: 14, vita: 10, speed: 12 }, color: '#6a5acd', shape: 'ghost' },
-  gleamwing:  { name: 'Gleamwing',  type: 'Lumiere', rarity: 4, base: { force: 13, vita: 13, speed: 15 }, color: '#ffd966', shape: 'bird' },
-  terradon:   { name: 'Terradon',   type: 'Roche',   rarity: 4, base: { force: 18, vita: 17, speed: 6  }, color: '#b5651d', shape: 'dino' },
-  mythira:    { name: 'Mythira',    type: 'Mystique',rarity: 5, base: { force: 20, vita: 18, speed: 16 }, color: '#e75da8', shape: 'fairy' },
+  // --- Lignee FEU ---
+  flammkit:    { name: 'Flammkit',    type: 'Feu',    rarity: 1, base: { force: 10, vita: 8,  speed: 9  }, color: '#ff7a45', shape: 'beast', line: 'feu',   stage: 1, evolvesTo: 'pyrokit' },
+  pyrokit:     { name: 'Pyrokit',     type: 'Feu',    rarity: 2, base: { force: 15, vita: 12, speed: 14 }, color: '#ef4d2e', shape: 'beast', line: 'feu',   stage: 2, evolvesTo: 'infernaught' },
+  infernaught: { name: 'Infernaught', type: 'Feu',    rarity: 4, base: { force: 23, vita: 18, speed: 17 }, color: '#c41f2a', shape: 'dino',  line: 'feu',   stage: 3, evolvesTo: null },
+
+  // --- Lignee EAU ---
+  aquolet:     { name: 'Aquolet',     type: 'Eau',    rarity: 1, base: { force: 8,  vita: 11, speed: 8  }, color: '#46b0ef', shape: 'blob',    line: 'eau',   stage: 1, evolvesTo: 'tidolet' },
+  tidolet:     { name: 'Tidolet',     type: 'Eau',    rarity: 2, base: { force: 12, vita: 16, speed: 12 }, color: '#2b91c9', shape: 'serpent', line: 'eau',   stage: 2, evolvesTo: 'leviaqua' },
+  leviaqua:    { name: 'Leviaqua',    type: 'Eau',    rarity: 4, base: { force: 19, vita: 23, speed: 16 }, color: '#2a5bd8', shape: 'serpent', line: 'eau',   stage: 3, evolvesTo: null },
+
+  // --- Lignee PLANTE ---
+  sprouty:     { name: 'Sprouty',     type: 'Plante', rarity: 1, base: { force: 7,  vita: 12, speed: 7  }, color: '#5fc463', shape: 'sprout', line: 'plante', stage: 1, evolvesTo: 'floracub' },
+  floracub:    { name: 'Floracub',    type: 'Plante', rarity: 2, base: { force: 12, vita: 17, speed: 11 }, color: '#3fa84a', shape: 'beast',  line: 'plante', stage: 2, evolvesTo: 'verdantaur' },
+  verdantaur:  { name: 'Verdantaur',  type: 'Plante', rarity: 4, base: { force: 20, vita: 24, speed: 14 }, color: '#2f7d33', shape: 'dino',   line: 'plante', stage: 3, evolvesTo: null },
 };
 
 export const SPECIES_IDS = Object.keys(SPECIES);
@@ -58,11 +63,12 @@ export function rarityOf(speciesId) {
 // Stats effectives = base de l'espece + genes (+ bonus shiny).
 export function effectiveStats(creature) {
   const sp = SPECIES[creature.species];
+  const base = sp ? sp.base : { force: 8, vita: 8, speed: 8 };
   const shiny = creature.variant === 1 ? 1.1 : 1;
   return {
-    force: Math.round((sp.base.force + creature.gene_force) * shiny),
-    vita:  Math.round((sp.base.vita  + creature.gene_vita)  * shiny),
-    speed: Math.round((sp.base.speed + creature.gene_speed) * shiny),
+    force: Math.round((base.force + creature.gene_force) * shiny),
+    vita:  Math.round((base.vita  + creature.gene_vita)  * shiny),
+    speed: Math.round((base.speed + creature.gene_speed) * shiny),
   };
 }
 

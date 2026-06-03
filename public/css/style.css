@@ -274,6 +274,38 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 }
 .meadow .critter:hover .label, .meadow .critter.show-label .label { opacity: 1; }
 
+/* ---------- Glumpdex ---------- */
+.dexline { margin-bottom: 24px; }
+.dexline:last-child { margin-bottom: 4px; }
+.dexline-title { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 16px; color: var(--text); margin-bottom: 12px; }
+.dexchain { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.dexmon {
+  --rc: var(--r1);
+  background: linear-gradient(180deg, var(--panel2), rgba(20,26,44,.7));
+  border: 1px solid var(--line-strong); border-radius: 16px; padding: 14px 12px;
+  width: 152px; text-align: center; position: relative; overflow: hidden; transition: transform .12s, box-shadow .15s;
+}
+.dexmon::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--rc); }
+.dexmon[data-rarity="1"] { --rc: var(--r1); }
+.dexmon[data-rarity="2"] { --rc: var(--r2); }
+.dexmon[data-rarity="3"] { --rc: var(--r3); }
+.dexmon[data-rarity="4"] { --rc: var(--r4); }
+.dexmon[data-rarity="5"] { --rc: var(--r5); }
+.dexmon:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(0,0,0,.4); }
+.dexmon .avatar {
+  width: 104px; height: 104px; margin: 2px auto 4px; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--rc) 28%, transparent), transparent 70%);
+  border-radius: 50%;
+}
+.dexmon .rarity-dots { color: var(--rc); font-size: 13px; letter-spacing: 2px; margin-bottom: 4px; }
+.dexmon .name { font-weight: 700; font-size: 15px; }
+.dexmon .sub { color: var(--muted); font-size: 12px; }
+.dexarrow { font-size: 28px; color: var(--muted); font-weight: 700; }
+@media (max-width: 560px) {
+  .dexchain { flex-direction: column; }
+  .dexarrow { transform: rotate(90deg); }
+}
+
 /* ---------- Leaderboard ---------- */
 .board { width: 100%; border-collapse: collapse; }
 .board th, .board td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); }

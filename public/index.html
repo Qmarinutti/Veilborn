@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=3" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -76,6 +76,15 @@
         </div>
       </section>
 
+      <!-- Vue Glumpdex -->
+      <section id="view-dex" class="view hidden">
+        <div class="panel">
+          <h2>📖 Glumpdex</h2>
+          <p class="hint">Les lignees de Glumps et leurs evolutions.</p>
+          <div id="dex"></div>
+        </div>
+      </section>
+
       <!-- Vue classement -->
       <section id="view-leaderboard" class="view hidden">
         <div class="panel">
@@ -108,6 +117,7 @@
     <nav class="bottomnav">
       <button class="navbtn active" data-view="farm"><span class="ic">🥚</span><span class="lbl">Elevage</span></button>
       <button class="navbtn" data-view="prairie"><span class="ic">🌳</span><span class="lbl">Prairie</span></button>
+      <button class="navbtn" data-view="dex"><span class="ic">📖</span><span class="lbl">Glumpdex</span></button>
       <button class="navbtn" data-view="leaderboard"><span class="ic">🏆</span><span class="lbl">Classement</span></button>
       <button class="navbtn" data-view="visit"><span class="ic">🔭</span><span class="lbl">Visiter</span></button>
     </nav>
@@ -134,6 +144,6 @@
     </aside>
   </div>
 
-  <script src="js/app.js?v=3" type="module"></script>
+  <script src="js/app.js?v=4" type="module"></script>
 </body>
 </html>

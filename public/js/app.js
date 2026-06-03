@@ -63,8 +63,42 @@ $$('.navbtn').forEach(b => b.addEventListener('click', () => {
   $$('.view').forEach(v => v.classList.add('hidden'));
   $('#view-' + view).classList.remove('hidden');
   if (view === 'leaderboard') loadLeaderboard();
+  if (view === 'dex') loadDex();
   if (view === 'prairie') startPrairie(); else stopPrairie();
 }));
+
+// ============================================================
+//  Glumpdex : lignees d'evolution
+// ============================================================
+const LINE_NAMES = { feu: 'Lignee de Feu 🔥', eau: "Lignee d'Eau 💧", plante: 'Lignee de Plante 🌿' };
+let dexLoaded = false;
+async function loadDex() {
+  const { species } = await api('/species');
+  const lines = {};
+  for (const [id, sp] of Object.entries(species)) {
+    if (!sp.line) continue;
+    (lines[sp.line] ||= []).push({ id, ...sp });
+  }
+  let html = '';
+  for (const ln of ['feu', 'eau', 'plante']) {
+    const arr = (lines[ln] || []).sort((a, b) => a.stage - b.stage);
+    if (!arr.length) continue;
+    html += `<div class="dexline"><div class="dexline-title">${LINE_NAMES[ln] || ln}</div><div class="dexchain">`;
+    arr.forEach((sp, i) => {
+      const cr = { color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, variant: 0 };
+      html += `<div class="dexmon" data-rarity="${sp.rarity}">
+        <div class="avatar">${creatureSVG(cr, 96)}</div>
+        <div class="rarity-dots">${RARITY_DOTS(sp.rarity)}</div>
+        <div class="name">${sp.name}</div>
+        <div class="sub">${sp.type}</div>
+      </div>`;
+      if (i < arr.length - 1) html += `<div class="dexarrow">→</div>`;
+    });
+    html += `</div></div>`;
+  }
+  $('#dex').innerHTML = html;
+  dexLoaded = true;
+}
 
 // ============================================================
 //  Entree en jeu + boucle de rafraichissement
