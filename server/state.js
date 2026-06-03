@@ -5,7 +5,7 @@ import { get, all, run } from './db.js';
 import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
   evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
-  tierOf, TIER_NAMES,
+  tierOf, TIER_NAMES, breedingCellCost,
 } from './game.js';
 
 // Multiplicateur de gain d'essence selon le niveau (+5% par niveau).
@@ -113,6 +113,7 @@ export async function getPlayerState(user) {
       prairieUsed: inPrairieCount,
       breedingCells: fresh.breeding_cells,
       breedingUsed,
+      nextCellCost: fresh.breeding_cells < BALANCE.breedingMaxCells ? breedingCellCost(fresh.breeding_cells) : null,
     },
     essencePerSec: Number(ratePerSec.toFixed(3)),
     creatures,

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=22" />
+  <link rel="stylesheet" href="css/style.css?v=23" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -72,8 +72,7 @@
       <!-- Vue reproduction -->
       <section id="view-breed" class="view hidden">
         <div class="panel">
-          <h2>💞 Reproduction <span id="breeding-info" class="prairie-info"></span>
-            <button id="buy-cell" class="btn small">+ Cellule</button></h2>
+          <h2>💞 Reproduction <span id="breeding-info" class="prairie-info"></span></h2>
           <p class="hint">Dans une cellule libre, choisis le <b>parent gauche</b> et le <b>parent droit</b> → l'<b>œuf</b> apparaît au milieu (un bébé, rareté tirée au sort).</p>
           <p id="breed-msg" class="msg"></p>
           <div id="breeding-cells" class="breed-cells"></div>
@@ -176,6 +175,16 @@
       </div>
     </div>
 
+    <!-- Boite de confirmation (jolie, remplace confirm()) -->
+    <div id="confirm-overlay" class="overlay hidden"></div>
+    <div id="confirm-modal" class="confirm-modal hidden">
+      <p id="confirm-text"></p>
+      <div class="confirm-actions">
+        <button id="confirm-no" class="btn">Annuler</button>
+        <button id="confirm-yes" class="btn primary">Confirmer</button>
+      </div>
+    </div>
+
     <!-- Panneau coulissant (drawer) -->
     <div id="drawer-overlay" class="overlay hidden"></div>
     <aside id="drawer" class="drawer hidden">
@@ -226,6 +235,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=25" type="module"></script>
+  <script src="js/app.js?v=26" type="module"></script>
 </body>
 </html>

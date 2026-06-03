@@ -254,6 +254,10 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .breed-egg { font-size: 42px; animation: wobble 2.5s ease-in-out infinite; }
 .breed-mid .countdown { font-weight: 700; color: var(--warn); font-variant-numeric: tabular-nums; }
 .breed-mid .heart { font-size: 26px; }
+.breed-cell.unlock { justify-content: center; gap: 10px; cursor: pointer; border-style: dashed; color: var(--muted); transition: .15s; min-height: 56px; }
+.breed-cell.unlock:hover { border-color: var(--gold); color: var(--text); background: rgba(255,211,77,.06); }
+.unlock-lock { font-size: 22px; }
+.unlock-cost { color: var(--gold); font-weight: 700; }
 @keyframes beat { 0%,100% { transform: scale(1); } 25% { transform: scale(1.25); } }
 
 /* ---------- Cards ---------- */
@@ -314,6 +318,17 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
   box-shadow: 0 14px 34px rgba(0,0,0,.5); opacity: 0; pointer-events: none; transition: .25s;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.err { background: linear-gradient(135deg, #ff6b7d, #c0392b); box-shadow: 0 14px 34px rgba(192,57,43,.5); }
+
+/* Boite de confirmation (remplace confirm()) */
+.confirm-modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 80;
+  width: min(360px, 92vw); background: var(--panel-solid); border: 1px solid var(--line-strong);
+  border-radius: 18px; padding: 24px; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+}
+.confirm-modal p { font-size: 15px; line-height: 1.5; margin: 0 0 20px; }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.confirm-actions .btn { flex: 1; }
 
 /* Tutoriel (carte en bas pour voir le menu changer au-dessus) */
 #tuto-overlay { background: rgba(4,7,15,.25); backdrop-filter: none; }

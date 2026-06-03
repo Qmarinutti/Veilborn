@@ -19,14 +19,39 @@ async function api(path, opts = {}) {
   return data;
 }
 
-// Petite notification ephemere (toast)
-function flash(msg) {
+// Toast ephemere (succes ou erreur) — remplace les alert() moches.
+function flash(msg, type = 'ok') {
   let t = document.getElementById('toast');
-  if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+  t.className = 'toast' + (type === 'err' ? ' err' : '');
   t.textContent = msg;
+  void t.offsetWidth; // relance l'animation
   t.classList.add('show');
   clearTimeout(flash._t);
-  flash._t = setTimeout(() => t.classList.remove('show'), 2600);
+  flash._t = setTimeout(() => t.classList.remove('show'), type === 'err' ? 3200 : 2600);
+}
+
+// Jolie boite de confirmation (remplace confirm()). Renvoie une Promise<boolean>.
+function confirmDialog(message) {
+  return new Promise((resolve) => {
+    $('#confirm-text').textContent = message;
+    $('#confirm-modal').classList.remove('hidden');
+    $('#confirm-overlay').classList.remove('hidden');
+    const yes = $('#confirm-yes'), no = $('#confirm-no'), ov = $('#confirm-overlay');
+    const done = (val) => {
+      $('#confirm-modal').classList.add('hidden');
+      $('#confirm-overlay').classList.add('hidden');
+      yes.removeEventListener('click', onYes);
+      no.removeEventListener('click', onNo);
+      ov.removeEventListener('click', onNo);
+      resolve(val);
+    };
+    const onYes = () => done(true);
+    const onNo = () => done(false);
+    yes.addEventListener('click', onYes);
+    no.addEventListener('click', onNo);
+    ov.addEventListener('click', onNo);
+  });
 }
 
 // ============================================================
@@ -273,16 +298,27 @@ function renderBreedingCells() {
       html += `<div class="breed-cell locked-cell"><span>Cellule libre</span></div>`;
     }
   }
+  // Cellule a debloquer, juste en dessous (jusqu'au max de 5).
+  if (STATE.user.nextCellCost != null) {
+    html += `<div class="breed-cell unlock" data-buy-cell="1">
+      <span class="unlock-lock">🔒</span>
+      <span>Débloquer une cellule</span>
+      <span class="unlock-cost">✨ ${STATE.user.nextCellCost.toLocaleString('fr-FR')}</span>
+    </div>`;
+  }
   $('#breeding-cells').innerHTML = html;
-
-  const buyBtn = $('#buy-cell');
-  if (max >= 5) { buyBtn.disabled = true; buyBtn.textContent = 'Max (5)'; }
-  else { buyBtn.disabled = false; buyBtn.textContent = '+ Cellule'; }
 }
 
 $('#breeding-cells').addEventListener('click', async (e) => {
   const slot = e.target.closest('[data-pick-parent]');
   const doBreed = e.target.closest('#do-breed');
+  const buyCell = e.target.closest('[data-buy-cell]');
+  if (buyCell) {
+    if (!await confirmDialog(`Débloquer une cellule de reproduction pour ${STATE.user.nextCellCost.toLocaleString('fr-FR')} essence ?`)) return;
+    try { const r = await api('/breeding/buy-cell', { method: 'POST' }); flash(`Cellule débloquée (-${r.cost} ✨)`); await refresh(); }
+    catch (err) { flash(err.message, "err"); }
+    return;
+  }
   if (slot) {
     const side = slot.dataset.pickParent;
     const other = side === 'a' ? breedSelB : breedSelA;
@@ -378,14 +414,9 @@ function fmt(ms) {
 // ============================================================
 $('#buy-slot').addEventListener('click', async () => {
   try { await api('/incubator/buy', { method: 'POST' }); await refresh(); }
-  catch (err) { alert(err.message); }
+  catch (err) { flash(err.message, "err"); }
 });
 
-$('#buy-cell').addEventListener('click', async () => {
-  if (!confirm('Acheter une cellule de reproduction ? (coûteux)')) return;
-  try { const r = await api('/breeding/buy-cell', { method: 'POST' }); flash(`Cellule achetée (-${r.cost} ✨)`); await refresh(); }
-  catch (err) { alert(err.message); }
-});
 
 // Delegation pour relacher / renommer
 // ---------- Fiche detaillee d'un Glump ----------
@@ -445,14 +476,14 @@ $('#detail-body').addEventListener('click', async (e) => {
       const r = await api('/creature/candy', { method: 'POST', body: { id } });
       await refresh(); openDetail(id);
       flash(`+${r.xp} XP 🍬 (niveau ${r.creature.level})`);
-    } catch (err) { alert(err.message); }
+    } catch (err) { flash(err.message, "err"); }
   } else if (evoBtn) {
     const id = Number(evoBtn.dataset.evolve);
     try {
       const r = await api('/creature/evolve', { method: 'POST', body: { id } });
       await refresh(); openDetail(id);
       flash(`✨ ${r.fromName} a evolue en ${r.creature.speciesName} !`);
-    } catch (err) { alert(err.message); }
+    } catch (err) { flash(err.message, "err"); }
   }
 });
 
@@ -468,21 +499,21 @@ $('#collection').addEventListener('click', async (e) => {
   const evo = btn?.dataset.evolve;
   if (evo) {
     const c = STATE.creatures.find(x => x.id === Number(evo));
-    if (c && !confirm(`Faire evoluer ${c.nickname || c.speciesName} en ${c.evolvesToName} pour ${c.evolveCost} essence ?`)) return;
+    if (c && !await confirmDialog(`Faire evoluer ${c.nickname || c.speciesName} en ${c.evolvesToName} pour ${c.evolveCost} essence ?`)) return;
     try {
       const r = await api('/creature/evolve', { method: 'POST', body: { id: Number(evo) } });
       await refresh();
       flash(`✨ ${r.fromName} a evolue en ${r.creature.speciesName} !`);
-    } catch (err) { alert(err.message); }
+    } catch (err) { flash(err.message, "err"); }
   } else if (rel) {
-    if (!confirm('Relacher ce Glump contre de l\'essence ?')) return;
+    if (!await confirmDialog('Relacher ce Glump contre de l\'essence ?')) return;
     try { await api('/creature/release', { method: 'POST', body: { id: Number(rel) } }); await refresh(); }
-    catch (err) { alert(err.message); }
+    catch (err) { flash(err.message, "err"); }
   } else if (ren) {
     const nickname = prompt('Nouveau surnom (vide pour retirer) :');
     if (nickname === null) return;
     try { await api('/creature/rename', { method: 'POST', body: { id: Number(ren), nickname } }); await refresh(); }
-    catch (err) { alert(err.message); }
+    catch (err) { flash(err.message, "err"); }
   }
 });
 
@@ -611,19 +642,19 @@ function pickCardHtml(c) {
 
 $('#buy-prairie').addEventListener('click', async () => {
   try { const r = await api('/prairie/buy', { method: 'POST' }); flash(`Emplacement achete (-${r.cost} ✨)`); await refresh(); }
-  catch (err) { alert(err.message); }
+  catch (err) { flash(err.message, "err"); }
 });
 $('#prairie-slots').addEventListener('click', async (e) => {
   const rm = e.target.dataset.prairieRm;
   const add = e.target.closest('[data-prairie-add]');
   if (rm) {
     try { await api('/prairie/remove', { method: 'POST', body: { id: Number(rm) } }); await refresh(); }
-    catch (err) { alert(err.message); }
+    catch (err) { flash(err.message, "err"); }
   } else if (add) {
     const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.inPrairie);
     openPicker('Mettre un Glump en prairie', avail, pickCardHtml, async (id) => {
       try { await api('/prairie/assign', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash('Glump mis en prairie 🌳'); }
-      catch (err) { alert(err.message); }
+      catch (err) { flash(err.message, "err"); }
     });
   }
 });
@@ -758,9 +789,9 @@ $('#friends-list').addEventListener('click', async (e) => {
     closeDrawer();
     visitFarm(Number(visit.dataset.visitFriend), visit.dataset.name);
   } else if (rem) {
-    if (!confirm('Retirer cet ami ?')) return;
+    if (!await confirmDialog('Retirer cet ami ?')) return;
     try { await api('/social/remove', { method: 'POST', body: { friendId: Number(rem.dataset.removeFriend) } }); loadSocial(); }
-    catch (err) { alert(err.message); }
+    catch (err) { flash(err.message, "err"); }
   }
 });
 
@@ -814,14 +845,14 @@ $('#shop-modal').addEventListener('click', async (e) => {
   const eggTile = e.target.closest('[data-buy-egg-type]');
   if (eggTile) {
     try { await api('/shop/buy-egg', { method: 'POST', body: { type: eggTile.dataset.buyEggType } }); flash(`Œuf ${eggTile.dataset.buyEggType} acheté ! 🥚`); await refresh(); }
-    catch (err) { alert(err.message); }
+    catch (err) { flash(err.message, "err"); }
     return;
   }
   if (e.target.closest('#buy-candy')) {
     const glumps = STATE.creatures.filter(c => c.stage !== 'egg');
     openPicker('Donner un Super Bonbon à…', glumps, pickCardHtml, async (id) => {
       try { const r = await api('/creature/candy', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`+${r.xp} XP 🍬`); }
-      catch (err) { alert(err.message); }
+      catch (err) { flash(err.message, "err"); }
     });
     return;
   }
@@ -833,7 +864,7 @@ $('#shop-modal').addEventListener('click', async (e) => {
         <div class="sub">${Math.ceil((c.remainingMs || 0) / 1000)}s restantes</div>
       </div>`, async (id) => {
       try { const r = await api('/egg/accelerate', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`Œuf accéléré (-${r.cost} ✨)`); }
-      catch (err) { alert(err.message); }
+      catch (err) { flash(err.message, "err"); }
     });
     return;
   }
