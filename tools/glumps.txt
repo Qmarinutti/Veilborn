@@ -1,0 +1,25 @@
+# =====================================================================
+#  LISTE DES GLUMPS  ->  genere server/species.json
+#  Lance ensuite :  npm run gen
+# =====================================================================
+#
+#  Une ligne = une chaine d'evolution.
+#  Format :   Type | Nom1 > Nom2 > Nom3
+#
+#  - Le "|" separe le TYPE de la chaine.
+#  - Le ">" separe les formes (stade 1 > stade 2 > stade 3...).
+#  - Rarete optionnelle par forme avec ":" ->  Nom:rarete   (1 a 5)
+#    (si absente, rarete auto par stade : 1, 2, 4, 5, 5...)
+#  - Mets une "*" au debut de la ligne pour que la 1re forme soit un STARTER
+#    (les nouveaux joueurs recoivent les starters au depart).
+#  - Lignes vides et lignes commencant par "#" = ignorees.
+#
+#  Exemples :
+#    Feu    | Flammkit > Pyrokit > Infernaught
+#    Foudre | Sparkit:2 > Voltron:4
+#    Roche  | Boulder                      (un Glump seul, sans evolution)
+# =====================================================================
+
+* Feu    | Flammkit > Pyrokit > Infernaught
+* Eau    | Aquolet > Tidolet > Leviaqua
+* Plante | Sprouty > Floracub > Verdantaur

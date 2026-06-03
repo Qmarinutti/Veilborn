@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js"
+    "dev": "node --watch server/index.js",
+    "gen": "node tools/gen-species.mjs"
   },
   "engines": {
     "node": ">=22.5.0"

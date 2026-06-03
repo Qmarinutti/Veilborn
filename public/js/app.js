@@ -80,20 +80,24 @@ $$('.navbtn').forEach(b => b.addEventListener('click', () => {
 // ============================================================
 //  Glumpdex : lignees d'evolution
 // ============================================================
-const LINE_NAMES = { feu: 'Lignee de Feu 🔥', eau: "Lignee d'Eau 💧", plante: 'Lignee de Plante 🌿' };
-let dexLoaded = false;
+const TYPE_EMOJI = { Feu: '🔥', Eau: '💧', Plante: '🌿', Foudre: '⚡', Roche: '🪨', Glace: '❄️', Ombre: '🌑', Lumiere: '✨', Mystique: '🔮' };
 async function loadDex() {
   const { species } = await api('/species');
+  // Regroupe par lignee (l'id de lignee = l'id du Glump de base), ordre d'apparition.
   const lines = {};
+  const order = [];
   for (const [id, sp] of Object.entries(species)) {
-    if (!sp.line) continue;
-    (lines[sp.line] ||= []).push({ id, ...sp });
+    const ln = sp.line || id;
+    if (!lines[ln]) { lines[ln] = []; order.push(ln); }
+    lines[ln].push({ id, ...sp });
   }
   let html = '';
-  for (const ln of ['feu', 'eau', 'plante']) {
-    const arr = (lines[ln] || []).sort((a, b) => a.stage - b.stage);
+  for (const ln of order) {
+    const arr = lines[ln].sort((a, b) => (a.stage || 1) - (b.stage || 1));
     if (!arr.length) continue;
-    html += `<div class="dexline"><div class="dexline-title">${LINE_NAMES[ln] || ln}</div><div class="dexchain">`;
+    const base = arr[0];
+    const title = `${TYPE_EMOJI[base.type] || ''} ${base.name}`.trim();
+    html += `<div class="dexline"><div class="dexline-title">${title}</div><div class="dexchain">`;
     arr.forEach((sp, i) => {
       const cr = { species: sp.id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: 0 };
       html += `<div class="dexmon" data-rarity="${sp.rarity}">
@@ -106,8 +110,7 @@ async function loadDex() {
     });
     html += `</div></div>`;
   }
-  $('#dex').innerHTML = html;
-  dexLoaded = true;
+  $('#dex').innerHTML = html || '<p class="hint">Aucun Glump.</p>';
 }
 
 // ============================================================

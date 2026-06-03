@@ -58,8 +58,14 @@ for (const [id, sp] of Object.entries(RAW_SPECIES)) {
 
 export const SPECIES_IDS = Object.keys(SPECIES);
 
-// Especes de depart (communes) que recoit un nouveau joueur.
-export const STARTER_IDS = ['flammkit', 'aquolet', 'sprouty'];
+// Especes de depart que recoit un nouveau joueur :
+//  1) celles marquees "starter": true dans species.json ;
+//  2) sinon flammkit/aquolet/sprouty si elles existent ;
+//  3) sinon les 3 premieres especes definies.
+let starters = Object.keys(RAW_SPECIES).filter(id => RAW_SPECIES[id]?.starter === true && SPECIES[id]);
+if (!starters.length) starters = ['flammkit', 'aquolet', 'sprouty'].filter(id => SPECIES[id]);
+if (!starters.length) starters = SPECIES_IDS.slice(0, 3);
+export const STARTER_IDS = starters;
 
 // --- Petit PRNG deterministe optionnel; ici on utilise Math.random ---
 function rand(n) { return Math.floor(Math.random() * n); }
