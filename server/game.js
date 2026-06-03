@@ -225,3 +225,10 @@ export function evolutionOf(speciesId) {
   const evo = SPECIES[speciesId]?.evolvesTo;
   return evo && SPECIES[evo] ? evo : null;
 }
+
+// Niveau requis pour evoluer (selon le stade actuel du Glump).
+const EVOLVE_LEVEL = { 1: 16, 2: 36 };
+export function evolveLevelOf(speciesId) {
+  const st = SPECIES[speciesId]?.stage || 1;
+  return EVOLVE_LEVEL[st] || 16;
+}

@@ -4,7 +4,7 @@
 import { get, all, run } from './db.js';
 import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
-  evolutionOf, evolveCost, levelFromXp, xpForLevel, natureByName,
+  evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
 } from './game.js';
 import { hasArt } from './art.js';
 
@@ -149,7 +149,8 @@ export function publicCreature(c, now = Date.now()) {
   if (evo) {
     out.evolvesTo = evo;
     out.evolvesToName = SPECIES[evo].name;
-    out.evolveCost = evolveCost(evo);
+    out.evolveLevel = evolveLevelOf(c.species);
+    out.canEvolve = out.level >= out.evolveLevel;
   }
   return out;
 }

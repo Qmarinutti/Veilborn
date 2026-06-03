@@ -10,8 +10,8 @@ import {
 } from './auth.js';
 import {
   BALANCE, STARTER_IDS, SPECIES, wildCreature, breed,
-  incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveCost,
-  prairieSlotCost, EGG_SHOP, randomSpeciesInRarity,
+  incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
+  levelFromXp, prairieSlotCost, EGG_SHOP, randomSpeciesInRarity,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser } from './state.js';
 import { hasArt } from './art.js';
@@ -235,16 +235,15 @@ app.post('/api/creature/evolve', requireAuth, h(async (req, res) => {
   const target = evolutionOf(c.species);
   if (!target) return res.status(400).json({ error: 'Ce Glump est deja a sa forme finale.' });
 
-  const user = await reloadUser(req.user.id);
-  const cost = evolveCost(target);
-  if (user.essence < cost) {
-    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
+  const level = levelFromXp(c.xp || 0);
+  const reqLevel = evolveLevelOf(c.species);
+  if (level < reqLevel) {
+    return res.status(400).json({ error: `Niveau ${reqLevel} requis pour evoluer (actuel : ${level}).` });
   }
 
-  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [cost, req.user.id]);
   await run('UPDATE creatures SET species = ? WHERE id = ?', [target, id]);
   const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
-  res.json({ ok: true, creature: publicCreature(row), cost, fromName: SPECIES[c.species].name });
+  res.json({ ok: true, creature: publicCreature(row), fromName: SPECIES[c.species].name });
 }));
 
 // ---------- Renommer ----------

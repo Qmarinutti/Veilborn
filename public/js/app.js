@@ -270,7 +270,9 @@ function cardHtml(c) {
   if (c.variant) badges.push('<span class="badge shiny">SHINY</span>');
   if (baby) badges.push('<span class="badge baby">Bebe</span>');
   const evo = (c.stage === 'adult' && c.evolvesTo)
-    ? `<button class="btn small evo" data-evolve="${c.id}">⬆ ${c.evolvesToName} <span class="evo-cost">✨${c.evolveCost}</span></button>`
+    ? (c.canEvolve
+        ? `<button class="btn small evo" data-evolve="${c.id}">⬆ Evoluer → ${c.evolvesToName}</button>`
+        : `<button class="btn small evo" disabled>⬆ ${c.evolvesToName} · Niv ${c.evolveLevel}</button>`)
     : '';
   const xpPct = Math.min(100, Math.round(100 * (c.xpInto || 0) / (c.xpNext || 1)));
   return `<div class="card" data-id="${c.id}" data-rarity="${c.rarity}">
@@ -384,7 +386,12 @@ function openDetail(id) {
     <div class="detail-block"><div class="detail-lbl">Genes (IV) → Stats</div>
       ${ivRow('force')}${ivRow('vita')}${ivRow('speed')}
       <div class="detail-sub">Puissance totale <b>${c.power}</b> · Valeur ${c.value}</div>
-    </div>`;
+    </div>
+    ${c.evolvesTo ? `<div class="detail-block"><div class="detail-lbl">Evolution</div>
+      ${c.canEvolve
+        ? `<button class="btn primary" data-evolve="${c.id}" style="width:100%;">⬆ Evoluer en ${c.evolvesToName}</button>`
+        : `<div class="detail-sub">Evolue en <b>${c.evolvesToName}</b> au <b>niveau ${c.evolveLevel}</b> (actuel : ${c.level}).</div>`}
+    </div>` : ''}`;
   $('#detail').classList.remove('hidden');
   $('#detail-overlay').classList.remove('hidden');
 }
@@ -392,15 +399,23 @@ function closeDetail() { $('#detail').classList.add('hidden'); $('#detail-overla
 $('#detail-close').addEventListener('click', closeDetail);
 $('#detail-overlay').addEventListener('click', closeDetail);
 $('#detail-body').addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-candy]');
-  if (!b) return;
-  const id = Number(b.dataset.candy);
-  try {
-    const r = await api('/creature/candy', { method: 'POST', body: { id } });
-    await refresh();
-    openDetail(id);
-    flash(`+${r.xp} XP 🍬 (niveau ${r.creature.level})`);
-  } catch (err) { alert(err.message); }
+  const candyBtn = e.target.closest('[data-candy]');
+  const evoBtn = e.target.closest('[data-evolve]');
+  if (candyBtn) {
+    const id = Number(candyBtn.dataset.candy);
+    try {
+      const r = await api('/creature/candy', { method: 'POST', body: { id } });
+      await refresh(); openDetail(id);
+      flash(`+${r.xp} XP 🍬 (niveau ${r.creature.level})`);
+    } catch (err) { alert(err.message); }
+  } else if (evoBtn) {
+    const id = Number(evoBtn.dataset.evolve);
+    try {
+      const r = await api('/creature/evolve', { method: 'POST', body: { id } });
+      await refresh(); openDetail(id);
+      flash(`✨ ${r.fromName} a evolue en ${r.creature.speciesName} !`);
+    } catch (err) { alert(err.message); }
+  }
 });
 
 $('#collection').addEventListener('click', async (e) => {
@@ -696,7 +711,7 @@ $('#drawer-overlay').addEventListener('click', closeDrawer);
 // ============================================================
 const TUTO = [
   { icon: '🥚', title: 'Bienvenue dans Veilborn !', text: "Tu eleves des creatures appelees Glumps : fais-les eclore, grandir, evoluer, et complete ton Glumpdex de 300 Glumps. Tu demarres avec ton starter.", view: 'box' },
-  { icon: '📦', title: 'Collection', text: "Voici tous tes Glumps. Tu peux les renommer, les relacher contre de l'essence, ou les faire evoluer (bouton vert) quand ils sont adultes.", view: 'box' },
+  { icon: '📦', title: 'Collection', text: "Voici tous tes Glumps. Clique sur l'un d'eux pour sa fiche (IV, stats, nature). Tu peux les renommer, les relacher, ou les faire evoluer une fois le niveau requis atteint.", view: 'box' },
   { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs.", view: 'eggs' },
   { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare.", view: 'breed' },
   { icon: '🌳', title: 'Prairie', text: "Place tes Glumps ici : ce sont eux qui farment l'essence ✨ (la monnaie du jeu). Max 4 emplacements au depart, achetables. Choisis tes meilleurs farmeurs !", view: 'prairie' },
