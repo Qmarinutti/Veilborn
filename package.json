@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "gen": "node tools/gen-species.mjs"
+    "gen": "node tools/gen-species.mjs",
+    "sprites": "node tools/gen-sprites.mjs"
   },
   "engines": {
     "node": ">=22.5.0"
