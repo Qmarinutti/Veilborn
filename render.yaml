@@ -1,0 +1,15 @@
+# Configuration de deploiement Render (https://render.com)
+# Render lit ce fichier automatiquement quand tu connectes le depot GitHub.
+services:
+  - type: web
+    name: pokelike
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      # Les valeurs se saisissent dans le dashboard Render (elles restent secretes).
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false

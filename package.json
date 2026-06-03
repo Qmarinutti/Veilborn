@@ -1,0 +1,17 @@
+{
+  "name": "pokelike",
+  "version": "0.1.0",
+  "description": "Jeu d'elevage idle multijoueur (pokemon-like, non commercial)",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.3",
+    "express": "^4.19.2"
+  }
+}

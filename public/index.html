@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokelike — elevage idle</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Ecran de connexion -->
+  <div id="auth-screen" class="screen">
+    <div class="auth-card">
+      <h1>🥚 Pokelike</h1>
+      <p class="tagline">Elevage idle de Bestioles</p>
+      <div class="tabs">
+        <button class="tab active" data-auth="login">Connexion</button>
+        <button class="tab" data-auth="register">Inscription</button>
+      </div>
+      <form id="auth-form">
+        <input id="username" type="text" placeholder="Pseudo" autocomplete="username" />
+        <input id="password" type="password" placeholder="Mot de passe" autocomplete="current-password" />
+        <button type="submit" id="auth-submit" class="btn primary">Se connecter</button>
+      </form>
+      <p id="auth-error" class="error"></p>
+    </div>
+  </div>
+
+  <!-- Ecran de jeu -->
+  <div id="game-screen" class="screen hidden">
+    <header class="topbar">
+      <div class="brand">🥚 Pokelike</div>
+      <div class="resources">
+        <span class="essence">✨ <b id="essence">0</b></span>
+        <span class="rate" id="rate">+0/s</span>
+      </div>
+      <nav class="nav">
+        <button class="navbtn active" data-view="farm">Mon elevage</button>
+        <button class="navbtn" data-view="prairie">Prairie</button>
+        <button class="navbtn" data-view="leaderboard">Classement</button>
+        <button class="navbtn" data-view="visit">Visiter</button>
+      </nav>
+      <div class="account">
+        <span id="who"></span>
+        <button id="logout" class="btn small">Quitter</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Vue elevage -->
+      <section id="view-farm" class="view">
+        <div class="panel">
+          <h2>Incubateurs <button id="buy-slot" class="btn small">+ Incubateur</button></h2>
+          <div id="incubators" class="incubators"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Reproduction</h2>
+          <p class="hint">Choisis deux adultes pour pondre un oeuf.</p>
+          <div class="breed-pickers">
+            <select id="parentA"></select>
+            <span class="heart">❤</span>
+            <select id="parentB"></select>
+            <button id="breed-btn" class="btn primary">Reproduire</button>
+          </div>
+          <p id="breed-msg" class="msg"></p>
+        </div>
+
+        <div class="panel">
+          <h2>Ma collection (<span id="coll-count">0</span>)</h2>
+          <div id="collection" class="cards"></div>
+        </div>
+      </section>
+
+      <!-- Vue prairie : les creatures gambadent -->
+      <section id="view-prairie" class="view hidden">
+        <div class="panel">
+          <h2>Ma prairie 🌳</h2>
+          <p class="hint">Tes Bestioles (adultes et bebes) se baladent ici. Clique sur l'une d'elles pour son nom.</p>
+          <div id="meadow" class="meadow"></div>
+        </div>
+      </section>
+
+      <!-- Vue classement -->
+      <section id="view-leaderboard" class="view hidden">
+        <div class="panel">
+          <h2>Classement des eleveurs</h2>
+          <table class="board">
+            <thead><tr><th>#</th><th>Eleveur</th><th>Valeur collection</th><th>Meilleure</th><th>Creatures</th><th></th></tr></thead>
+            <tbody id="board-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Vue visite -->
+      <section id="view-visit" class="view hidden">
+        <div class="panel">
+          <h2 id="visit-title">Elevage visite</h2>
+          <p class="hint" id="visit-hint">Clique sur un eleveur dans le classement pour visiter son elevage.</p>
+          <div id="visit-cards" class="cards"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js" type="module"></script>
+</body>
+</html>
