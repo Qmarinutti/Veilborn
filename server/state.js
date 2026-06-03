@@ -77,14 +77,17 @@ export async function getPlayerState(user) {
   const now = Date.now();
   const creatures = rows.map(c => publicCreature(c, now));
 
-  // Decouvertes : on memorise toute espece deja possedee (reste debloquee
-  // meme apres relachement/evolution).
-  const ownedSpecies = [...new Set(rows.map(r => r.species))];
-  for (const sp of ownedSpecies) {
-    await run('INSERT OR IGNORE INTO discoveries (user_id, species) VALUES (?, ?)', [user.id, sp]);
+  // Decouvertes : on memorise chaque (espece, variant) deja possede (normal ET
+  // chromatique separement ; reste debloque meme apres relachement/evolution).
+  const ownedPairs = [...new Set(rows.map(r => r.species + ':' + (r.variant || 0)))];
+  for (const pair of ownedPairs) {
+    const i = pair.lastIndexOf(':');
+    await run('INSERT OR IGNORE INTO discoveries (user_id, species, variant) VALUES (?, ?, ?)',
+      [user.id, pair.slice(0, i), Number(pair.slice(i + 1))]);
   }
-  const discRows = await all('SELECT species FROM discoveries WHERE user_id = ?', [user.id]);
-  const discovered = discRows.map(d => d.species);
+  const discRows = await all('SELECT species, variant FROM discoveries WHERE user_id = ?', [user.id]);
+  const discovered = discRows.filter(d => d.variant === 0).map(d => d.species);
+  const discoveredShiny = discRows.filter(d => d.variant === 1).map(d => d.species);
 
   let ratePerSec = 0;
   for (const c of rows) {
@@ -104,6 +107,7 @@ export async function getPlayerState(user) {
     essencePerSec: Number(ratePerSec.toFixed(3)),
     creatures,
     discovered,
+    discoveredShiny,
     serverTime: now,
   };
 }

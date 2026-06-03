@@ -73,7 +73,8 @@ export async function initDb() {
     CREATE TABLE IF NOT EXISTS discoveries (
       user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       species  TEXT NOT NULL,
-      PRIMARY KEY (user_id, species)
+      variant  INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, species, variant)
     );
   `);
 
@@ -85,5 +86,16 @@ export async function initDb() {
     "ALTER TABLE creatures ADD COLUMN nature TEXT NOT NULL DEFAULT 'Equilibre'",
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
+  }
+
+  // Migration discoveries -> ajoute la dimension "variant" (normal/chromatique).
+  // discoveries est un cache reconstruit a chaque lecture, on peut le recreer sans risque.
+  try {
+    await db.execute('SELECT variant FROM discoveries LIMIT 1');
+  } catch {
+    try { await db.execute('DROP TABLE IF EXISTS discoveries'); } catch {}
+    await db.execute(`CREATE TABLE discoveries (
+      user_id INTEGER NOT NULL, species TEXT NOT NULL, variant INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, species, variant))`);
   }
 }

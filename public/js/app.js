@@ -117,19 +117,26 @@ $$('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.datase
 //  Glumpdex : lignees d'evolution
 // ============================================================
 const TYPE_EMOJI = { Feu: '🔥', Eau: '💧', Plante: '🌿', Foudre: '⚡', Roche: '🪨', Glace: '❄️', Ombre: '🌑', Lumiere: '✨', Mystique: '🔮', Acier: '⚙️', Poison: '☠️', Vent: '🌪️', Insecte: '🐛', Dragon: '🐉' };
+let dexMode = 'normal'; // 'normal' | 'shiny'
 async function loadDex() {
   const { species } = await api('/species');
-  const discovered = new Set(STATE?.discovered || []);
+  const shiny = dexMode === 'shiny';
+  const discovered = new Set((shiny ? STATE?.discoveredShiny : STATE?.discovered) || []);
   const entries = Object.entries(species); // ordre du species.json (familles a la suite)
   const total = entries.length;
 
-  // Grille continue : tous les Glumps a la suite (N°001, 002, 003...), qui reviennent a la ligne.
-  let html = `<p class="hint">Decouverts : <b>${discovered.size}</b> / ${total}</p><div class="dexgrid">`;
+  let html = `
+    <div class="dex-toggle">
+      <button class="dextab ${!shiny ? 'active' : ''}" data-dexmode="normal">Normal</button>
+      <button class="dextab ${shiny ? 'active' : ''}" data-dexmode="shiny">✨ Chromatique</button>
+    </div>
+    <p class="hint">${shiny ? 'Chromatiques obtenus' : 'Decouverts'} : <b>${discovered.size}</b> / ${total}</p>
+    <div class="dexgrid">`;
   let num = 0;
   for (const [id, sp] of entries) {
     num++;
     const locked = !discovered.has(id);
-    const cr = { species: id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: 0 };
+    const cr = { species: id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: shiny ? 1 : 0 };
     html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.rarity}">
       <div class="dexnum">N°${String(num).padStart(3, '0')}</div>
       <div class="avatar">${creatureVisual(cr, 52)}</div>
@@ -140,6 +147,10 @@ async function loadDex() {
   html += '</div>';
   $('#dex').innerHTML = html;
 }
+$('#dex').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-dexmode]');
+  if (t) { dexMode = t.dataset.dexmode; loadDex(); }
+});
 
 // ============================================================
 //  Entree en jeu + boucle de rafraichissement

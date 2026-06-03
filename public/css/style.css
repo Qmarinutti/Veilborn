@@ -403,6 +403,12 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .dexline { margin-bottom: 24px; }
 .dexline:last-child { margin-bottom: 4px; }
 .dexline-title { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 16px; color: var(--text); margin-bottom: 12px; }
+/* Selecteur Dex normal / chromatique */
+.dex-toggle { display: inline-flex; gap: 4px; background: rgba(0,0,0,.22); padding: 4px; border-radius: 12px; margin-bottom: 12px; }
+.dextab { padding: 8px 16px; background: transparent; border: none; color: var(--muted); border-radius: 9px; cursor: pointer; font-weight: 600; font-family: 'Fredoka', sans-serif; }
+.dextab.active { background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; }
+.dextab.active[data-dexmode="shiny"] { background: linear-gradient(135deg, var(--gold), #ff7a98); color: #2a1a00; }
+
 /* Grille continue : tous les Glumps a la suite, qui reviennent a la ligne */
 .dexgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; }
 .dexgrid .dexmon { width: auto; }
