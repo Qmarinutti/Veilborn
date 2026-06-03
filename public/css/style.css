@@ -115,10 +115,66 @@ input:focus, select:focus { outline: none; border-color: var(--primary); box-sha
 }
 .navbtn:hover { color: var(--text); }
 .navbtn.active { background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; box-shadow: 0 6px 16px rgba(108,140,255,.35); }
-.account { display: flex; align-items: center; gap: 12px; color: var(--muted); font-weight: 600; }
+.account { display: flex; align-items: center; gap: 12px; color: var(--muted); font-weight: 600; margin-left: auto; }
 
 /* ---------- Layout ---------- */
-main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 60px; }
+main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
+
+/* ---------- Barre de navigation du bas ---------- */
+.bottomnav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: flex; justify-content: center; gap: 6px;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+  background: rgba(14, 19, 33, 0.92); backdrop-filter: blur(16px);
+  border-top: 1px solid var(--line);
+}
+.bottomnav .navbtn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  min-width: 86px; padding: 8px 12px; border-radius: 14px;
+  background: transparent; border: none; color: var(--muted);
+  font-weight: 600; cursor: pointer; transition: .15s;
+}
+.bottomnav .navbtn .ic { font-size: 23px; line-height: 1; filter: grayscale(.4) opacity(.8); transition: .15s; }
+.bottomnav .navbtn .lbl { font-size: 11px; }
+.bottomnav .navbtn:hover { color: var(--text); }
+.bottomnav .navbtn:hover .ic { filter: none; }
+.bottomnav .navbtn.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary2));
+  box-shadow: 0 8px 22px rgba(108,140,255,.45);
+}
+.bottomnav .navbtn.active .ic { filter: none; transform: translateY(-1px); }
+
+/* ---------- Rail lateral ---------- */
+.siderail {
+  position: fixed; right: 14px; top: 46%; transform: translateY(-50%); z-index: 30;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.railbtn {
+  width: 50px; height: 50px; border-radius: 15px; font-size: 21px; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line-strong); color: var(--text);
+  backdrop-filter: blur(10px); box-shadow: 0 8px 20px rgba(0,0,0,.35); transition: .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.railbtn:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: 0 12px 26px rgba(108,140,255,.35); }
+
+/* ---------- Drawer ---------- */
+.overlay { position: fixed; inset: 0; background: rgba(4,7,15,.55); backdrop-filter: blur(2px); z-index: 40; }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(360px, 88vw); z-index: 50;
+  background: var(--panel-solid); border-left: 1px solid var(--line-strong);
+  box-shadow: -24px 0 70px rgba(0,0,0,.55); padding: 22px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.drawer-head { display: flex; align-items: center; justify-content: space-between; }
+.drawer-head h3 { margin: 0; font-size: 19px; }
+.drawer-body { overflow-y: auto; }
+.drawer-section { display: flex; flex-direction: column; gap: 14px; }
+
+@media (max-width: 560px) {
+  .bottomnav .navbtn { min-width: 0; flex: 1; padding: 8px 4px; }
+  .siderail { top: auto; bottom: 92px; transform: none; }
+}
 .panel {
   background: var(--panel); backdrop-filter: blur(10px);
   border: 1px solid var(--line); border-radius: 18px;

@@ -83,6 +83,7 @@ async function refresh() {
     STATE = await api('/state');
     SERVER_SKEW = STATE.serverTime - Date.now();
     $('#who').textContent = STATE.user.username;
+    const sw = $('#settings-who'); if (sw) sw.textContent = STATE.user.username;
     renderAll();
   } catch (err) {
     // session expiree -> retour login
@@ -414,6 +415,26 @@ function prairieLoop() {
   }
   prairieRAF = requestAnimationFrame(prairieLoop);
 }
+
+// ============================================================
+//  Drawer lateral : evenements / boutique / reglages
+// ============================================================
+const DRAWER_TITLES = { events: '🎉 Evenements', shop: '🛒 Boutique', settings: '⚙️ Reglages' };
+function openDrawer(type) {
+  $('#drawer-title').textContent = DRAWER_TITLES[type] || '';
+  $$('.drawer-section').forEach(s => s.classList.add('hidden'));
+  const sec = $('#drawer-' + type);
+  if (sec) sec.classList.remove('hidden');
+  $('#drawer').classList.remove('hidden');
+  $('#drawer-overlay').classList.remove('hidden');
+}
+function closeDrawer() {
+  $('#drawer').classList.add('hidden');
+  $('#drawer-overlay').classList.add('hidden');
+}
+$$('.railbtn').forEach(b => b.addEventListener('click', () => openDrawer(b.dataset.drawer)));
+$('#drawer-close').addEventListener('click', closeDrawer);
+$('#drawer-overlay').addEventListener('click', closeDrawer);
 
 // ============================================================
 //  Demarrage
