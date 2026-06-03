@@ -321,6 +321,13 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .dexmon .name { font-weight: 700; font-size: 15px; }
 .dexmon .sub { color: var(--muted); font-size: 12px; }
 .dexarrow { font-size: 28px; color: var(--muted); font-weight: 700; }
+/* Glump non debloque : silhouette noire facon Pokedex */
+.dexmon.locked { opacity: .9; }
+.dexmon.locked::before { background: var(--line); }
+.dexmon.locked .avatar { background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.08), transparent 70%); }
+.dexmon.locked .sprite, .dexmon.locked .art { filter: brightness(0) opacity(.5); }
+.dexmon.locked .name { color: var(--muted); letter-spacing: 2px; }
+.dexmon.locked .rarity-dots { color: var(--muted); opacity: .4; }
 @media (max-width: 560px) {
   .dexchain { flex-direction: column; }
   .dexarrow { transform: rotate(90deg); }

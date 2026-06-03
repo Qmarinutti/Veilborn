@@ -91,26 +91,30 @@ async function loadDex() {
     if (!lines[ln]) { lines[ln] = []; order.push(ln); }
     lines[ln].push({ id, ...sp });
   }
-  let html = '';
+  const discovered = new Set(STATE?.discovered || []);
+  const total = Object.keys(species).length;
+  let html = `<p class="hint">Decouverts : <b>${discovered.size}</b> / ${total}</p>`;
   for (const ln of order) {
     const arr = lines[ln].sort((a, b) => (a.stage || 1) - (b.stage || 1));
     if (!arr.length) continue;
     const base = arr[0];
-    const title = `${TYPE_EMOJI[base.type] || ''} ${base.name}`.trim();
+    const baseSeen = discovered.has(base.id);
+    const title = baseSeen ? `${TYPE_EMOJI[base.type] || ''} ${base.name}`.trim() : '❔ ???';
     html += `<div class="dexline"><div class="dexline-title">${title}</div><div class="dexchain">`;
     arr.forEach((sp, i) => {
+      const locked = !discovered.has(sp.id);
       const cr = { species: sp.id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: 0 };
-      html += `<div class="dexmon" data-rarity="${sp.rarity}">
+      html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.rarity}">
         <div class="avatar">${creatureVisual(cr, 96)}</div>
         <div class="rarity-dots">${RARITY_DOTS(sp.rarity)}</div>
-        <div class="name">${sp.name}</div>
-        <div class="sub">${sp.type}</div>
+        <div class="name">${locked ? '???' : sp.name}</div>
+        <div class="sub">${locked ? '—' : sp.type}</div>
       </div>`;
       if (i < arr.length - 1) html += `<div class="dexarrow">→</div>`;
     });
     html += `</div></div>`;
   }
-  $('#dex').innerHTML = html || '<p class="hint">Aucun Glump.</p>';
+  $('#dex').innerHTML = html;
 }
 
 // ============================================================

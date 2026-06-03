@@ -65,5 +65,11 @@ export async function initDb() {
       user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at  INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS discoveries (
+      user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      species  TEXT NOT NULL,
+      PRIMARY KEY (user_id, species)
+    );
   `);
 }

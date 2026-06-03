@@ -69,6 +69,15 @@ export async function getPlayerState(user) {
   const now = Date.now();
   const creatures = rows.map(c => publicCreature(c, now));
 
+  // Decouvertes : on memorise toute espece deja possedee (reste debloquee
+  // meme apres relachement/evolution).
+  const ownedSpecies = [...new Set(rows.map(r => r.species))];
+  for (const sp of ownedSpecies) {
+    await run('INSERT OR IGNORE INTO discoveries (user_id, species) VALUES (?, ?)', [user.id, sp]);
+  }
+  const discRows = await all('SELECT species FROM discoveries WHERE user_id = ?', [user.id]);
+  const discovered = discRows.map(d => d.species);
+
   let ratePerSec = 0;
   for (const c of rows) {
     if (c.stage === 'adult') ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec;
@@ -83,6 +92,7 @@ export async function getPlayerState(user) {
     },
     essencePerSec: Number(ratePerSec.toFixed(3)),
     creatures,
+    discovered,
     serverTime: now,
   };
 }
