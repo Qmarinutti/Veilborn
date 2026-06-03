@@ -321,8 +321,13 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .shop-name { font-weight: 700; }
 .shop-sub { color: var(--muted); font-size: 12px; }
 
-/* Fiche detaillee */
-#detail { overflow-y: auto; }
+/* Fiche detaillee (modale CENTREE) */
+#detail {
+  top: 50%; left: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%);
+  width: min(440px, 94vw); max-height: 88vh; overflow-y: auto;
+  border: 1px solid var(--line-strong); border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.6);
+}
 .detail-top { --rc: var(--r1); text-align: center; margin-bottom: 16px; }
 .detail-top[data-rarity="1"] { --rc: var(--r1); } .detail-top[data-rarity="2"] { --rc: var(--r2); }
 .detail-top[data-rarity="3"] { --rc: var(--r3); } .detail-top[data-rarity="4"] { --rc: var(--r4); }
