@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=9" />
+  <link rel="stylesheet" href="css/style.css?v=10" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -73,12 +73,14 @@
         </div>
       </section>
 
-      <!-- Vue prairie : les creatures gambadent -->
+      <!-- Vue prairie : les Glumps qui farment l'essence -->
       <section id="view-prairie" class="view hidden">
         <div class="panel">
-          <h2>Ma prairie 🌳</h2>
-          <p class="hint">Tes Glumps (adultes et bebes) se baladent ici. Clique sur l'un d'eux pour son nom.</p>
+          <h2>🌳 Prairie <span id="prairie-info" class="prairie-info"></span>
+            <button id="buy-prairie" class="btn small">+ Emplacement</button></h2>
+          <p class="hint">Les Glumps places ici <b>farment de l'essence</b> ✨. Clique sur un emplacement vide pour en ajouter.</p>
           <div id="meadow" class="meadow"></div>
+          <div id="prairie-slots" class="prairie-slots"></div>
         </div>
       </section>
 
@@ -130,6 +132,17 @@
       <button class="navbtn" data-view="visit"><span class="ic">🔭</span><span class="lbl">Visite</span></button>
     </nav>
 
+    <!-- Selecteur de Glump pour la prairie -->
+    <div id="picker-overlay" class="overlay hidden"></div>
+    <aside id="picker" class="drawer hidden">
+      <div class="drawer-head">
+        <h3>Mettre un Glump en prairie</h3>
+        <button id="picker-close" class="btn small">✕</button>
+      </div>
+      <p class="hint">Choisis un adulte a faire farmer (clique dessus).</p>
+      <div id="picker-list" class="cards picker-list"></div>
+    </aside>
+
     <!-- Panneau coulissant (drawer) -->
     <div id="drawer-overlay" class="overlay hidden"></div>
     <aside id="drawer" class="drawer hidden">
@@ -152,6 +165,6 @@
     </aside>
   </div>
 
-  <script src="js/app.js?v=11" type="module"></script>
+  <script src="js/app.js?v=12" type="module"></script>
 </body>
 </html>

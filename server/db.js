@@ -40,6 +40,7 @@ export async function initDb() {
       pass_salt       TEXT NOT NULL,
       essence         REAL NOT NULL DEFAULT 0,
       incubator_slots INTEGER NOT NULL DEFAULT 2,
+      prairie_slots   INTEGER NOT NULL DEFAULT 4,
       last_tick       INTEGER NOT NULL,
       created_at      INTEGER NOT NULL
     );
@@ -54,6 +55,7 @@ export async function initDb() {
       gene_speed  INTEGER NOT NULL,
       variant     INTEGER NOT NULL DEFAULT 0,
       nickname    TEXT,
+      in_prairie  INTEGER NOT NULL DEFAULT 0,
       hatch_at    INTEGER,
       mature_at   INTEGER,
       created_at  INTEGER NOT NULL
@@ -72,4 +74,12 @@ export async function initDb() {
       PRIMARY KEY (user_id, species)
     );
   `);
+
+  // Migrations pour les bases deja existantes (ignore si la colonne existe deja).
+  for (const sql of [
+    'ALTER TABLE users ADD COLUMN prairie_slots INTEGER NOT NULL DEFAULT 4',
+    'ALTER TABLE creatures ADD COLUMN in_prairie INTEGER NOT NULL DEFAULT 0',
+  ]) {
+    try { await db.execute(sql); } catch { /* colonne deja presente */ }
+  }
 }

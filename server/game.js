@@ -17,8 +17,12 @@ export const BALANCE = {
   incubationBaseSec: 120,
   // Duree de maturation bebe -> adulte (secondes), multipliee par la rarete.
   maturationBaseSec: 180,
-  // Revenu idle d'essence par seconde et par adulte = rarete * ce facteur.
+  // Revenu idle d'essence par seconde et par adulte EN PRAIRIE = rarete * ce facteur.
   essencePerRarityPerSec: 0.02,
+  // Prairie : emplacements de farm (Glumps qui produisent de l'essence).
+  prairieStartSlots: 4,
+  prairieMaxSlots: 12,
+  prairieSlotCostBase: 350, // cout du prochain emplacement
   // On ne crediter au max que X heures d'idle hors-ligne.
   offlineCapHours: 12,
   shinyChance: 0.02, // 2% de base
@@ -155,6 +159,12 @@ export function maturationSeconds(speciesId) {
 
 export function nextSlotCost(currentSlots) {
   return Math.round(BALANCE.slotCostBase * Math.pow(currentSlots, 1.6));
+}
+
+// Cout du prochain emplacement de prairie (slots au-dela des 4 de depart).
+export function prairieSlotCost(currentSlots) {
+  const extra = Math.max(1, currentSlots - BALANCE.prairieStartSlots + 1);
+  return Math.round(BALANCE.prairieSlotCostBase * Math.pow(extra, 1.8));
 }
 
 // Cout en essence pour faire evoluer vers une espece cible (selon sa rarete).

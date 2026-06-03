@@ -11,6 +11,7 @@ import {
 import {
   BALANCE, STARTER_IDS, SPECIES, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveCost,
+  prairieSlotCost,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser } from './state.js';
 import { hasArt } from './art.js';
@@ -58,6 +59,8 @@ app.post('/api/register', h(async (req, res) => {
   for (const sp of STARTER_IDS) {
     await insertCreature(userId, wildCreature(sp, { adult: true }));
   }
+  // Les starters commencent en prairie pour farmer de l'essence des le debut.
+  await run('UPDATE creatures SET in_prairie = 1 WHERE owner_id = ?', [userId]);
 
   const token = await createSession(userId);
   setCookie(res, token);
@@ -143,6 +146,41 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   await run('DELETE FROM creatures WHERE id = ?', [id]);
   await run('UPDATE users SET essence = essence + ? WHERE id = ?', [refund, req.user.id]);
   res.json({ ok: true, refund });
+}));
+
+// ---------- Prairie : assigner / retirer / acheter un emplacement ----------
+app.post('/api/prairie/assign', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent farmer en prairie.' });
+  if (c.in_prairie === 1) return res.json({ ok: true });
+  const used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND in_prairie = 1", [req.user.id])).n;
+  const user = await reloadUser(req.user.id);
+  if (used >= user.prairie_slots) return res.status(400).json({ error: 'Prairie pleine — achete un emplacement.' });
+  await run('UPDATE creatures SET in_prairie = 1 WHERE id = ?', [id]);
+  res.json({ ok: true });
+}));
+
+app.post('/api/prairie/remove', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT id FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  await run('UPDATE creatures SET in_prairie = 0 WHERE id = ?', [id]);
+  res.json({ ok: true });
+}));
+
+app.post('/api/prairie/buy', requireAuth, h(async (req, res) => {
+  const user = await reloadUser(req.user.id);
+  if (user.prairie_slots >= BALANCE.prairieMaxSlots) {
+    return res.status(400).json({ error: 'Nombre maximum d\'emplacements atteint.' });
+  }
+  const cost = prairieSlotCost(user.prairie_slots);
+  if (user.essence < cost) {
+    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
+  }
+  await run('UPDATE users SET essence = essence - ?, prairie_slots = prairie_slots + 1 WHERE id = ?', [cost, user.id]);
+  res.json({ ok: true, cost });
 }));
 
 // ---------- Faire evoluer ----------

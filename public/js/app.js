@@ -105,7 +105,7 @@ async function loadDex() {
       const locked = !discovered.has(sp.id);
       const cr = { species: sp.id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: 0 };
       html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.rarity}">
-        <div class="avatar">${creatureVisual(cr, 96)}</div>
+        <div class="avatar">${creatureVisual(cr, 58)}</div>
         <div class="rarity-dots">${RARITY_DOTS(sp.rarity)}</div>
         <div class="name">${locked ? '???' : sp.name}</div>
         <div class="sub">${locked ? '—' : sp.type}</div>
@@ -166,7 +166,7 @@ function renderAll() {
   renderIncubators();
   renderBreedPickers();
   renderCollection();
-  if (prairieActive) buildMeadow(); // reconstruit si une creature est apparue/a evolue
+  if (prairieActive) { buildMeadow(); renderPrairieSlots(); }
 }
 
 const RARITY_DOTS = (r) => '★'.repeat(r) + '☆'.repeat(5 - r);
@@ -400,12 +400,80 @@ let prairieIds = '';     // signature des creatures affichees
 function startPrairie() {
   prairieActive = true;
   buildMeadow();
+  renderPrairieSlots();
   if (!prairieRAF) prairieRAF = requestAnimationFrame(prairieLoop);
 }
 function stopPrairie() {
   prairieActive = false;
   if (prairieRAF) { cancelAnimationFrame(prairieRAF); prairieRAF = null; }
 }
+
+// Emplacements de prairie (chips sous le pre) + infos + bouton acheter.
+function renderPrairieSlots() {
+  if (!STATE) return;
+  const max = STATE.user.prairieSlots;
+  const inP = STATE.creatures.filter(c => c.inPrairie);
+  $('#prairie-info').textContent = `${inP.length}/${max} · +${STATE.essencePerSec.toFixed(2)}/s ✨`;
+
+  const buyBtn = $('#buy-prairie');
+  if (max >= 12) { buyBtn.disabled = true; buyBtn.textContent = 'Max'; }
+  else { buyBtn.disabled = false; buyBtn.textContent = '+ Emplacement'; }
+
+  let html = '';
+  for (let i = 0; i < max; i++) {
+    const c = inP[i];
+    if (c) {
+      html += `<div class="slot">
+        <div class="mini">${creatureVisual(c, 42)}</div>
+        <span class="slot-name">${c.nickname || c.speciesName}</span>
+        <button class="slot-rm" data-prairie-rm="${c.id}" title="Retirer">✕</button>
+      </div>`;
+    } else {
+      html += `<div class="slot empty" data-prairie-add="1">+ Ajouter</div>`;
+    }
+  }
+  $('#prairie-slots').innerHTML = html;
+}
+
+// Selecteur : liste des adultes pas encore en prairie.
+function openPicker() {
+  const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.inPrairie);
+  $('#picker-list').innerHTML = avail.map(c => `
+    <div class="card" data-pick="${c.id}" data-rarity="${c.rarity}">
+      ${avatar(c)}
+      <div class="name">${c.nickname || c.speciesName}</div>
+      <div class="sub">${c.type} · P${c.power}</div>
+    </div>`).join('') || '<p class="hint">Aucun adulte disponible. Fais eclore et grandir des Glumps !</p>';
+  $('#picker').classList.remove('hidden');
+  $('#picker-overlay').classList.remove('hidden');
+}
+function closePicker() {
+  $('#picker').classList.add('hidden');
+  $('#picker-overlay').classList.add('hidden');
+}
+
+$('#buy-prairie').addEventListener('click', async () => {
+  try { const r = await api('/prairie/buy', { method: 'POST' }); flash(`Emplacement achete (-${r.cost} ✨)`); await refresh(); }
+  catch (err) { alert(err.message); }
+});
+$('#prairie-slots').addEventListener('click', async (e) => {
+  const rm = e.target.dataset.prairieRm;
+  const add = e.target.closest('[data-prairie-add]');
+  if (rm) {
+    try { await api('/prairie/remove', { method: 'POST', body: { id: Number(rm) } }); await refresh(); }
+    catch (err) { alert(err.message); }
+  } else if (add) {
+    openPicker();
+  }
+});
+$('#picker-list').addEventListener('click', async (e) => {
+  const card = e.target.closest('[data-pick]');
+  if (!card) return;
+  try { await api('/prairie/assign', { method: 'POST', body: { id: Number(card.dataset.pick) } }); closePicker(); await refresh(); flash('Glump mis en prairie 🌳'); }
+  catch (err) { alert(err.message); }
+});
+$('#picker-close').addEventListener('click', closePicker);
+$('#picker-overlay').addEventListener('click', closePicker);
 
 function meadowSize() {
   const m = $('#meadow');
@@ -415,7 +483,7 @@ function meadowSize() {
 // (Re)construit la prairie seulement si la liste des creatures a change.
 function buildMeadow() {
   if (!STATE) return;
-  const list = STATE.creatures.filter(c => c.stage !== 'egg');
+  const list = STATE.creatures.filter(c => c.inPrairie); // seuls les Glumps en prairie y gambadent
   const sig = list.map(c => c.id + c.stage).join(',');
   if (sig === prairieIds && critters.length) return; // rien de neuf
   prairieIds = sig;

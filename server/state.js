@@ -20,7 +20,7 @@ async function tickEssence(user) {
   if (elapsed > cap) elapsed = cap;
 
   const adults = await all(
-    "SELECT species FROM creatures WHERE owner_id = ? AND stage = 'adult'", [user.id]);
+    "SELECT species FROM creatures WHERE owner_id = ? AND stage = 'adult' AND in_prairie = 1", [user.id]);
 
   let ratePerSec = 0;
   for (const c of adults) ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec;
@@ -80,8 +80,9 @@ export async function getPlayerState(user) {
 
   let ratePerSec = 0;
   for (const c of rows) {
-    if (c.stage === 'adult') ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec;
+    if (c.stage === 'adult' && c.in_prairie === 1) ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec;
   }
+  const inPrairieCount = rows.filter(c => c.in_prairie === 1).length;
 
   return {
     user: {
@@ -89,6 +90,8 @@ export async function getPlayerState(user) {
       username: fresh.username,
       essence: Math.floor(fresh.essence),
       incubatorSlots: fresh.incubator_slots,
+      prairieSlots: fresh.prairie_slots,
+      prairieUsed: inPrairieCount,
     },
     essencePerSec: Number(ratePerSec.toFixed(3)),
     creatures,
@@ -112,6 +115,7 @@ export function publicCreature(c, now = Date.now()) {
     stage: c.stage,
     variant: c.variant,
     nickname: c.nickname,
+    inPrairie: c.in_prairie === 1,
     genes: { force: c.gene_force, vita: c.gene_vita, speed: c.gene_speed },
     stats: effectiveStats(c),
     power: power(c),
