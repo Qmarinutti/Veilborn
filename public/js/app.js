@@ -1,5 +1,5 @@
 // ---------- Client Veilborn ----------
-import { creatureSVG } from './sprites.js';
+import { creatureSVG } from './sprites.js?v=6';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
