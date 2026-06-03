@@ -231,19 +231,19 @@ export function nextSlotCost(currentSlots) {
   return Math.round(BALANCE.slotCostBase * Math.pow(currentSlots, 1.6));
 }
 
-// --- Boutique d'oeufs : achetables avec l'essence ---
-// rarities = [min,max] de l'espece tiree au hasard a l'achat.
-export const EGG_SHOP = [
-  { id: 'common',    name: 'Oeuf commun',     emoji: '🥚', price: 80,   rarities: [1, 2] },
-  { id: 'rare',      name: 'Oeuf rare',       emoji: '🥚', price: 320,  rarities: [2, 3] },
-  { id: 'epic',      name: 'Oeuf epique',     emoji: '🥚', price: 950,  rarities: [3, 4] },
-  { id: 'legendary', name: 'Oeuf legendaire', emoji: '🥚', price: 2800, rarities: [4, 5] },
-];
+// --- Boutique : oeufs par ELEMENT (pure chance, pas de rarete affichee) ---
+// On achete un oeuf d'un element -> bebe (forme de base) aleatoire de cet element.
+export const ELEMENTS = ['Feu', 'Eau', 'Plante', 'Foudre', 'Roche', 'Glace', 'Ombre', 'Lumiere', 'Mystique', 'Acier', 'Poison', 'Vent', 'Insecte', 'Dragon'];
+export const SHOP_EGG_PRICE = 250;
 
-// Tire une espece au hasard dans une plage de rarete.
-export function randomSpeciesInRarity(min, max) {
-  const pool = SPECIES_IDS.filter(id => { const r = rarityOf(id); return r >= min && r <= max; });
+export function randomBaseOfType(type) {
+  const pool = SPECIES_IDS.filter(id => (SPECIES[id].stage || 1) === 1 && SPECIES[id].type === type);
   return pool.length ? pool[Math.floor(Math.random() * pool.length)] : SPECIES_IDS[0];
+}
+
+// Cout pour accelerer (terminer) un oeuf : ~1 essence par seconde restante.
+export function accelerateCost(remainingMs) {
+  return Math.max(40, Math.ceil(Math.max(0, remainingMs) / 1000));
 }
 
 // Cout du prochain emplacement de prairie (slots au-dela des 4 de depart).

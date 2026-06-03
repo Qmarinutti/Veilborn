@@ -12,7 +12,7 @@ import {
 import {
   BALANCE, STARTER_IDS, SPECIES, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
-  levelFromXp, prairieSlotCost, EGG_SHOP, randomSpeciesInRarity,
+  levelFromXp, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
   breedingSeconds, breedingCellCost,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser } from './state.js';
@@ -181,30 +181,48 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   res.json({ ok: true, refund });
 }));
 
-// ---------- Boutique d'oeufs ----------
-app.get('/api/shop', (req, res) => res.json({ eggs: EGG_SHOP }));
+// ---------- Boutique : oeufs par element / objets / bonus ----------
+app.get('/api/shop', (req, res) => res.json({
+  elements: ELEMENTS,
+  eggPrice: SHOP_EGG_PRICE,
+  candy: { cost: BALANCE.candyCost, xp: BALANCE.candyXp },
+}));
 
 app.post('/api/shop/buy-egg', requireAuth, h(async (req, res) => {
-  const { tier } = req.body || {};
-  const item = EGG_SHOP.find(e => e.id === tier);
-  if (!item) return res.status(400).json({ error: 'Oeuf inconnu.' });
+  const type = String((req.body || {}).type || '');
+  if (!ELEMENTS.includes(type)) return res.status(400).json({ error: 'Element inconnu.' });
 
   const eggCount = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 0", [req.user.id])).n;
   if (eggCount >= req.user.incubator_slots) {
     return res.status(400).json({ error: 'Tous tes incubateurs sont occupes.' });
   }
   const user = await reloadUser(req.user.id);
-  if (user.essence < item.price) {
-    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${item.price}).` });
+  if (user.essence < SHOP_EGG_PRICE) {
+    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${SHOP_EGG_PRICE}).` });
   }
 
-  const species = randomSpeciesInRarity(item.rarities[0], item.rarities[1]);
+  const species = randomBaseOfType(type); // bebe aleatoire de cet element (luck)
   const child = wildCreature(species, { adult: false });
   const hatchAt = Date.now() + incubationSeconds(species) * 1000;
-  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [item.price, req.user.id]);
-  const eggId = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt });
+  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [SHOP_EGG_PRICE, req.user.id]);
+  const eggId = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 0 });
   const row = await get('SELECT * FROM creatures WHERE id = ?', [eggId]);
-  res.json({ ok: true, egg: publicCreature(row), cost: item.price });
+  res.json({ ok: true, egg: publicCreature(row), cost: SHOP_EGG_PRICE });
+}));
+
+// Accelerer (terminer instantanement) un oeuf en cours (incubateur OU cellule).
+app.post('/api/egg/accelerate', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Oeuf introuvable.' });
+  if (c.stage !== 'egg') return res.status(400).json({ error: "Ce n'est pas un oeuf en cours." });
+  const remaining = Math.max(0, (c.hatch_at || 0) - Date.now());
+  const cost = accelerateCost(remaining);
+  const user = await reloadUser(req.user.id);
+  if (user.essence < cost) return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
+  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [cost, req.user.id]);
+  await run('UPDATE creatures SET hatch_at = ? WHERE id = ?', [Date.now(), id]);
+  res.json({ ok: true, cost });
 }));
 
 // ---------- Prairie : assigner / retirer / acheter un emplacement ----------

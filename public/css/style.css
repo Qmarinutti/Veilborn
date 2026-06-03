@@ -321,6 +321,23 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .shop-name { font-weight: 700; }
 .shop-sub { color: var(--muted); font-size: 12px; }
 
+/* Boutique : modale centree a onglets */
+.center-modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50;
+  width: min(460px, 94vw); max-height: 88vh; overflow-y: auto;
+  background: var(--panel-solid); border: 1px solid var(--line-strong); border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.6); padding: 22px;
+}
+.shop-tabs { display: flex; gap: 4px; background: rgba(0,0,0,.22); padding: 4px; border-radius: 12px; margin: 12px 0 16px; }
+.shop-tab { flex: 1; padding: 9px; background: transparent; border: none; color: var(--muted); border-radius: 9px; cursor: pointer; font-weight: 600; font-family: 'Fredoka', sans-serif; }
+.shop-tab.active { background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; }
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+.shop-egg-tile { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; background: var(--panel2); border: 1px solid var(--line-strong); border-radius: 12px; cursor: pointer; transition: .15s; }
+.shop-egg-tile:hover { border-color: var(--primary); transform: translateY(-2px); }
+.shop-egg-emoji { font-size: 26px; }
+.shop-egg-name { font-size: 12px; font-weight: 600; }
+.shop-egg-price { font-size: 12px; color: var(--gold); font-weight: 700; }
+
 /* Social / amis */
 .friend-code { display: flex; align-items: center; gap: 10px; }
 .friend-code span { font-family: monospace; font-size: 20px; font-weight: 700; letter-spacing: 3px; background: rgba(0,0,0,.3); padding: 9px 14px; border-radius: 10px; color: var(--gold); flex: 1; text-align: center; }

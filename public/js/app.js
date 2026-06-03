@@ -571,21 +571,26 @@ function renderPrairieSlots() {
   $('#prairie-slots').innerHTML = html;
 }
 
-// Selecteur : liste des adultes pas encore en prairie.
-function openPicker() {
-  const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.inPrairie);
-  $('#picker-list').innerHTML = avail.map(c => `
-    <div class="card" data-pick="${c.id}" data-rarity="${c.rarity}">
-      ${avatar(c)}
-      <div class="name">${c.nickname || c.speciesName}</div>
-      <div class="sub">${c.type} · P${c.power}</div>
-    </div>`).join('') || '<p class="hint">Aucun adulte disponible. Fais eclore et grandir des Glumps !</p>';
+// Selecteur generique : openPicker(titre, items, renderFn, onPick(id)).
+let pickerOnPick = null;
+function openPicker(title, items, render, onPick) {
+  $('#picker .drawer-head h3').textContent = title;
+  $('#picker-list').innerHTML = items.length ? items.map(render).join('') : '<p class="hint">Rien de disponible.</p>';
+  pickerOnPick = onPick;
   $('#picker').classList.remove('hidden');
   $('#picker-overlay').classList.remove('hidden');
 }
 function closePicker() {
   $('#picker').classList.add('hidden');
   $('#picker-overlay').classList.add('hidden');
+  pickerOnPick = null;
+}
+function pickCardHtml(c) {
+  return `<div class="card" data-pick="${c.id}" data-rarity="${c.rarity}">
+    ${avatar(c)}
+    <div class="name">${c.nickname || c.speciesName}</div>
+    <div class="sub">${c.type} · P${c.power}</div>
+  </div>`;
 }
 
 $('#buy-prairie').addEventListener('click', async () => {
@@ -599,14 +604,16 @@ $('#prairie-slots').addEventListener('click', async (e) => {
     try { await api('/prairie/remove', { method: 'POST', body: { id: Number(rm) } }); await refresh(); }
     catch (err) { alert(err.message); }
   } else if (add) {
-    openPicker();
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.inPrairie);
+    openPicker('Mettre un Glump en prairie', avail, pickCardHtml, async (id) => {
+      try { await api('/prairie/assign', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash('Glump mis en prairie 🌳'); }
+      catch (err) { alert(err.message); }
+    });
   }
 });
-$('#picker-list').addEventListener('click', async (e) => {
-  const card = e.target.closest('[data-pick]');
-  if (!card) return;
-  try { await api('/prairie/assign', { method: 'POST', body: { id: Number(card.dataset.pick) } }); closePicker(); await refresh(); flash('Glump mis en prairie 🌳'); }
-  catch (err) { alert(err.message); }
+$('#picker-list').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-pick]');
+  if (el && pickerOnPick) pickerOnPick(Number(el.dataset.pick));
 });
 $('#picker-close').addEventListener('click', closePicker);
 $('#picker-overlay').addEventListener('click', closePicker);
@@ -694,7 +701,6 @@ function openDrawer(type) {
   $$('.drawer-section').forEach(s => s.classList.add('hidden'));
   const sec = $('#drawer-' + type);
   if (sec) sec.classList.remove('hidden');
-  if (type === 'shop') loadShop();
   if (type === 'social') loadSocial();
   $('#drawer').classList.remove('hidden');
   $('#drawer-overlay').classList.remove('hidden');
@@ -742,32 +748,92 @@ $('#friends-list').addEventListener('click', async (e) => {
   }
 });
 
-// Boutique d'oeufs
-async function loadShop() {
-  try {
-    const { eggs } = await api('/shop');
-    $('#shop-eggs').innerHTML = eggs.map(e => `
-      <div class="shop-item">
-        <div class="shop-egg">${e.emoji}</div>
-        <div class="shop-info"><div class="shop-name">${e.name}</div><div class="shop-sub">Rarete ${e.rarities[0]}–${e.rarities[1]}</div></div>
-        <button class="btn small primary" data-buy-egg="${e.id}">✨ ${e.price}</button>
-      </div>`).join('');
-  } catch (err) { $('#shop-eggs').innerHTML = `<p class="hint">${err.message}</p>`; }
+// ---------- Boutique (modale centree a onglets) ----------
+let shopData = null;
+function openShop() {
+  $('#shop-modal').classList.remove('hidden');
+  $('#shop-overlay').classList.remove('hidden');
+  switchShopTab('egg');
 }
-$('#shop-eggs').addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-buy-egg]');
-  if (!b) return;
-  try {
-    const r = await api('/shop/buy-egg', { method: 'POST', body: { tier: b.dataset.buyEgg } });
-    flash(`Oeuf achete ! 🥚 (${r.egg.speciesName})`);
-    await refresh();
-  } catch (err) { alert(err.message); }
+function closeShop() {
+  $('#shop-modal').classList.add('hidden');
+  $('#shop-overlay').classList.add('hidden');
+}
+async function switchShopTab(tab) {
+  $$('.shop-tab').forEach(t => t.classList.toggle('active', t.dataset.shoptab === tab));
+  $$('.shop-pane').forEach(p => p.classList.add('hidden'));
+  $('#shop-' + tab).classList.remove('hidden');
+  if (!shopData) { try { shopData = await api('/shop'); } catch { shopData = { elements: [], eggPrice: 0, candy: {} }; } }
+  if (tab === 'egg') renderShopEgg();
+  else if (tab === 'item') renderShopItem();
+  else if (tab === 'bonus') renderShopBonus();
+}
+function renderShopEgg() {
+  $('#shop-egg').innerHTML = `<p class="hint">Un œuf d'un élément → un bébé <b>aléatoire</b> de ce type (pure chance !). Il te faut un incubateur libre (onglet Œufs).</p>
+    <div class="shop-grid">` + shopData.elements.map(t => `
+    <button class="shop-egg-tile" data-buy-egg-type="${t}">
+      <span class="shop-egg-emoji">${TYPE_EMOJI[t] || '🥚'}</span>
+      <span class="shop-egg-name">${t}</span>
+      <span class="shop-egg-price">✨ ${shopData.eggPrice}</span>
+    </button>`).join('') + `</div>`;
+}
+function renderShopItem() {
+  const c = shopData.candy || {};
+  $('#shop-item').innerHTML = `
+    <div class="shop-item">
+      <div class="shop-egg">🍬</div>
+      <div class="shop-info"><div class="shop-name">Super Bonbon</div><div class="shop-sub">+${c.xp} XP à un Glump</div></div>
+      <button class="btn small primary" id="buy-candy">✨ ${c.cost}</button>
+    </div>`;
+}
+function renderShopBonus() {
+  $('#shop-bonus').innerHTML = `
+    <div class="shop-item">
+      <div class="shop-egg">⚡</div>
+      <div class="shop-info"><div class="shop-name">Accélérer un œuf</div><div class="shop-sub">Termine une éclosion / couvaison (coût selon le temps restant)</div></div>
+      <button class="btn small primary" id="accel-egg">Choisir</button>
+    </div>`;
+}
+$('#shop-modal').addEventListener('click', async (e) => {
+  const eggTile = e.target.closest('[data-buy-egg-type]');
+  if (eggTile) {
+    try { await api('/shop/buy-egg', { method: 'POST', body: { type: eggTile.dataset.buyEggType } }); flash(`Œuf ${eggTile.dataset.buyEggType} acheté ! 🥚`); await refresh(); }
+    catch (err) { alert(err.message); }
+    return;
+  }
+  if (e.target.closest('#buy-candy')) {
+    const glumps = STATE.creatures.filter(c => c.stage !== 'egg');
+    openPicker('Donner un Super Bonbon à…', glumps, pickCardHtml, async (id) => {
+      try { const r = await api('/creature/candy', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`+${r.xp} XP 🍬`); }
+      catch (err) { alert(err.message); }
+    });
+    return;
+  }
+  if (e.target.closest('#accel-egg')) {
+    const inProgress = STATE.creatures.filter(c => c.stage === 'egg');
+    openPicker('Accélérer quel œuf ?', inProgress, (c) => `<div class="card" data-pick="${c.id}">
+        <div class="avatar"><div style="font-size:42px;">🥚</div></div>
+        <div class="name">${c.fromBreeding ? '???' : c.speciesName}</div>
+        <div class="sub">${Math.ceil((c.remainingMs || 0) / 1000)}s restantes</div>
+      </div>`, async (id) => {
+      try { const r = await api('/egg/accelerate', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`Œuf accéléré (-${r.cost} ✨)`); }
+      catch (err) { alert(err.message); }
+    });
+    return;
+  }
 });
+$('#shop-close').addEventListener('click', closeShop);
+$('#shop-overlay').addEventListener('click', closeShop);
+$$('.shop-tab').forEach(t => t.addEventListener('click', () => switchShopTab(t.dataset.shoptab)));
+
 function closeDrawer() {
   $('#drawer').classList.add('hidden');
   $('#drawer-overlay').classList.add('hidden');
 }
-$$('.railbtn').forEach(b => b.addEventListener('click', () => openDrawer(b.dataset.drawer)));
+$$('.railbtn').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.drawer === 'shop') openShop();
+  else openDrawer(b.dataset.drawer);
+}));
 $('#drawer-close').addEventListener('click', closeDrawer);
 $('#drawer-overlay').addEventListener('click', closeDrawer);
 
