@@ -120,7 +120,7 @@ function renderAll() {
 const RARITY_DOTS = (r) => '★'.repeat(r) + '☆'.repeat(5 - r);
 
 function avatar(c) {
-  return `<div class="avatar" style="background:${c.color}22">${creatureSVG(c, 56)}</div>`;
+  return `<div class="avatar">${creatureSVG(c, 74)}</div>`;
 }
 
 function eggs() { return STATE.creatures.filter(c => c.stage === 'egg'); }
@@ -181,7 +181,7 @@ function cardHtml(c) {
   const badges = [];
   if (c.variant) badges.push('<span class="badge shiny">SHINY</span>');
   if (baby) badges.push('<span class="badge baby">Bebe</span>');
-  return `<div class="card" data-id="${c.id}">
+  return `<div class="card" data-id="${c.id}" data-rarity="${c.rarity}">
     ${badges.join('')}
     ${avatar(c)}
     <div class="rarity-dots">${RARITY_DOTS(c.rarity)}</div>
@@ -309,7 +309,7 @@ function cardHtmlReadonly(c) {
   const badges = [];
   if (c.variant) badges.push('<span class="badge shiny">SHINY</span>');
   if (c.stage === 'baby') badges.push('<span class="badge baby">Bebe</span>');
-  return `<div class="card">
+  return `<div class="card" data-rarity="${c.rarity}">
     ${badges.join('')}
     ${avatar(c)}
     <div class="rarity-dots">${RARITY_DOTS(c.rarity)}</div>
@@ -358,6 +358,10 @@ function buildMeadow() {
   const { w, h } = meadowSize();
   // decor
   let decor = '<div class="sun"></div>';
+  const clouds = [[w*0.12, 40, 90, 22], [w*0.5, 30, 120, 28], [w*0.78, 70, 80, 20]];
+  for (const [x, y, cw, ch] of clouds) {
+    decor += `<div class="cloud" style="left:${x}px;top:${y}px;width:${cw}px;height:${ch}px;"></div>`;
+  }
   const bushes = [[ -10, 70, 90], [w*0.35, 60, 70], [w*0.7, 80, 110], [w*0.9, 50, 60]];
   for (const [x, bw, bh] of bushes) {
     decor += `<div class="bush" style="left:${x}px;width:${bw}px;height:${bh}px;"></div>`;
