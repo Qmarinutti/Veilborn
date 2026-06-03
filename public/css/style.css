@@ -78,6 +78,34 @@ input::placeholder { color: #6f7fa0; }
 input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,140,255,.18); }
 .error { color: var(--danger); min-height: 18px; margin: 12px 0 0; font-size: 14px; }
 
+/* ---------- Choix du starter ---------- */
+#starter-screen { display: flex; align-items: center; justify-content: center; padding: 20px; }
+.starter-box { text-align: center; max-width: 740px; }
+.starter-box h1 {
+  margin: 0 0 4px; font-size: 30px; font-family: 'Fredoka', sans-serif;
+  background: linear-gradient(90deg, #fff, #c9d6ff 60%, var(--accent));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.starter-choices { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin: 26px 0 18px; }
+.starter-card {
+  --rc: var(--r1);
+  width: 186px; padding: 18px; cursor: pointer; position: relative; overflow: hidden;
+  background: var(--panel); border: 2px solid var(--line-strong); border-radius: 18px;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.starter-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--rc); }
+.starter-card[data-rarity="1"] { --rc: var(--r1); }
+.starter-card[data-rarity="2"] { --rc: var(--r2); }
+.starter-card[data-rarity="3"] { --rc: var(--r3); }
+.starter-card:hover { transform: translateY(-6px); border-color: var(--rc); box-shadow: 0 18px 44px rgba(0,0,0,.5); }
+.starter-card .avatar {
+  width: 124px; height: 124px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--rc) 30%, transparent), transparent 70%);
+}
+.starter-card .avatar .art { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.starter-card .name { font-weight: 700; font-size: 19px; font-family: 'Fredoka', sans-serif; }
+.starter-card .sub { color: var(--muted); font-size: 13px; }
+
 /* ---------- Buttons ---------- */
 .btn {
   padding: 11px 16px; border: 1px solid var(--line-strong); border-radius: 11px;

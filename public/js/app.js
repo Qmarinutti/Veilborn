@@ -41,19 +41,54 @@ $$('.tab').forEach(t => t.addEventListener('click', () => {
   $('#auth-error').textContent = '';
 }));
 
+let pendingSignup = null;
+
 $('#auth-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('#auth-error').textContent = '';
   const username = $('#username').value.trim();
   const password = $('#password').value;
-  try {
-    await api('/' + (authMode === 'login' ? 'login' : 'register'), {
-      method: 'POST', body: { username, password },
-    });
-    await enterGame();
-  } catch (err) {
-    $('#auth-error').textContent = err.message;
+  if (authMode === 'login') {
+    try { await api('/login', { method: 'POST', body: { username, password } }); await enterGame(); }
+    catch (err) { $('#auth-error').textContent = err.message; }
+  } else {
+    if (username.length < 3 || password.length < 4) {
+      $('#auth-error').textContent = 'Pseudo (>=3) et mot de passe (>=4) requis.'; return;
+    }
+    pendingSignup = { username, password };
+    await showStarterChoice();
   }
+});
+
+// Ecran de choix du starter (a l'inscription)
+async function showStarterChoice() {
+  try {
+    const { starters } = await api('/starters');
+    $('#starter-choices').innerHTML = starters.map(s => `
+      <div class="starter-card" data-starter="${s.id}" data-rarity="${s.rarity}">
+        <div class="avatar">${creatureVisual({ ...s, species: s.id }, 110)}</div>
+        <div class="name">${s.name}</div>
+        <div class="sub">${s.type}</div>
+      </div>`).join('');
+    $('#starter-error').textContent = '';
+    $('#auth-screen').classList.add('hidden');
+    $('#starter-screen').classList.remove('hidden');
+  } catch (err) { $('#auth-error').textContent = err.message; }
+}
+
+$('#starter-choices').addEventListener('click', async (e) => {
+  const card = e.target.closest('[data-starter]');
+  if (!card || !pendingSignup) return;
+  try {
+    await api('/register', { method: 'POST', body: { ...pendingSignup, starter: card.dataset.starter } });
+    $('#starter-screen').classList.add('hidden');
+    pendingSignup = null;
+    await enterGame();
+  } catch (err) { $('#starter-error').textContent = err.message; }
+});
+$('#starter-back').addEventListener('click', () => {
+  $('#starter-screen').classList.add('hidden');
+  $('#auth-screen').classList.remove('hidden');
 });
 
 $('#logout').addEventListener('click', async () => {

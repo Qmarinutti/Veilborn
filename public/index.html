@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=10" />
+  <link rel="stylesheet" href="css/style.css?v=11" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -25,6 +25,17 @@
         <button type="submit" id="auth-submit" class="btn primary">Se connecter</button>
       </form>
       <p id="auth-error" class="error"></p>
+    </div>
+  </div>
+
+  <!-- Ecran de choix du starter (a l'inscription) -->
+  <div id="starter-screen" class="screen hidden">
+    <div class="starter-box">
+      <h1>Choisis ton premier Glump</h1>
+      <p class="tagline">Ton compagnon de depart — choisis bien !</p>
+      <div id="starter-choices" class="starter-choices"></div>
+      <button id="starter-back" class="btn small">← Retour</button>
+      <p id="starter-error" class="error"></p>
     </div>
   </div>
 
@@ -165,6 +176,6 @@
     </aside>
   </div>
 
-  <script src="js/app.js?v=12" type="module"></script>
+  <script src="js/app.js?v=13" type="module"></script>
 </body>
 </html>

@@ -42,9 +42,12 @@ function setCookie(res, token) {
 
 // ---------- Auth ----------
 app.post('/api/register', h(async (req, res) => {
-  const { username, password } = req.body || {};
+  const { username, password, starter } = req.body || {};
   if (!username || !password || username.length < 3 || password.length < 4) {
     return res.status(400).json({ error: 'Pseudo (>=3) et mot de passe (>=4) requis.' });
+  }
+  if (!STARTER_IDS.includes(starter)) {
+    return res.status(400).json({ error: 'Choisis ton Glump de depart.' });
   }
   const exists = await get('SELECT id FROM users WHERE username = ?', [username]);
   if (exists) return res.status(409).json({ error: 'Ce pseudo est deja pris.' });
@@ -55,11 +58,8 @@ app.post('/api/register', h(async (req, res) => {
     'INSERT INTO users (username, pass_hash, pass_salt, essence, incubator_slots, last_tick, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [username, hash, salt, BALANCE.startEssence, BALANCE.startSlots, now, now]);
 
-  // Cadeau de depart : les starters adultes, pour reproduire tout de suite.
-  for (const sp of STARTER_IDS) {
-    await insertCreature(userId, wildCreature(sp, { adult: true }));
-  }
-  // Les starters commencent en prairie pour farmer de l'essence des le debut.
+  // Le joueur commence avec le starter choisi (adulte), place en prairie pour farmer.
+  await insertCreature(userId, wildCreature(starter, { adult: true }));
   await run('UPDATE creatures SET in_prairie = 1 WHERE owner_id = ?', [userId]);
 
   const token = await createSession(userId);
@@ -242,6 +242,15 @@ app.get('/api/farm/:userId', h(async (req, res) => {
     "SELECT * FROM creatures WHERE owner_id = ? AND stage != 'egg' ORDER BY created_at ASC", [u.id]);
   res.json({ username: u.username, creatures: rows.map(c => publicCreature(c)) });
 }));
+
+// ---------- Starters proposes a l'inscription ----------
+app.get('/api/starters', (req, res) => {
+  const starters = STARTER_IDS.map(id => {
+    const sp = SPECIES[id];
+    return { id, species: id, name: sp.name, type: sp.type, color: sp.color, shape: sp.shape, rarity: sp.rarity, hasArt: hasArt(id) };
+  });
+  res.json({ starters });
+});
 
 // ---------- Donnees statiques de jeu ----------
 app.get('/api/species', (req, res) => {
