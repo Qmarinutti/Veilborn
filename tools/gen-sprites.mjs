@@ -41,7 +41,7 @@ const EN = {
   Poison:['poison','purple and toxic green, acid'], Vent:['wind','white and cyan, wings and air swirls'],
   Insecte:['bug','green and brown, carapace and antennae'], Dragon:['dragon','deep purple, scales horns and wings'],
 };
-const STYLE = 'original creature design, cute but cool monster, game mascot, cel-shaded, bold clean outlines, vibrant saturated colors, full body, centered, simple flat pastel background, high quality, no text, no watermark';
+const STYLE = 'a single solo creature, one character only, original creature design, cute but cool monster, game mascot, cel-shaded, bold clean outlines, vibrant saturated colors, full body, centered portrait, simple flat pastel background, high quality, no text, no watermark';
 
 function promptFor(sp) {
   const [enType, enLook] = EN[sp.type] || ['', ''];
@@ -56,7 +56,7 @@ async function generate(id, sp) {
     headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prompt: promptFor(sp),
-      negative_prompt: 'text, words, letters, watermark, blurry, low quality, deformed, ugly',
+      negative_prompt: 'multiple creatures, two characters, group, crowd, duplicate, text, words, letters, watermark, blurry, low quality, deformed, ugly',
       num_steps: 8, width: 512, height: 512,
     }),
   });
