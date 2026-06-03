@@ -11,6 +11,7 @@ Depose ici une image PNG par Glump, nommee EXACTEMENT avec son identifiant :
 - Fond transparent = ideal (surtout pour la prairie). Sinon un fond simple
   marche aussi : dans les cartes/Dex l'image est recadree en rond.
 
-Une fois les images deposees, dis-le a l'assistant : il active leur affichage
-(il ajoute les identifiants dans la liste ART de public/js/sprites.js).
-Tant qu'une image manque, le Glump garde son sprite dessine (SVG) par defaut.
+AUTOMATIQUE : il suffit de deposer l'image ici. Le serveur scanne ce dossier et
+l'affiche tout seul (aucune edition de code, aucune activation). Tant qu'une image
+manque, le Glump garde son sprite dessine (SVG) par defaut.
+(Le scan se rafraichit en quelques secondes ; recharge la page pour la voir.)

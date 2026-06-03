@@ -1,0 +1,13 @@
+{
+  "flammkit":    { "name": "Flammkit",    "type": "Feu",     "rarity": 1, "color": "#ff7a45", "shape": "beast",   "line": "feu",    "stage": 1, "evolvesTo": "pyrokit" },
+  "pyrokit":     { "name": "Pyrokit",     "type": "Feu",     "rarity": 2, "color": "#ef4d2e", "shape": "beast",   "line": "feu",    "stage": 2, "evolvesTo": "infernaught" },
+  "infernaught": { "name": "Infernaught", "type": "Feu",     "rarity": 4, "color": "#c41f2a", "shape": "dino",    "line": "feu",    "stage": 3, "evolvesTo": null },
+
+  "aquolet":     { "name": "Aquolet",     "type": "Eau",     "rarity": 1, "color": "#46b0ef", "shape": "blob",    "line": "eau",    "stage": 1, "evolvesTo": "tidolet" },
+  "tidolet":     { "name": "Tidolet",     "type": "Eau",     "rarity": 2, "color": "#2b91c9", "shape": "serpent", "line": "eau",    "stage": 2, "evolvesTo": "leviaqua" },
+  "leviaqua":    { "name": "Leviaqua",    "type": "Eau",     "rarity": 4, "color": "#2a5bd8", "shape": "serpent", "line": "eau",    "stage": 3, "evolvesTo": null },
+
+  "sprouty":     { "name": "Sprouty",     "type": "Plante",  "rarity": 1, "color": "#5fc463", "shape": "sprout",  "line": "plante", "stage": 1, "evolvesTo": "floracub" },
+  "floracub":    { "name": "Floracub",    "type": "Plante",  "rarity": 2, "color": "#3fa84a", "shape": "beast",   "line": "plante", "stage": 2, "evolvesTo": "verdantaur" },
+  "verdantaur":  { "name": "Verdantaur",  "type": "Plante",  "rarity": 4, "color": "#2f7d33", "shape": "dino",    "line": "plante", "stage": 3, "evolvesTo": null }
+}

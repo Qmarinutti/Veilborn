@@ -1,5 +1,5 @@
 // ---------- Client Veilborn ----------
-import { creatureSVG, creatureVisual } from './sprites.js?v=7';
+import { creatureSVG, creatureVisual } from './sprites.js?v=8';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -95,7 +95,7 @@ async function loadDex() {
     if (!arr.length) continue;
     html += `<div class="dexline"><div class="dexline-title">${LINE_NAMES[ln] || ln}</div><div class="dexchain">`;
     arr.forEach((sp, i) => {
-      const cr = { species: id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, variant: 0 };
+      const cr = { species: sp.id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: 0 };
       html += `<div class="dexmon" data-rarity="${sp.rarity}">
         <div class="avatar">${creatureVisual(cr, 96)}</div>
         <div class="rarity-dots">${RARITY_DOTS(sp.rarity)}</div>

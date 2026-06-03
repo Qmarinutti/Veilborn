@@ -6,6 +6,7 @@ import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
   evolutionOf, evolveCost,
 } from './game.js';
+import { hasArt } from './art.js';
 
 const HOUR_MS = 3600 * 1000;
 
@@ -96,6 +97,7 @@ export function publicCreature(c, now = Date.now()) {
     type: sp?.type ?? '?',
     color: sp?.color ?? '#888',
     shape: sp?.shape ?? 'blob',
+    hasArt: hasArt(c.species),
     rarity: rarityOf(c.species),
     stage: c.stage,
     variant: c.variant,

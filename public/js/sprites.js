@@ -15,9 +15,12 @@ export const ART = new Set([
 ]);
 
 // Renvoie l'image si elle existe pour cette espece, sinon le sprite SVG dessine.
+// hasArt est fourni par le serveur (scan auto de public/sprites/) ; ART est un
+// surcharge manuelle optionnelle cote client.
 export function creatureVisual(creature, size = 80) {
-  if (creature && creature.species && ART.has(creature.species)) {
-    return `<img class="sprite art" src="sprites/${creature.species}.png" width="${size}" height="${size}" alt="${creature.speciesName || ''}" loading="lazy">`;
+  const id = creature && creature.species;
+  if (id && (creature.hasArt || ART.has(id))) {
+    return `<img class="sprite art" src="sprites/${id}.png" width="${size}" height="${size}" alt="${creature.speciesName || ''}" loading="lazy">`;
   }
   return creatureSVG(creature, size);
 }

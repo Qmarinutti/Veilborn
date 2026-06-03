@@ -13,6 +13,7 @@ import {
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveCost,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser } from './state.js';
+import { hasArt } from './art.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -205,7 +206,11 @@ app.get('/api/farm/:userId', h(async (req, res) => {
 }));
 
 // ---------- Donnees statiques de jeu ----------
-app.get('/api/species', (req, res) => res.json({ species: SPECIES }));
+app.get('/api/species', (req, res) => {
+  const out = {};
+  for (const [id, sp] of Object.entries(SPECIES)) out[id] = { ...sp, hasArt: hasArt(id) };
+  res.json({ species: out });
+});
 
 // ---------- Fichiers statiques ----------
 app.use(express.static(join(__dirname, '..', 'public')));

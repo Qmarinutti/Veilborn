@@ -2,6 +2,9 @@
 //  Donnees & logique de jeu (especes, genetique, idle, valeur)
 //  Tout est "original" pour rester non-commercial (pas de marque).
 // ============================================================
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
 // --- Reglages d'equilibrage (modifiables facilement) ---
 // Temps volontairement courts pour un prototype testable.
@@ -27,24 +30,31 @@ export const BALANCE = {
 // --- Especes (creatures originales) ---
 // rarity 1..5 : 1 commun -> 5 legendaire
 // base : stats de base de l'espece. types : pour les combats plus tard.
-// shape = silhouette dessinee cote client (voir public/js/sprites.js)
-// line/stage/evolvesTo = lignee d'evolution (pour le Glumpdex).
-export const SPECIES = {
-  // --- Lignee FEU ---
-  flammkit:    { name: 'Flammkit',    type: 'Feu',    rarity: 1, base: { force: 10, vita: 8,  speed: 9  }, color: '#ff7a45', shape: 'beast', line: 'feu',   stage: 1, evolvesTo: 'pyrokit' },
-  pyrokit:     { name: 'Pyrokit',     type: 'Feu',    rarity: 2, base: { force: 15, vita: 12, speed: 14 }, color: '#ef4d2e', shape: 'beast', line: 'feu',   stage: 2, evolvesTo: 'infernaught' },
-  infernaught: { name: 'Infernaught', type: 'Feu',    rarity: 4, base: { force: 23, vita: 18, speed: 17 }, color: '#c41f2a', shape: 'dino',  line: 'feu',   stage: 3, evolvesTo: null },
+// Les especes sont definies dans server/species.json (facile a etendre a 200-300).
+// Une entree peut ne donner que name/type/rarity : le reste a des valeurs par defaut.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const RAW_SPECIES = JSON.parse(readFileSync(join(__dirname, 'species.json'), 'utf8'));
 
-  // --- Lignee EAU ---
-  aquolet:     { name: 'Aquolet',     type: 'Eau',    rarity: 1, base: { force: 8,  vita: 11, speed: 8  }, color: '#46b0ef', shape: 'blob',    line: 'eau',   stage: 1, evolvesTo: 'tidolet' },
-  tidolet:     { name: 'Tidolet',     type: 'Eau',    rarity: 2, base: { force: 12, vita: 16, speed: 12 }, color: '#2b91c9', shape: 'serpent', line: 'eau',   stage: 2, evolvesTo: 'leviaqua' },
-  leviaqua:    { name: 'Leviaqua',    type: 'Eau',    rarity: 4, base: { force: 19, vita: 23, speed: 16 }, color: '#2a5bd8', shape: 'serpent', line: 'eau',   stage: 3, evolvesTo: null },
+// Stats de base par defaut, deduites de la rarete (si "base" non fourni).
+function defaultBase(rarity) {
+  return { force: 6 + rarity * 3, vita: 6 + rarity * 3, speed: 6 + rarity * 2 };
+}
 
-  // --- Lignee PLANTE ---
-  sprouty:     { name: 'Sprouty',     type: 'Plante', rarity: 1, base: { force: 7,  vita: 12, speed: 7  }, color: '#5fc463', shape: 'sprout', line: 'plante', stage: 1, evolvesTo: 'floracub' },
-  floracub:    { name: 'Floracub',    type: 'Plante', rarity: 2, base: { force: 12, vita: 17, speed: 11 }, color: '#3fa84a', shape: 'beast',  line: 'plante', stage: 2, evolvesTo: 'verdantaur' },
-  verdantaur:  { name: 'Verdantaur',  type: 'Plante', rarity: 4, base: { force: 20, vita: 24, speed: 14 }, color: '#2f7d33', shape: 'dino',   line: 'plante', stage: 3, evolvesTo: null },
-};
+export const SPECIES = {};
+for (const [id, sp] of Object.entries(RAW_SPECIES)) {
+  const rarity = sp.rarity ?? 1;
+  SPECIES[id] = {
+    name: sp.name ?? id,
+    type: sp.type ?? '?',
+    rarity,
+    base: sp.base ?? defaultBase(rarity),
+    color: sp.color ?? '#8aa0c0',
+    shape: sp.shape ?? 'blob',
+    line: sp.line ?? null,
+    stage: sp.stage ?? 1,
+    evolvesTo: sp.evolvesTo ?? null,
+  };
+}
 
 export const SPECIES_IDS = Object.keys(SPECIES);
 
