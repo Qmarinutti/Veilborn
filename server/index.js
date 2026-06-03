@@ -28,10 +28,10 @@ async function insertCreature(ownerId, c, extra = {}) {
   const now = Date.now();
   return insert(`
     INSERT INTO creatures
-      (owner_id, species, stage, gene_force, gene_vita, gene_speed, variant, nickname, hatch_at, mature_at, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (owner_id, species, stage, gene_force, gene_vita, gene_speed, variant, nature, nickname, hatch_at, mature_at, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [ownerId, c.species, c.stage ?? 'adult',
-     c.gene_force, c.gene_vita, c.gene_speed, c.variant ?? 0,
+     c.gene_force, c.gene_vita, c.gene_speed, c.variant ?? 0, c.nature ?? 'Equilibre',
      extra.nickname ?? null, extra.hatch_at ?? null, extra.mature_at ?? null, now]);
 }
 
@@ -207,6 +207,22 @@ app.post('/api/prairie/buy', requireAuth, h(async (req, res) => {
   }
   await run('UPDATE users SET essence = essence - ?, prairie_slots = prairie_slots + 1 WHERE id = ?', [cost, user.id]);
   res.json({ ok: true, cost });
+}));
+
+// ---------- Super Bonbon : donne de l'XP a un Glump (paye en essence) ----------
+app.post('/api/creature/candy', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  if (c.stage === 'egg') return res.status(400).json({ error: 'Un oeuf ne peut pas gagner d\'XP.' });
+  const user = await reloadUser(req.user.id);
+  if (user.essence < BALANCE.candyCost) {
+    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${BALANCE.candyCost}).` });
+  }
+  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [BALANCE.candyCost, req.user.id]);
+  await run('UPDATE creatures SET xp = xp + ? WHERE id = ?', [BALANCE.candyXp, id]);
+  const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
+  res.json({ ok: true, creature: publicCreature(row), cost: BALANCE.candyCost, xp: BALANCE.candyXp });
 }));
 
 // ---------- Faire evoluer ----------

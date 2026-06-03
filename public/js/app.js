@@ -261,17 +261,20 @@ function cardHtml(c) {
   const evo = (c.stage === 'adult' && c.evolvesTo)
     ? `<button class="btn small evo" data-evolve="${c.id}">⬆ ${c.evolvesToName} <span class="evo-cost">✨${c.evolveCost}</span></button>`
     : '';
+  const xpPct = Math.min(100, Math.round(100 * (c.xpInto || 0) / (c.xpNext || 1)));
   return `<div class="card" data-id="${c.id}" data-rarity="${c.rarity}">
     ${badges.join('')}
+    <span class="badge lvl">Niv ${c.level || 1}</span>
     ${avatar(c)}
     <div class="rarity-dots">${RARITY_DOTS(c.rarity)}</div>
     <div class="name">${c.nickname || c.speciesName}</div>
-    <div class="sub">${c.type} · valeur ${c.value}</div>
+    <div class="sub">${c.type} · val. ${c.value}</div>
     <div class="stats">
       <span><b>${c.stats.force}</b>FOR</span>
       <span><b>${c.stats.vita}</b>VIT</span>
       <span><b>${c.stats.speed}</b>VIT.</span>
     </div>
+    <div class="xpbar" title="${c.xpInto || 0}/${c.xpNext || 0} XP"><i style="width:${xpPct}%"></i></div>
     ${evo}
     <div class="card-actions">
       <button class="btn small" data-rename="${c.id}">Renommer</button>
@@ -334,8 +337,68 @@ $('#buy-slot').addEventListener('click', async () => {
 });
 
 // Delegation pour relacher / renommer
+// ---------- Fiche detaillee d'un Glump ----------
+const STAT_LABEL = { force: 'Force', vita: 'Vitalite', speed: 'Vitesse' };
+function openDetail(id) {
+  const c = STATE.creatures.find(x => x.id === id);
+  if (!c) return;
+  const stageTxt = c.stage === 'egg' ? 'Oeuf' : c.stage === 'baby' ? 'Bebe' : 'Adulte';
+  const natTxt = c.natureUp
+    ? `<b>${c.nature}</b> (+10% ${STAT_LABEL[c.natureUp]}, −10% ${STAT_LABEL[c.natureDown]})`
+    : `<b>${c.nature}</b> (neutre)`;
+  const ivRow = (key) => {
+    const g = c.genes[key], pct = Math.round(100 * g / 31);
+    const cls = c.natureUp === key ? 'up' : c.natureDown === key ? 'down' : '';
+    const sign = c.natureUp === key ? ' ▲' : c.natureDown === key ? ' ▼' : '';
+    return `<div class="iv-row">
+      <span class="iv-label ${cls}">${STAT_LABEL[key]}${sign}</span>
+      <div class="iv-bar"><i style="width:${pct}%"></i></div>
+      <span class="iv-val">${g}/31</span><span class="iv-stat">→ <b>${c.stats[key]}</b></span></div>`;
+  };
+  const xpPct = Math.round(100 * (c.xpInto || 0) / (c.xpNext || 1));
+  $('#detail-name').textContent = (c.variant ? '✨ ' : '') + (c.nickname || c.speciesName);
+  $('#detail-body').innerHTML = `
+    <div class="detail-top" data-rarity="${c.rarity}">
+      <div class="detail-avatar">${creatureVisual(c, 132)}</div>
+      <div class="detail-species">${c.speciesName}</div>
+      <div class="detail-tags">${c.type} · ${RARITY_DOTS(c.rarity)} · ${stageTxt}</div>
+      ${c.variant ? '<div class="badge shiny" style="position:static;display:inline-block;margin-top:6px;">CHROMATIQUE ✨</div>' : ''}
+    </div>
+    <div class="detail-block"><div class="detail-lbl">Niveau ${c.level}</div>
+      <div class="xpbar"><i style="width:${xpPct}%"></i></div>
+      <div class="detail-sub">${c.xpInto}/${c.xpNext} XP — ${c.inPrairie ? "gagne de l'XP en prairie 🌳" : 'place-le en prairie pour progresser'}</div>
+      <button class="btn small primary candy" data-candy="${c.id}" style="margin-top:10px;width:100%;">🍬 Super Bonbon ✨60 (+120 XP)</button>
+    </div>
+    <div class="detail-block"><div class="detail-lbl">Nature</div><div>${natTxt}</div></div>
+    <div class="detail-block"><div class="detail-lbl">Genes (IV) → Stats</div>
+      ${ivRow('force')}${ivRow('vita')}${ivRow('speed')}
+      <div class="detail-sub">Puissance totale <b>${c.power}</b> · Valeur ${c.value}</div>
+    </div>`;
+  $('#detail').classList.remove('hidden');
+  $('#detail-overlay').classList.remove('hidden');
+}
+function closeDetail() { $('#detail').classList.add('hidden'); $('#detail-overlay').classList.add('hidden'); }
+$('#detail-close').addEventListener('click', closeDetail);
+$('#detail-overlay').addEventListener('click', closeDetail);
+$('#detail-body').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-candy]');
+  if (!b) return;
+  const id = Number(b.dataset.candy);
+  try {
+    const r = await api('/creature/candy', { method: 'POST', body: { id } });
+    await refresh();
+    openDetail(id);
+    flash(`+${r.xp} XP 🍬 (niveau ${r.creature.level})`);
+  } catch (err) { alert(err.message); }
+});
+
 $('#collection').addEventListener('click', async (e) => {
   const btn = e.target.closest('button');
+  if (!btn) { // clic sur la carte (hors bouton) -> fiche detaillee
+    const card = e.target.closest('.card');
+    if (card) openDetail(Number(card.dataset.id));
+    return;
+  }
   const rel = btn?.dataset.release;
   const ren = btn?.dataset.rename;
   const evo = btn?.dataset.evolve;

@@ -54,8 +54,10 @@ export async function initDb() {
       gene_vita   INTEGER NOT NULL,
       gene_speed  INTEGER NOT NULL,
       variant     INTEGER NOT NULL DEFAULT 0,
+      nature      TEXT NOT NULL DEFAULT 'Equilibre',
       nickname    TEXT,
       in_prairie  INTEGER NOT NULL DEFAULT 0,
+      xp          INTEGER NOT NULL DEFAULT 0,
       hatch_at    INTEGER,
       mature_at   INTEGER,
       created_at  INTEGER NOT NULL
@@ -79,6 +81,8 @@ export async function initDb() {
   for (const sql of [
     'ALTER TABLE users ADD COLUMN prairie_slots INTEGER NOT NULL DEFAULT 4',
     'ALTER TABLE creatures ADD COLUMN in_prairie INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE creatures ADD COLUMN xp INTEGER NOT NULL DEFAULT 0',
+    "ALTER TABLE creatures ADD COLUMN nature TEXT NOT NULL DEFAULT 'Equilibre'",
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }

@@ -19,14 +19,19 @@ export const BALANCE = {
   maturationBaseSec: 180,
   // Revenu idle d'essence par seconde et par adulte EN PRAIRIE = rarete * ce facteur.
   essencePerRarityPerSec: 0.02,
+  // XP gagnee par seconde par un Glump en prairie (sert a monter de niveau).
+  xpPerSec: 1,
+  // Super Bonbon (boutique) : donne de l'XP a un Glump contre de l'essence.
+  candyCost: 60,
+  candyXp: 120,
   // Prairie : emplacements de farm (Glumps qui produisent de l'essence).
   prairieStartSlots: 4,
   prairieMaxSlots: 12,
   prairieSlotCostBase: 350, // cout du prochain emplacement
   // On ne crediter au max que X heures d'idle hors-ligne.
   offlineCapHours: 12,
-  shinyChance: 0.02, // 2% de base
-  shinyChanceWithShinyParent: 0.12,
+  shinyChance: 0.002, // 0.2% (~1/500) : chromatique tres tres rare
+  shinyChanceWithShinyParent: 0.02, // repro avec un parent shiny : 2%
   mutationRange: 4, // +/- sur les genes herites
   maxGene: 31,
 };
@@ -81,14 +86,39 @@ export function rarityOf(speciesId) {
 }
 
 // Stats effectives = base de l'espece + genes (+ bonus shiny).
+// Niveau a partir de l'XP totale (paliers : 0, 100, 300, 600, 1000... = 50*L*(L-1)).
+export function levelFromXp(xp) {
+  return Math.min(100, Math.floor((1 + Math.sqrt(1 + (4 * (xp || 0)) / 50)) / 2));
+}
+// XP totale requise pour atteindre le niveau L.
+export function xpForLevel(L) {
+  return 50 * L * (L - 1);
+}
+
+// --- Natures : +10% sur une stat, -10% sur une autre (comme Pokemon) ---
+export const NATURES = [
+  { name: 'Equilibre', up: null,    down: null },
+  { name: 'Costaud',   up: 'force', down: 'vita' },
+  { name: 'Brutal',    up: 'force', down: 'speed' },
+  { name: 'Robuste',   up: 'vita',  down: 'force' },
+  { name: 'Tenace',    up: 'vita',  down: 'speed' },
+  { name: 'Vif',       up: 'speed', down: 'force' },
+  { name: 'Agile',     up: 'speed', down: 'vita' },
+];
+export function randomNature() { return NATURES[Math.floor(Math.random() * NATURES.length)].name; }
+export function natureByName(name) { return NATURES.find(n => n.name === name) || NATURES[0]; }
+
 export function effectiveStats(creature) {
   const sp = SPECIES[creature.species];
   const base = sp ? sp.base : { force: 8, vita: 8, speed: 8 };
   const shiny = creature.variant === 1 ? 1.1 : 1;
+  const lvlMul = 1 + 0.03 * (levelFromXp(creature.xp || 0) - 1); // +3% par niveau
+  const nat = natureByName(creature.nature);
+  const natMul = (stat) => (nat.up === stat ? 1.1 : nat.down === stat ? 0.9 : 1);
   return {
-    force: Math.round((base.force + creature.gene_force) * shiny),
-    vita:  Math.round((base.vita  + creature.gene_vita)  * shiny),
-    speed: Math.round((base.speed + creature.gene_speed) * shiny),
+    force: Math.round((base.force + creature.gene_force) * shiny * lvlMul * natMul('force')),
+    vita:  Math.round((base.vita  + creature.gene_vita)  * shiny * lvlMul * natMul('vita')),
+    speed: Math.round((base.speed + creature.gene_speed) * shiny * lvlMul * natMul('speed')),
   };
 }
 
@@ -134,6 +164,7 @@ export function breed(parentA, parentB) {
     gene_vita:  inherit(parentA.gene_vita,  parentB.gene_vita),
     gene_speed: inherit(parentA.gene_speed, parentB.gene_speed),
     variant,
+    nature: randomNature(),
   };
 }
 
@@ -146,6 +177,7 @@ export function wildCreature(speciesId, { adult = false } = {}) {
     gene_vita: randomGene(),
     gene_speed: randomGene(),
     variant,
+    nature: randomNature(),
     stage: adult ? 'adult' : 'baby',
   };
 }

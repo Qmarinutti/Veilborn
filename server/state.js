@@ -4,7 +4,7 @@
 import { get, all, run } from './db.js';
 import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
-  evolutionOf, evolveCost,
+  evolutionOf, evolveCost, levelFromXp, xpForLevel, natureByName,
 } from './game.js';
 import { hasArt } from './art.js';
 
@@ -26,6 +26,14 @@ async function tickEssence(user) {
   for (const c of adults) ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec;
 
   const gained = ratePerSec * (elapsed / 1000);
+
+  // Les Glumps en prairie gagnent aussi de l'XP (montee de niveau).
+  const xpGain = Math.round(BALANCE.xpPerSec * (elapsed / 1000));
+  if (xpGain > 0) {
+    await run("UPDATE creatures SET xp = xp + ? WHERE owner_id = ? AND in_prairie = 1 AND stage = 'adult'",
+      [xpGain, user.id]);
+  }
+
   await run('UPDATE users SET essence = ?, last_tick = ? WHERE id = ?',
     [user.essence + gained, now, user.id]);
 }
@@ -116,6 +124,13 @@ export function publicCreature(c, now = Date.now()) {
     variant: c.variant,
     nickname: c.nickname,
     inPrairie: c.in_prairie === 1,
+    nature: c.nature || 'Equilibre',
+    natureUp: natureByName(c.nature).up,
+    natureDown: natureByName(c.nature).down,
+    level: levelFromXp(c.xp || 0),
+    xp: c.xp || 0,
+    xpInto: (c.xp || 0) - xpForLevel(levelFromXp(c.xp || 0)),
+    xpNext: Math.max(1, xpForLevel(levelFromXp(c.xp || 0) + 1) - xpForLevel(levelFromXp(c.xp || 0))),
     genes: { force: c.gene_force, vita: c.gene_vita, speed: c.gene_speed },
     stats: effectiveStats(c),
     power: power(c),
