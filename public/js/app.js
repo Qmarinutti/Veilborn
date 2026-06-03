@@ -583,9 +583,32 @@ function openDrawer(type) {
   $$('.drawer-section').forEach(s => s.classList.add('hidden'));
   const sec = $('#drawer-' + type);
   if (sec) sec.classList.remove('hidden');
+  if (type === 'shop') loadShop();
   $('#drawer').classList.remove('hidden');
   $('#drawer-overlay').classList.remove('hidden');
 }
+
+// Boutique d'oeufs
+async function loadShop() {
+  try {
+    const { eggs } = await api('/shop');
+    $('#shop-eggs').innerHTML = eggs.map(e => `
+      <div class="shop-item">
+        <div class="shop-egg">${e.emoji}</div>
+        <div class="shop-info"><div class="shop-name">${e.name}</div><div class="shop-sub">Rarete ${e.rarities[0]}–${e.rarities[1]}</div></div>
+        <button class="btn small primary" data-buy-egg="${e.id}">✨ ${e.price}</button>
+      </div>`).join('');
+  } catch (err) { $('#shop-eggs').innerHTML = `<p class="hint">${err.message}</p>`; }
+}
+$('#shop-eggs').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-buy-egg]');
+  if (!b) return;
+  try {
+    const r = await api('/shop/buy-egg', { method: 'POST', body: { tier: b.dataset.buyEgg } });
+    flash(`Oeuf achete ! 🥚 (${r.egg.speciesName})`);
+    await refresh();
+  } catch (err) { alert(err.message); }
+});
 function closeDrawer() {
   $('#drawer').classList.add('hidden');
   $('#drawer-overlay').classList.add('hidden');

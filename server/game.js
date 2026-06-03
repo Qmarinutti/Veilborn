@@ -161,6 +161,21 @@ export function nextSlotCost(currentSlots) {
   return Math.round(BALANCE.slotCostBase * Math.pow(currentSlots, 1.6));
 }
 
+// --- Boutique d'oeufs : achetables avec l'essence ---
+// rarities = [min,max] de l'espece tiree au hasard a l'achat.
+export const EGG_SHOP = [
+  { id: 'common',    name: 'Oeuf commun',     emoji: '🥚', price: 80,   rarities: [1, 2] },
+  { id: 'rare',      name: 'Oeuf rare',       emoji: '🥚', price: 320,  rarities: [2, 3] },
+  { id: 'epic',      name: 'Oeuf epique',     emoji: '🥚', price: 950,  rarities: [3, 4] },
+  { id: 'legendary', name: 'Oeuf legendaire', emoji: '🥚', price: 2800, rarities: [4, 5] },
+];
+
+// Tire une espece au hasard dans une plage de rarete.
+export function randomSpeciesInRarity(min, max) {
+  const pool = SPECIES_IDS.filter(id => { const r = rarityOf(id); return r >= min && r <= max; });
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : SPECIES_IDS[0];
+}
+
 // Cout du prochain emplacement de prairie (slots au-dela des 4 de depart).
 export function prairieSlotCost(currentSlots) {
   const extra = Math.max(1, currentSlots - BALANCE.prairieStartSlots + 1);

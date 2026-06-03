@@ -311,6 +311,13 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .tuto-actions { display: flex; gap: 8px; justify-content: center; align-items: center; }
 .tuto-actions #tuto-skip { margin-right: auto; }
 
+/* Boutique */
+.shop-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--panel2); border: 1px solid var(--line-strong); border-radius: 12px; margin-bottom: 10px; }
+.shop-egg { font-size: 30px; animation: wobble 2.5s ease-in-out infinite; }
+.shop-info { flex: 1; }
+.shop-name { font-weight: 700; }
+.shop-sub { color: var(--muted); font-size: 12px; }
+
 /* ---------- Prairie ---------- */
 .meadow {
   position: relative; width: 100%; height: 480px; border-radius: 18px; overflow: hidden;

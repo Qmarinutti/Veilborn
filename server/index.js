@@ -11,7 +11,7 @@ import {
 import {
   BALANCE, STARTER_IDS, SPECIES, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveCost,
-  prairieSlotCost,
+  prairieSlotCost, EGG_SHOP, randomSpeciesInRarity,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser } from './state.js';
 import { hasArt } from './art.js';
@@ -146,6 +146,32 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   await run('DELETE FROM creatures WHERE id = ?', [id]);
   await run('UPDATE users SET essence = essence + ? WHERE id = ?', [refund, req.user.id]);
   res.json({ ok: true, refund });
+}));
+
+// ---------- Boutique d'oeufs ----------
+app.get('/api/shop', (req, res) => res.json({ eggs: EGG_SHOP }));
+
+app.post('/api/shop/buy-egg', requireAuth, h(async (req, res) => {
+  const { tier } = req.body || {};
+  const item = EGG_SHOP.find(e => e.id === tier);
+  if (!item) return res.status(400).json({ error: 'Oeuf inconnu.' });
+
+  const eggCount = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg'", [req.user.id])).n;
+  if (eggCount >= req.user.incubator_slots) {
+    return res.status(400).json({ error: 'Tous tes incubateurs sont occupes.' });
+  }
+  const user = await reloadUser(req.user.id);
+  if (user.essence < item.price) {
+    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${item.price}).` });
+  }
+
+  const species = randomSpeciesInRarity(item.rarities[0], item.rarities[1]);
+  const child = wildCreature(species, { adult: false });
+  const hatchAt = Date.now() + incubationSeconds(species) * 1000;
+  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [item.price, req.user.id]);
+  const eggId = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt });
+  const row = await get('SELECT * FROM creatures WHERE id = ?', [eggId]);
+  res.json({ ok: true, egg: publicCreature(row), cost: item.price });
 }));
 
 // ---------- Prairie : assigner / retirer / acheter un emplacement ----------
