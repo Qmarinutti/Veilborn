@@ -294,13 +294,15 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Tutoriel */
+/* Tutoriel (carte en bas pour voir le menu changer au-dessus) */
+#tuto-overlay { background: rgba(4,7,15,.25); backdrop-filter: none; }
 .tuto {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 70;
-  width: min(440px, 92vw); background: var(--panel-solid); border: 1px solid var(--line-strong);
-  border-radius: 20px; padding: 26px; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  position: fixed; left: 50%; bottom: 92px; top: auto; transform: translateX(-50%); z-index: 70;
+  width: min(460px, 94vw); background: var(--panel-solid); border: 2px solid var(--primary);
+  border-radius: 20px; padding: 22px 24px; text-align: center;
+  box-shadow: 0 24px 70px rgba(0,0,0,.6), 0 0 0 4px rgba(108,140,255,.15);
 }
-.tuto-icon { font-size: 50px; line-height: 1; }
+.tuto-icon { font-size: 44px; line-height: 1; }
 .tuto h3 { margin: 10px 0 8px; font-size: 22px; font-family: 'Fredoka', sans-serif; }
 .tuto p { color: var(--text); opacity: .9; font-size: 15px; line-height: 1.5; margin: 0 0 18px; min-height: 72px; }
 .tuto-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 18px; }

@@ -102,15 +102,16 @@ $('#logout').addEventListener('click', async () => {
 // ============================================================
 //  Navigation entre vues
 // ============================================================
-$$('.navbtn').forEach(b => b.addEventListener('click', () => {
-  const view = b.dataset.view;
-  $$('.navbtn').forEach(x => x.classList.toggle('active', x === b));
+function switchView(view) {
+  $$('.navbtn').forEach(x => x.classList.toggle('active', x.dataset.view === view));
   $$('.view').forEach(v => v.classList.add('hidden'));
-  $('#view-' + view).classList.remove('hidden');
+  const el = $('#view-' + view);
+  if (el) el.classList.remove('hidden');
   if (view === 'leaderboard') loadLeaderboard();
   if (view === 'dex') loadDex();
   if (view === 'prairie') startPrairie(); else stopPrairie();
-}));
+}
+$$('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
 
 // ============================================================
 //  Glumpdex : lignees d'evolution
@@ -597,20 +598,21 @@ $('#drawer-overlay').addEventListener('click', closeDrawer);
 //  Tutoriel
 // ============================================================
 const TUTO = [
-  { icon: '🥚', title: 'Bienvenue dans Veilborn !', text: "Tu eleves des creatures appelees Glumps : fais-les eclore, grandir, evoluer, et complete ton Glumpdex de 300 Glumps. Tu demarres avec ton starter." },
-  { icon: '📦', title: 'Collection', text: "Tous tes Glumps sont ici. Tu peux les renommer, les relacher contre de l'essence, ou les faire evoluer (bouton vert) quand ils sont adultes." },
-  { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs." },
-  { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare." },
-  { icon: '🌳', title: 'Prairie', text: "Place tes Glumps ici : ce sont eux qui farment l'essence ✨ (la monnaie du jeu). Max 4 emplacements au depart, achetables. Choisis tes meilleurs farmeurs !" },
-  { icon: '📖', title: 'Glumpdex', text: "Les 300 Glumps numerotes. Ceux que tu n'as pas encore eus sont en silhouette. Objectif : tous les decouvrir en faisant eclore et reproduire !" },
-  { icon: '🏆', title: 'Rang & Visite', text: "Compare la valeur de ta collection aux autres eleveurs (Rang), et visite leurs elevages (Visite)." },
-  { icon: '🚀', title: "C'est parti !", text: "L'essence monte toute seule tant que tu as des Glumps en prairie. Reviens regulierement faire eclore, reproduire et evoluer. Tu peux revoir ce tuto dans Reglages ⚙️." },
+  { icon: '🥚', title: 'Bienvenue dans Veilborn !', text: "Tu eleves des creatures appelees Glumps : fais-les eclore, grandir, evoluer, et complete ton Glumpdex de 300 Glumps. Tu demarres avec ton starter.", view: 'box' },
+  { icon: '📦', title: 'Collection', text: "Voici tous tes Glumps. Tu peux les renommer, les relacher contre de l'essence, ou les faire evoluer (bouton vert) quand ils sont adultes.", view: 'box' },
+  { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs.", view: 'eggs' },
+  { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare.", view: 'breed' },
+  { icon: '🌳', title: 'Prairie', text: "Place tes Glumps ici : ce sont eux qui farment l'essence ✨ (la monnaie du jeu). Max 4 emplacements au depart, achetables. Choisis tes meilleurs farmeurs !", view: 'prairie' },
+  { icon: '📖', title: 'Glumpdex', text: "Les 300 Glumps numerotes, a la suite. Ceux que tu n'as pas encore eus sont en silhouette. Objectif : tous les decouvrir !", view: 'dex' },
+  { icon: '🏆', title: 'Rang & Visite', text: "Compare la valeur de ta collection aux autres eleveurs (Rang), et visite leurs elevages (onglet Visite).", view: 'leaderboard' },
+  { icon: '🚀', title: "C'est parti !", text: "L'essence monte toute seule tant que tu as des Glumps en prairie. Reviens faire eclore, reproduire et evoluer. Tu peux revoir ce tuto dans Reglages ⚙️.", view: 'box' },
 ];
 let tutoStep = 0;
 function showTuto(step = 0) { tutoStep = step; renderTuto(); $('#tutorial').classList.remove('hidden'); $('#tuto-overlay').classList.remove('hidden'); }
-function hideTuto() { $('#tutorial').classList.add('hidden'); $('#tuto-overlay').classList.add('hidden'); try { localStorage.setItem('veilborn_tuto', '1'); } catch {} }
+function hideTuto() { $('#tutorial').classList.add('hidden'); $('#tuto-overlay').classList.add('hidden'); switchView('box'); try { localStorage.setItem('veilborn_tuto', '1'); } catch {} }
 function renderTuto() {
   const s = TUTO[tutoStep];
+  if (s.view) switchView(s.view); // on navigue en arriere-plan vers l'onglet decrit
   $('#tuto-icon').textContent = s.icon;
   $('#tuto-title').textContent = s.title;
   $('#tuto-text').textContent = s.text;
