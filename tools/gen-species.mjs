@@ -31,11 +31,13 @@ function shade(hex, p) {
   const t = p < 0 ? 0 : 255, a = Math.abs(p);
   return '#' + c.map(v => Math.round(v + (t - v) * a).toString(16).padStart(2, '0')).join('');
 }
-// Forme (silhouette SVG) auto selon type + stade.
-function shapeFor(type, i) {
+// Forme (silhouette SVG) variee "au pif" mais stable (hash de l'id).
+const SHAPES = ['beast', 'blob', 'serpent', 'dino', 'sprout'];
+function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+function shapeFor(type, i, id) {
+  if (i >= 2) return ['dino', 'serpent', 'beast'][hashStr(id) % 3]; // formes finales imposantes
   if (type === 'Eau') return i === 0 ? 'blob' : 'serpent';
-  if (type === 'Plante') return i === 0 ? 'sprout' : i === 1 ? 'beast' : 'dino';
-  return i === 0 ? 'beast' : i === 1 ? 'beast' : 'dino';
+  return SHAPES[hashStr(id || type) % SHAPES.length];
 }
 
 const lines = readFileSync(INPUT, 'utf8').split(/\r?\n/);
@@ -70,7 +72,7 @@ for (const raw of lines) {
       type,
       rarity,
       color: shade(TYPE_COLOR[type] || DEFAULT_COLOR, -0.12 * i),
-      shape: shapeFor(type, i),
+      shape: shapeFor(type, i, id),
       line: lineId,
       stage: i + 1,
       evolvesTo: ids[i + 1] || null,

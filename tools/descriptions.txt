@@ -1,0 +1,1206 @@
+============================================================
+  VEILBORN - 300 GLUMPS - BRIEF SPRITES
+  Pour chaque monstre : depose une image  public/sprites/<id>.png
+  (l'<id> est indique entre crochets ; il s'affiche tout seul.)
+============================================================
+
+001. [flammkit.png]  Flammkit  -  Feu (stade 1/3)
+     EN: Flammkit: a small cute baby fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Flammkit, Glump de feu - petit bebe mignon, curieux et amical ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+002. [pyrokit.png]  Pyrokit  -  Feu (stade 2/3)
+     EN: Pyrokit: a agile and fierce fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Pyrokit, Glump de feu - forme adolescente plus agile et feroce, confiant et combatif ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+003. [infernaught.png]  Infernaught  -  Feu (stade 3/3)
+     EN: Infernaught: a large powerful and badass fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Infernaught, Glump de feu - forme finale grande et puissante (badass), imposant et menacant ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+004. [aquolet.png]  Aquolet  -  Eau (stade 1/3)
+     EN: Aquolet: a small cute baby water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Aquolet, Glump d'eau - petit bebe mignon, curieux et amical ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+005. [tidolet.png]  Tidolet  -  Eau (stade 2/3)
+     EN: Tidolet: a agile and fierce water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tidolet, Glump d'eau - forme adolescente plus agile et feroce, confiant et combatif ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+006. [leviaqua.png]  Leviaqua  -  Eau (stade 3/3)
+     EN: Leviaqua: a large powerful and badass water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Leviaqua, Glump d'eau - forme finale grande et puissante (badass), imposant et menacant ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+007. [sprouty.png]  Sprouty  -  Plante (stade 1/3)
+     EN: Sprouty: a small cute baby grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sprouty, Glump de plante - petit bebe mignon, curieux et amical ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+008. [floracub.png]  Floracub  -  Plante (stade 2/3)
+     EN: Floracub: a agile and fierce grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Floracub, Glump de plante - forme adolescente plus agile et feroce, confiant et combatif ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+009. [verdantaur.png]  Verdantaur  -  Plante (stade 3/3)
+     EN: Verdantaur: a large powerful and badass grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Verdantaur, Glump de plante - forme finale grande et puissante (badass), imposant et menacant ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+010. [pyroy.png]  Pyroy  -  Feu (stade 1/2)
+     EN: Pyroy: a small cute baby fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Pyroy, Glump de feu - petit bebe mignon, curieux et amical ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+011. [pyrocrest.png]  Pyrocrest  -  Feu (stade 2/2)
+     EN: Pyrocrest: a agile and fierce fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Pyrocrest, Glump de feu - forme adolescente plus agile et feroce, confiant et combatif ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+012. [wavo.png]  Wavo  -  Eau (stade 1/2)
+     EN: Wavo: a small cute baby water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wavo, Glump d'eau - petit bebe mignon, curieux et amical ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+013. [wavjaw.png]  Wavjaw  -  Eau (stade 2/2)
+     EN: Wavjaw: a agile and fierce water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wavjaw, Glump d'eau - forme adolescente plus agile et feroce, confiant et combatif ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+014. [verdpup.png]  Verdpup  -  Plante (stade 1/3)
+     EN: Verdpup: a small cute baby grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Verdpup, Glump de plante - petit bebe mignon, curieux et amical ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+015. [verdclaw.png]  Verdclaw  -  Plante (stade 2/3)
+     EN: Verdclaw: a agile and fierce grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Verdclaw, Glump de plante - forme adolescente plus agile et feroce, confiant et combatif ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+016. [verdmancer.png]  Verdmancer  -  Plante (stade 3/3)
+     EN: Verdmancer: a large powerful and badass grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Verdmancer, Glump de plante - forme finale grande et puissante (badass), imposant et menacant ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+017. [sparkbud.png]  Sparkbud  -  Foudre (legendaire solo)
+     EN: Sparkbud: a majestic legendary, powerful and imposing electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sparkbud, Glump de foudre - legendaire majestueux et imposant, fier et legendaire ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+018. [terrapup.png]  Terrapup  -  Roche (stade 1/3)
+     EN: Terrapup: a small cute baby rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Terrapup, Glump de roche - petit bebe mignon, curieux et amical ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+019. [terramaw.png]  Terramaw  -  Roche (stade 2/3)
+     EN: Terramaw: a agile and fierce rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Terramaw, Glump de roche - forme adolescente plus agile et feroce, confiant et combatif ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+020. [terrazar.png]  Terrazar  -  Roche (stade 3/3)
+     EN: Terrazar: a large powerful and badass rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Terrazar, Glump de roche - forme finale grande et puissante (badass), imposant et menacant ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+021. [rimeling.png]  Rimeling  -  Glace (stade 1/2)
+     EN: Rimeling: a small cute baby ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Rimeling, Glump de glace - petit bebe mignon, curieux et amical ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+022. [rimetail.png]  Rimetail  -  Glace (stade 2/2)
+     EN: Rimetail: a agile and fierce ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Rimetail, Glump de glace - forme adolescente plus agile et feroce, confiant et combatif ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+023. [vespermite.png]  Vespermite  -  Ombre (legendaire solo)
+     EN: Vespermite: a majestic legendary, powerful and imposing dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vespermite, Glump d'ombre - legendaire majestueux et imposant, fier et legendaire ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+024. [gleamling.png]  Gleamling  -  Lumiere (legendaire solo)
+     EN: Gleamling: a majestic legendary, powerful and imposing light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Gleamling, Glump de lumiere - legendaire majestueux et imposant, fier et legendaire ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+025. [astray.png]  Astray  -  Mystique (stade 1/2)
+     EN: Astray: a small cute baby psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Astray, Glump mystique - petit bebe mignon, curieux et amical ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+026. [astrajaw.png]  Astrajaw  -  Mystique (stade 2/2)
+     EN: Astrajaw: a agile and fierce psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Astrajaw, Glump mystique - forme adolescente plus agile et feroce, confiant et combatif ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+027. [titanling.png]  Titanling  -  Acier (stade 1/3)
+     EN: Titanling: a small cute baby steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Titanling, Glump d'acier - petit bebe mignon, curieux et amical ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+028. [titanhorn.png]  Titanhorn  -  Acier (stade 2/3)
+     EN: Titanhorn: a agile and fierce steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Titanhorn, Glump d'acier - forme adolescente plus agile et feroce, confiant et combatif ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+029. [titanlord.png]  Titanlord  -  Acier (stade 3/3)
+     EN: Titanlord: a large powerful and badass steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Titanlord, Glump d'acier - forme finale grande et puissante (badass), imposant et menacant ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+030. [virumite.png]  Virumite  -  Poison (stade 1/3)
+     EN: Virumite: a small cute baby poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Virumite, Glump de poison - petit bebe mignon, curieux et amical ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+031. [viruback.png]  Viruback  -  Poison (stade 2/3)
+     EN: Viruback: a agile and fierce poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Viruback, Glump de poison - forme adolescente plus agile et feroce, confiant et combatif ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+032. [virugoth.png]  Virugoth  -  Poison (stade 3/3)
+     EN: Virugoth: a large powerful and badass poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Virugoth, Glump de poison - forme finale grande et puissante (badass), imposant et menacant ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+033. [galewin.png]  Galewin  -  Vent (stade 1/3)
+     EN: Galewin: a small cute baby wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Galewin, Glump de vent - petit bebe mignon, curieux et amical ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+034. [galewtail.png]  Galewtail  -  Vent (stade 2/3)
+     EN: Galewtail: a agile and fierce wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Galewtail, Glump de vent - forme adolescente plus agile et feroce, confiant et combatif ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+035. [galewkhan.png]  Galewkhan  -  Vent (stade 3/3)
+     EN: Galewkhan: a large powerful and badass wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Galewkhan, Glump de vent - forme finale grande et puissante (badass), imposant et menacant ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+036. [scarabling.png]  Scarabling  -  Insecte (stade 1/3)
+     EN: Scarabling: a small cute baby bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabling, Glump insecte - petit bebe mignon, curieux et amical ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+037. [scarabtail.png]  Scarabtail  -  Insecte (stade 2/3)
+     EN: Scarabtail: a agile and fierce bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabtail, Glump insecte - forme adolescente plus agile et feroce, confiant et combatif ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+038. [scarabtitan.png]  Scarabtitan  -  Insecte (stade 3/3)
+     EN: Scarabtitan: a large powerful and badass bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabtitan, Glump insecte - forme finale grande et puissante (badass), imposant et menacant ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+039. [wyvery.png]  Wyvery  -  Dragon (stade 1/3)
+     EN: Wyvery: a small cute baby dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wyvery, Glump dragon - petit bebe mignon, curieux et amical ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+040. [wyverwing.png]  Wyverwing  -  Dragon (stade 2/3)
+     EN: Wyverwing: a agile and fierce dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wyverwing, Glump dragon - forme adolescente plus agile et feroce, confiant et combatif ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+041. [wyverkhan.png]  Wyverkhan  -  Dragon (stade 3/3)
+     EN: Wyverkhan: a large powerful and badass dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wyverkhan, Glump dragon - forme finale grande et puissante (badass), imposant et menacant ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+042. [cinderling.png]  Cinderling  -  Feu (stade 1/3)
+     EN: Cinderling: a small cute baby fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Cinderling, Glump de feu - petit bebe mignon, curieux et amical ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+043. [cinderhorn.png]  Cinderhorn  -  Feu (stade 2/3)
+     EN: Cinderhorn: a agile and fierce fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Cinderhorn, Glump de feu - forme adolescente plus agile et feroce, confiant et combatif ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+044. [cindermyr.png]  Cindermyr  -  Feu (stade 3/3)
+     EN: Cindermyr: a large powerful and badass fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Cindermyr, Glump de feu - forme finale grande et puissante (badass), imposant et menacant ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+045. [wavkit.png]  Wavkit  -  Eau (stade 1/2)
+     EN: Wavkit: a small cute baby water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wavkit, Glump d'eau - petit bebe mignon, curieux et amical ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+046. [wavfang.png]  Wavfang  -  Eau (stade 2/2)
+     EN: Wavfang: a agile and fierce water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wavfang, Glump d'eau - forme adolescente plus agile et feroce, confiant et combatif ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+047. [thorny.png]  Thorny  -  Plante (stade 1/3)
+     EN: Thorny: a small cute baby grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Thorny, Glump de plante - petit bebe mignon, curieux et amical ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+048. [thorntail.png]  Thorntail  -  Plante (stade 2/3)
+     EN: Thorntail: a agile and fierce grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Thorntail, Glump de plante - forme adolescente plus agile et feroce, confiant et combatif ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+049. [thorndrake.png]  Thorndrake  -  Plante (stade 3/3)
+     EN: Thorndrake: a large powerful and badass grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Thorndrake, Glump de plante - forme finale grande et puissante (badass), imposant et menacant ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+050. [fulgurbud.png]  Fulgurbud  -  Foudre (legendaire solo)
+     EN: Fulgurbud: a majestic legendary, powerful and imposing electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Fulgurbud, Glump de foudre - legendaire majestueux et imposant, fier et legendaire ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+051. [stalagy.png]  Stalagy  -  Roche (stade 1/3)
+     EN: Stalagy: a small cute baby rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stalagy, Glump de roche - petit bebe mignon, curieux et amical ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+052. [stalagmaw.png]  Stalagmaw  -  Roche (stade 2/3)
+     EN: Stalagmaw: a agile and fierce rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stalagmaw, Glump de roche - forme adolescente plus agile et feroce, confiant et combatif ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+053. [stalagdrake.png]  Stalagdrake  -  Roche (stade 3/3)
+     EN: Stalagdrake: a large powerful and badass rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stalagdrake, Glump de roche - forme finale grande et puissante (badass), imposant et menacant ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+054. [glaciling.png]  Glaciling  -  Glace (stade 1/3)
+     EN: Glaciling: a small cute baby ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Glaciling, Glump de glace - petit bebe mignon, curieux et amical ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+055. [glaciback.png]  Glaciback  -  Glace (stade 2/3)
+     EN: Glaciback: a agile and fierce ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Glaciback, Glump de glace - forme adolescente plus agile et feroce, confiant et combatif ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+056. [glacirex.png]  Glacirex  -  Glace (stade 3/3)
+     EN: Glacirex: a large powerful and badass ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Glacirex, Glump de glace - forme finale grande et puissante (badass), imposant et menacant ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+057. [umbrin.png]  Umbrin  -  Ombre (stade 1/3)
+     EN: Umbrin: a small cute baby dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Umbrin, Glump d'ombre - petit bebe mignon, curieux et amical ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+058. [umbrpaw.png]  Umbrpaw  -  Ombre (stade 2/3)
+     EN: Umbrpaw: a agile and fierce dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Umbrpaw, Glump d'ombre - forme adolescente plus agile et feroce, confiant et combatif ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+059. [umbrkhan.png]  Umbrkhan  -  Ombre (stade 3/3)
+     EN: Umbrkhan: a large powerful and badass dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Umbrkhan, Glump d'ombre - forme finale grande et puissante (badass), imposant et menacant ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+060. [luxette.png]  Luxette  -  Lumiere (stade 1/3)
+     EN: Luxette: a small cute baby light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Luxette, Glump de lumiere - petit bebe mignon, curieux et amical ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+061. [luxtail.png]  Luxtail  -  Lumiere (stade 2/3)
+     EN: Luxtail: a agile and fierce light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Luxtail, Glump de lumiere - forme adolescente plus agile et feroce, confiant et combatif ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+062. [luxmyr.png]  Luxmyr  -  Lumiere (stade 3/3)
+     EN: Luxmyr: a large powerful and badass light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Luxmyr, Glump de lumiere - forme finale grande et puissante (badass), imposant et menacant ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+063. [sageette.png]  Sageette  -  Mystique (stade 1/3)
+     EN: Sageette: a small cute baby psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sageette, Glump mystique - petit bebe mignon, curieux et amical ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+064. [sagetail.png]  Sagetail  -  Mystique (stade 2/3)
+     EN: Sagetail: a agile and fierce psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sagetail, Glump mystique - forme adolescente plus agile et feroce, confiant et combatif ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+065. [sagethron.png]  Sagethron  -  Mystique (stade 3/3)
+     EN: Sagethron: a large powerful and badass psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sagethron, Glump mystique - forme finale grande et puissante (badass), imposant et menacant ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+066. [forgelet.png]  Forgelet  -  Acier (legendaire solo)
+     EN: Forgelet: a majestic legendary, powerful and imposing steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Forgelet, Glump d'acier - legendaire majestueux et imposant, fier et legendaire ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+067. [baney.png]  Baney  -  Poison (stade 1/3)
+     EN: Baney: a small cute baby poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Baney, Glump de poison - petit bebe mignon, curieux et amical ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+068. [banehorn.png]  Banehorn  -  Poison (stade 2/3)
+     EN: Banehorn: a agile and fierce poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Banehorn, Glump de poison - forme adolescente plus agile et feroce, confiant et combatif ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+069. [banerex.png]  Banerex  -  Poison (stade 3/3)
+     EN: Banerex: a large powerful and badass poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Banerex, Glump de poison - forme finale grande et puissante (badass), imposant et menacant ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+070. [aerobud.png]  Aerobud  -  Vent (legendaire solo)
+     EN: Aerobud: a majestic legendary, powerful and imposing wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Aerobud, Glump de vent - legendaire majestueux et imposant, fier et legendaire ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+071. [vespiling.png]  Vespiling  -  Insecte (stade 1/2)
+     EN: Vespiling: a small cute baby bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vespiling, Glump insecte - petit bebe mignon, curieux et amical ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+072. [vespimaw.png]  Vespimaw  -  Insecte (stade 2/2)
+     EN: Vespimaw: a agile and fierce bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vespimaw, Glump insecte - forme adolescente plus agile et feroce, confiant et combatif ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+073. [ryukit.png]  Ryukit  -  Dragon (stade 1/3)
+     EN: Ryukit: a small cute baby dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ryukit, Glump dragon - petit bebe mignon, curieux et amical ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+074. [ryucrest.png]  Ryucrest  -  Dragon (stade 2/3)
+     EN: Ryucrest: a agile and fierce dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ryucrest, Glump dragon - forme adolescente plus agile et feroce, confiant et combatif ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+075. [ryuzar.png]  Ryuzar  -  Dragon (stade 3/3)
+     EN: Ryuzar: a large powerful and badass dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ryuzar, Glump dragon - forme finale grande et puissante (badass), imposant et menacant ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+076. [vulcanin.png]  Vulcanin  -  Feu (stade 1/3)
+     EN: Vulcanin: a small cute baby fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vulcanin, Glump de feu - petit bebe mignon, curieux et amical ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+077. [vulcanhorn.png]  Vulcanhorn  -  Feu (stade 2/3)
+     EN: Vulcanhorn: a agile and fierce fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vulcanhorn, Glump de feu - forme adolescente plus agile et feroce, confiant et combatif ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+078. [vulcanmyr.png]  Vulcanmyr  -  Feu (stade 3/3)
+     EN: Vulcanmyr: a large powerful and badass fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vulcanmyr, Glump de feu - forme finale grande et puissante (badass), imposant et menacant ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+079. [nautilbud.png]  Nautilbud  -  Eau (stade 1/3)
+     EN: Nautilbud: a small cute baby water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nautilbud, Glump d'eau - petit bebe mignon, curieux et amical ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+080. [nautilcrest.png]  Nautilcrest  -  Eau (stade 2/3)
+     EN: Nautilcrest: a agile and fierce water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nautilcrest, Glump d'eau - forme adolescente plus agile et feroce, confiant et combatif ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+081. [nautilthron.png]  Nautilthron  -  Eau (stade 3/3)
+     EN: Nautilthron: a large powerful and badass water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nautilthron, Glump d'eau - forme finale grande et puissante (badass), imposant et menacant ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+082. [petalbud.png]  Petalbud  -  Plante (stade 1/2)
+     EN: Petalbud: a small cute baby grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Petalbud, Glump de plante - petit bebe mignon, curieux et amical ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+083. [petalcrest.png]  Petalcrest  -  Plante (stade 2/2)
+     EN: Petalcrest: a agile and fierce grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Petalcrest, Glump de plante - forme adolescente plus agile et feroce, confiant et combatif ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+084. [zapling.png]  Zapling  -  Foudre (stade 1/3)
+     EN: Zapling: a small cute baby electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zapling, Glump de foudre - petit bebe mignon, curieux et amical ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+085. [zaptail.png]  Zaptail  -  Foudre (stade 2/3)
+     EN: Zaptail: a agile and fierce electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zaptail, Glump de foudre - forme adolescente plus agile et feroce, confiant et combatif ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+086. [zapthron.png]  Zapthron  -  Foudre (stade 3/3)
+     EN: Zapthron: a large powerful and badass electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zapthron, Glump de foudre - forme finale grande et puissante (badass), imposant et menacant ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+087. [stalagkit.png]  Stalagkit  -  Roche (stade 1/3)
+     EN: Stalagkit: a small cute baby rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stalagkit, Glump de roche - petit bebe mignon, curieux et amical ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+088. [stalagtail.png]  Stalagtail  -  Roche (stade 2/3)
+     EN: Stalagtail: a agile and fierce rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stalagtail, Glump de roche - forme adolescente plus agile et feroce, confiant et combatif ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+089. [stalaggoth.png]  Stalaggoth  -  Roche (stade 3/3)
+     EN: Stalaggoth: a large powerful and badass rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stalaggoth, Glump de roche - forme finale grande et puissante (badass), imposant et menacant ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+090. [permafpup.png]  Permafpup  -  Glace (stade 1/3)
+     EN: Permafpup: a small cute baby ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Permafpup, Glump de glace - petit bebe mignon, curieux et amical ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+091. [permaffang.png]  Permaffang  -  Glace (stade 2/3)
+     EN: Permaffang: a agile and fierce ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Permaffang, Glump de glace - forme adolescente plus agile et feroce, confiant et combatif ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+092. [permafthron.png]  Permafthron  -  Glace (stade 3/3)
+     EN: Permafthron: a large powerful and badass ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Permafthron, Glump de glace - forme finale grande et puissante (badass), imposant et menacant ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+093. [gloompup.png]  Gloompup  -  Ombre (stade 1/3)
+     EN: Gloompup: a small cute baby dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Gloompup, Glump d'ombre - petit bebe mignon, curieux et amical ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+094. [gloomwing.png]  Gloomwing  -  Ombre (stade 2/3)
+     EN: Gloomwing: a agile and fierce dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Gloomwing, Glump d'ombre - forme adolescente plus agile et feroce, confiant et combatif ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+095. [gloomarch.png]  Gloomarch  -  Ombre (stade 3/3)
+     EN: Gloomarch: a large powerful and badass dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Gloomarch, Glump d'ombre - forme finale grande et puissante (badass), imposant et menacant ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+096. [luxo.png]  Luxo  -  Lumiere (stade 1/2)
+     EN: Luxo: a small cute baby light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Luxo, Glump de lumiere - petit bebe mignon, curieux et amical ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+097. [luxjaw.png]  Luxjaw  -  Lumiere (stade 2/2)
+     EN: Luxjaw: a agile and fierce light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Luxjaw, Glump de lumiere - forme adolescente plus agile et feroce, confiant et combatif ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+098. [aethermite.png]  Aethermite  -  Mystique (stade 1/3)
+     EN: Aethermite: a small cute baby psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Aethermite, Glump mystique - petit bebe mignon, curieux et amical ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+099. [aetherback.png]  Aetherback  -  Mystique (stade 2/3)
+     EN: Aetherback: a agile and fierce psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Aetherback, Glump mystique - forme adolescente plus agile et feroce, confiant et combatif ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+100. [aethertitan.png]  Aethertitan  -  Mystique (stade 3/3)
+     EN: Aethertitan: a large powerful and badass psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Aethertitan, Glump mystique - forme finale grande et puissante (badass), imposant et menacant ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+101. [rivetling.png]  Rivetling  -  Acier (legendaire solo)
+     EN: Rivetling: a majestic legendary, powerful and imposing steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Rivetling, Glump d'acier - legendaire majestueux et imposant, fier et legendaire ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+102. [miasbud.png]  Miasbud  -  Poison (stade 1/3)
+     EN: Miasbud: a small cute baby poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Miasbud, Glump de poison - petit bebe mignon, curieux et amical ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+103. [miaspaw.png]  Miaspaw  -  Poison (stade 2/3)
+     EN: Miaspaw: a agile and fierce poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Miaspaw, Glump de poison - forme adolescente plus agile et feroce, confiant et combatif ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+104. [miasmyr.png]  Miasmyr  -  Poison (stade 3/3)
+     EN: Miasmyr: a large powerful and badass poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Miasmyr, Glump de poison - forme finale grande et puissante (badass), imposant et menacant ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+105. [cyclony.png]  Cyclony  -  Vent (stade 1/3)
+     EN: Cyclony: a small cute baby wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Cyclony, Glump de vent - petit bebe mignon, curieux et amical ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+106. [cycloncrest.png]  Cycloncrest  -  Vent (stade 2/3)
+     EN: Cycloncrest: a agile and fierce wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Cycloncrest, Glump de vent - forme adolescente plus agile et feroce, confiant et combatif ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+107. [cyclonrex.png]  Cyclonrex  -  Vent (stade 3/3)
+     EN: Cyclonrex: a large powerful and badass wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Cyclonrex, Glump de vent - forme finale grande et puissante (badass), imposant et menacant ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+108. [scarabmite.png]  Scarabmite  -  Insecte (stade 1/3)
+     EN: Scarabmite: a small cute baby bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabmite, Glump insecte - petit bebe mignon, curieux et amical ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+109. [scarabcrest.png]  Scarabcrest  -  Insecte (stade 2/3)
+     EN: Scarabcrest: a agile and fierce bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabcrest, Glump insecte - forme adolescente plus agile et feroce, confiant et combatif ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+110. [scarabarch.png]  Scarabarch  -  Insecte (stade 3/3)
+     EN: Scarabarch: a large powerful and badass bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabarch, Glump insecte - forme finale grande et puissante (badass), imposant et menacant ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+111. [saurbud.png]  Saurbud  -  Dragon (legendaire solo)
+     EN: Saurbud: a majestic legendary, powerful and imposing dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Saurbud, Glump dragon - legendaire majestueux et imposant, fier et legendaire ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+112. [igniskit.png]  Igniskit  -  Feu (stade 1/3)
+     EN: Igniskit: a small cute baby fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Igniskit, Glump de feu - petit bebe mignon, curieux et amical ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+113. [ignispaw.png]  Ignispaw  -  Feu (stade 2/3)
+     EN: Ignispaw: a agile and fierce fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ignispaw, Glump de feu - forme adolescente plus agile et feroce, confiant et combatif ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+114. [ignisdrake.png]  Ignisdrake  -  Feu (stade 3/3)
+     EN: Ignisdrake: a large powerful and badass fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ignisdrake, Glump de feu - forme finale grande et puissante (badass), imposant et menacant ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+115. [hydrolet.png]  Hydrolet  -  Eau (stade 1/3)
+     EN: Hydrolet: a small cute baby water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Hydrolet, Glump d'eau - petit bebe mignon, curieux et amical ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+116. [hydrojaw.png]  Hydrojaw  -  Eau (stade 2/3)
+     EN: Hydrojaw: a agile and fierce water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Hydrojaw, Glump d'eau - forme adolescente plus agile et feroce, confiant et combatif ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+117. [hydrothron.png]  Hydrothron  -  Eau (stade 3/3)
+     EN: Hydrothron: a large powerful and badass water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Hydrothron, Glump d'eau - forme finale grande et puissante (badass), imposant et menacant ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+118. [foliao.png]  Foliao  -  Plante (legendaire solo)
+     EN: Foliao: a majestic legendary, powerful and imposing grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Foliao, Glump de plante - legendaire majestueux et imposant, fier et legendaire ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+119. [zapbud.png]  Zapbud  -  Foudre (legendaire solo)
+     EN: Zapbud: a majestic legendary, powerful and imposing electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zapbud, Glump de foudre - legendaire majestueux et imposant, fier et legendaire ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+120. [granitlet.png]  Granitlet  -  Roche (stade 1/3)
+     EN: Granitlet: a small cute baby rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Granitlet, Glump de roche - petit bebe mignon, curieux et amical ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+121. [granithorn.png]  Granithorn  -  Roche (stade 2/3)
+     EN: Granithorn: a agile and fierce rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Granithorn, Glump de roche - forme adolescente plus agile et feroce, confiant et combatif ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+122. [granitmyr.png]  Granitmyr  -  Roche (stade 3/3)
+     EN: Granitmyr: a large powerful and badass rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Granitmyr, Glump de roche - forme finale grande et puissante (badass), imposant et menacant ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+123. [shiverbud.png]  Shiverbud  -  Glace (stade 1/3)
+     EN: Shiverbud: a small cute baby ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Shiverbud, Glump de glace - petit bebe mignon, curieux et amical ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+124. [shiverjaw.png]  Shiverjaw  -  Glace (stade 2/3)
+     EN: Shiverjaw: a agile and fierce ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Shiverjaw, Glump de glace - forme adolescente plus agile et feroce, confiant et combatif ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+125. [shiverrex.png]  Shiverrex  -  Glace (stade 3/3)
+     EN: Shiverrex: a large powerful and badass ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Shiverrex, Glump de glace - forme finale grande et puissante (badass), imposant et menacant ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+126. [sombrkit.png]  Sombrkit  -  Ombre (stade 1/3)
+     EN: Sombrkit: a small cute baby dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sombrkit, Glump d'ombre - petit bebe mignon, curieux et amical ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+127. [sombrcrest.png]  Sombrcrest  -  Ombre (stade 2/3)
+     EN: Sombrcrest: a agile and fierce dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sombrcrest, Glump d'ombre - forme adolescente plus agile et feroce, confiant et combatif ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+128. [sombrthron.png]  Sombrthron  -  Ombre (stade 3/3)
+     EN: Sombrthron: a large powerful and badass dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sombrthron, Glump d'ombre - forme finale grande et puissante (badass), imposant et menacant ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+129. [dawno.png]  Dawno  -  Lumiere (stade 1/3)
+     EN: Dawno: a small cute baby light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Dawno, Glump de lumiere - petit bebe mignon, curieux et amical ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+130. [dawnback.png]  Dawnback  -  Lumiere (stade 2/3)
+     EN: Dawnback: a agile and fierce light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Dawnback, Glump de lumiere - forme adolescente plus agile et feroce, confiant et combatif ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+131. [dawnthron.png]  Dawnthron  -  Lumiere (stade 3/3)
+     EN: Dawnthron: a large powerful and badass light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Dawnthron, Glump de lumiere - forme finale grande et puissante (badass), imposant et menacant ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+132. [sageling.png]  Sageling  -  Mystique (stade 1/3)
+     EN: Sageling: a small cute baby psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sageling, Glump mystique - petit bebe mignon, curieux et amical ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+133. [sagecrest.png]  Sagecrest  -  Mystique (stade 2/3)
+     EN: Sagecrest: a agile and fierce psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sagecrest, Glump mystique - forme adolescente plus agile et feroce, confiant et combatif ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+134. [sagelord.png]  Sagelord  -  Mystique (stade 3/3)
+     EN: Sagelord: a large powerful and badass psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sagelord, Glump mystique - forme finale grande et puissante (badass), imposant et menacant ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+135. [steelette.png]  Steelette  -  Acier (legendaire solo)
+     EN: Steelette: a majestic legendary, powerful and imposing steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Steelette, Glump d'acier - legendaire majestueux et imposant, fier et legendaire ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+136. [baney1.png]  Baney1  -  Poison (stade 1/3)
+     EN: Baney1: a small cute baby poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Baney1, Glump de poison - petit bebe mignon, curieux et amical ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+137. [banejaw.png]  Banejaw  -  Poison (stade 2/3)
+     EN: Banejaw: a agile and fierce poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Banejaw, Glump de poison - forme adolescente plus agile et feroce, confiant et combatif ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+138. [banedrake.png]  Banedrake  -  Poison (stade 3/3)
+     EN: Banedrake: a large powerful and badass poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Banedrake, Glump de poison - forme finale grande et puissante (badass), imposant et menacant ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+139. [stratolet.png]  Stratolet  -  Vent (stade 1/2)
+     EN: Stratolet: a small cute baby wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stratolet, Glump de vent - petit bebe mignon, curieux et amical ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+140. [stratowing.png]  Stratowing  -  Vent (stade 2/2)
+     EN: Stratowing: a agile and fierce wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stratowing, Glump de vent - forme adolescente plus agile et feroce, confiant et combatif ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+141. [scarabin.png]  Scarabin  -  Insecte (stade 1/3)
+     EN: Scarabin: a small cute baby bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabin, Glump insecte - petit bebe mignon, curieux et amical ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+142. [scarabwing.png]  Scarabwing  -  Insecte (stade 2/3)
+     EN: Scarabwing: a agile and fierce bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabwing, Glump insecte - forme adolescente plus agile et feroce, confiant et combatif ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+143. [scarabnaught.png]  Scarabnaught  -  Insecte (stade 3/3)
+     EN: Scarabnaught: a large powerful and badass bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabnaught, Glump insecte - forme finale grande et puissante (badass), imposant et menacant ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+144. [broodo.png]  Broodo  -  Dragon (legendaire solo)
+     EN: Broodo: a majestic legendary, powerful and imposing dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Broodo, Glump dragon - legendaire majestueux et imposant, fier et legendaire ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+145. [blazpup.png]  Blazpup  -  Feu (stade 1/3)
+     EN: Blazpup: a small cute baby fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Blazpup, Glump de feu - petit bebe mignon, curieux et amical ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+146. [blazcrest.png]  Blazcrest  -  Feu (stade 2/3)
+     EN: Blazcrest: a agile and fierce fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Blazcrest, Glump de feu - forme adolescente plus agile et feroce, confiant et combatif ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+147. [blazthron.png]  Blazthron  -  Feu (stade 3/3)
+     EN: Blazthron: a large powerful and badass fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Blazthron, Glump de feu - forme finale grande et puissante (badass), imposant et menacant ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+148. [wavkit1.png]  Wavkit1  -  Eau (stade 1/3)
+     EN: Wavkit1: a small cute baby water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wavkit1, Glump d'eau - petit bebe mignon, curieux et amical ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+149. [wavback.png]  Wavback  -  Eau (stade 2/3)
+     EN: Wavback: a agile and fierce water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wavback, Glump d'eau - forme adolescente plus agile et feroce, confiant et combatif ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+150. [wavzar.png]  Wavzar  -  Eau (stade 3/3)
+     EN: Wavzar: a large powerful and badass water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Wavzar, Glump d'eau - forme finale grande et puissante (badass), imposant et menacant ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+151. [thornling.png]  Thornling  -  Plante (stade 1/3)
+     EN: Thornling: a small cute baby grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Thornling, Glump de plante - petit bebe mignon, curieux et amical ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+152. [thornmaw.png]  Thornmaw  -  Plante (stade 2/3)
+     EN: Thornmaw: a agile and fierce grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Thornmaw, Glump de plante - forme adolescente plus agile et feroce, confiant et combatif ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+153. [thornrex.png]  Thornrex  -  Plante (stade 3/3)
+     EN: Thornrex: a large powerful and badass grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Thornrex, Glump de plante - forme finale grande et puissante (badass), imposant et menacant ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+154. [fulgurmite.png]  Fulgurmite  -  Foudre (stade 1/3)
+     EN: Fulgurmite: a small cute baby electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Fulgurmite, Glump de foudre - petit bebe mignon, curieux et amical ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+155. [fulgurcrest.png]  Fulgurcrest  -  Foudre (stade 2/3)
+     EN: Fulgurcrest: a agile and fierce electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Fulgurcrest, Glump de foudre - forme adolescente plus agile et feroce, confiant et combatif ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+156. [fulgurmyr.png]  Fulgurmyr  -  Foudre (stade 3/3)
+     EN: Fulgurmyr: a large powerful and badass electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Fulgurmyr, Glump de foudre - forme finale grande et puissante (badass), imposant et menacant ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+157. [slatelet.png]  Slatelet  -  Roche (stade 1/3)
+     EN: Slatelet: a small cute baby rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Slatelet, Glump de roche - petit bebe mignon, curieux et amical ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+158. [slatetail.png]  Slatetail  -  Roche (stade 2/3)
+     EN: Slatetail: a agile and fierce rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Slatetail, Glump de roche - forme adolescente plus agile et feroce, confiant et combatif ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+159. [slatemyr.png]  Slatemyr  -  Roche (stade 3/3)
+     EN: Slatemyr: a large powerful and badass rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Slatemyr, Glump de roche - forme finale grande et puissante (badass), imposant et menacant ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+160. [frostlet.png]  Frostlet  -  Glace (stade 1/2)
+     EN: Frostlet: a small cute baby ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Frostlet, Glump de glace - petit bebe mignon, curieux et amical ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+161. [frostfang.png]  Frostfang  -  Glace (stade 2/2)
+     EN: Frostfang: a agile and fierce ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Frostfang, Glump de glace - forme adolescente plus agile et feroce, confiant et combatif ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+162. [noctkit.png]  Noctkit  -  Ombre (stade 1/2)
+     EN: Noctkit: a small cute baby dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Noctkit, Glump d'ombre - petit bebe mignon, curieux et amical ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+163. [noctclaw.png]  Noctclaw  -  Ombre (stade 2/2)
+     EN: Noctclaw: a agile and fierce dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Noctclaw, Glump d'ombre - forme adolescente plus agile et feroce, confiant et combatif ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+164. [clariling.png]  Clariling  -  Lumiere (stade 1/2)
+     EN: Clariling: a small cute baby light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Clariling, Glump de lumiere - petit bebe mignon, curieux et amical ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+165. [clariclaw.png]  Clariclaw  -  Lumiere (stade 2/2)
+     EN: Clariclaw: a agile and fierce light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Clariclaw, Glump de lumiere - forme adolescente plus agile et feroce, confiant et combatif ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+166. [psypup.png]  Psypup  -  Mystique (stade 1/3)
+     EN: Psypup: a small cute baby psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Psypup, Glump mystique - petit bebe mignon, curieux et amical ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+167. [psyclaw.png]  Psyclaw  -  Mystique (stade 2/3)
+     EN: Psyclaw: a agile and fierce psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Psyclaw, Glump mystique - forme adolescente plus agile et feroce, confiant et combatif ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+168. [psygoth.png]  Psygoth  -  Mystique (stade 3/3)
+     EN: Psygoth: a large powerful and badass psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Psygoth, Glump mystique - forme finale grande et puissante (badass), imposant et menacant ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+169. [irony.png]  Irony  -  Acier (stade 1/3)
+     EN: Irony: a small cute baby steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Irony, Glump d'acier - petit bebe mignon, curieux et amical ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+170. [ironpaw.png]  Ironpaw  -  Acier (stade 2/3)
+     EN: Ironpaw: a agile and fierce steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ironpaw, Glump d'acier - forme adolescente plus agile et feroce, confiant et combatif ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+171. [ironrex.png]  Ironrex  -  Acier (stade 3/3)
+     EN: Ironrex: a large powerful and badass steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ironrex, Glump d'acier - forme finale grande et puissante (badass), imposant et menacant ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+172. [miaso.png]  Miaso  -  Poison (stade 1/2)
+     EN: Miaso: a small cute baby poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Miaso, Glump de poison - petit bebe mignon, curieux et amical ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+173. [miasfang.png]  Miasfang  -  Poison (stade 2/2)
+     EN: Miasfang: a agile and fierce poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Miasfang, Glump de poison - forme adolescente plus agile et feroce, confiant et combatif ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+174. [galewy.png]  Galewy  -  Vent (stade 1/3)
+     EN: Galewy: a small cute baby wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Galewy, Glump de vent - petit bebe mignon, curieux et amical ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+175. [galewpaw.png]  Galewpaw  -  Vent (stade 2/3)
+     EN: Galewpaw: a agile and fierce wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Galewpaw, Glump de vent - forme adolescente plus agile et feroce, confiant et combatif ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+176. [galewrex.png]  Galewrex  -  Vent (stade 3/3)
+     EN: Galewrex: a large powerful and badass wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Galewrex, Glump de vent - forme finale grande et puissante (badass), imposant et menacant ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+177. [vespimite.png]  Vespimite  -  Insecte (stade 1/3)
+     EN: Vespimite: a small cute baby bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vespimite, Glump insecte - petit bebe mignon, curieux et amical ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+178. [vespijaw.png]  Vespijaw  -  Insecte (stade 2/3)
+     EN: Vespijaw: a agile and fierce bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vespijaw, Glump insecte - forme adolescente plus agile et feroce, confiant et combatif ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+179. [vespithron.png]  Vespithron  -  Insecte (stade 3/3)
+     EN: Vespithron: a large powerful and badass bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vespithron, Glump insecte - forme finale grande et puissante (badass), imposant et menacant ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+180. [dracolet.png]  Dracolet  -  Dragon (stade 1/2)
+     EN: Dracolet: a small cute baby dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Dracolet, Glump dragon - petit bebe mignon, curieux et amical ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+181. [dracojaw.png]  Dracojaw  -  Dragon (stade 2/2)
+     EN: Dracojaw: a agile and fierce dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Dracojaw, Glump dragon - forme adolescente plus agile et feroce, confiant et combatif ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+182. [brimstlet.png]  Brimstlet  -  Feu (stade 1/3)
+     EN: Brimstlet: a small cute baby fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Brimstlet, Glump de feu - petit bebe mignon, curieux et amical ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+183. [brimsthorn.png]  Brimsthorn  -  Feu (stade 2/3)
+     EN: Brimsthorn: a agile and fierce fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Brimsthorn, Glump de feu - forme adolescente plus agile et feroce, confiant et combatif ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+184. [brimstgoth.png]  Brimstgoth  -  Feu (stade 3/3)
+     EN: Brimstgoth: a large powerful and badass fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Brimstgoth, Glump de feu - forme finale grande et puissante (badass), imposant et menacant ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+185. [coraly.png]  Coraly  -  Eau (stade 1/3)
+     EN: Coraly: a small cute baby water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Coraly, Glump d'eau - petit bebe mignon, curieux et amical ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+186. [coralback.png]  Coralback  -  Eau (stade 2/3)
+     EN: Coralback: a agile and fierce water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Coralback, Glump d'eau - forme adolescente plus agile et feroce, confiant et combatif ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+187. [coraldrake.png]  Coraldrake  -  Eau (stade 3/3)
+     EN: Coraldrake: a large powerful and badass water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Coraldrake, Glump d'eau - forme finale grande et puissante (badass), imposant et menacant ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+188. [sproutlet.png]  Sproutlet  -  Plante (stade 1/2)
+     EN: Sproutlet: a small cute baby grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sproutlet, Glump de plante - petit bebe mignon, curieux et amical ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+189. [sproutpaw.png]  Sproutpaw  -  Plante (stade 2/2)
+     EN: Sproutpaw: a agile and fierce grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sproutpaw, Glump de plante - forme adolescente plus agile et feroce, confiant et combatif ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+190. [zapmite.png]  Zapmite  -  Foudre (stade 1/3)
+     EN: Zapmite: a small cute baby electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zapmite, Glump de foudre - petit bebe mignon, curieux et amical ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+191. [zapclaw.png]  Zapclaw  -  Foudre (stade 2/3)
+     EN: Zapclaw: a agile and fierce electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zapclaw, Glump de foudre - forme adolescente plus agile et feroce, confiant et combatif ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+192. [zapnaught.png]  Zapnaught  -  Foudre (stade 3/3)
+     EN: Zapnaught: a large powerful and badass electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zapnaught, Glump de foudre - forme finale grande et puissante (badass), imposant et menacant ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+193. [pebblkit.png]  Pebblkit  -  Roche (stade 1/3)
+     EN: Pebblkit: a small cute baby rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Pebblkit, Glump de roche - petit bebe mignon, curieux et amical ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+194. [pebblmaw.png]  Pebblmaw  -  Roche (stade 2/3)
+     EN: Pebblmaw: a agile and fierce rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Pebblmaw, Glump de roche - forme adolescente plus agile et feroce, confiant et combatif ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+195. [pebblrex.png]  Pebblrex  -  Roche (stade 3/3)
+     EN: Pebblrex: a large powerful and badass rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Pebblrex, Glump de roche - forme finale grande et puissante (badass), imposant et menacant ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+196. [gelidy.png]  Gelidy  -  Glace (legendaire solo)
+     EN: Gelidy: a majestic legendary, powerful and imposing ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Gelidy, Glump de glace - legendaire majestueux et imposant, fier et legendaire ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+197. [tenebrin.png]  Tenebrin  -  Ombre (stade 1/3)
+     EN: Tenebrin: a small cute baby dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tenebrin, Glump d'ombre - petit bebe mignon, curieux et amical ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+198. [tenebrmaw.png]  Tenebrmaw  -  Ombre (stade 2/3)
+     EN: Tenebrmaw: a agile and fierce dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tenebrmaw, Glump d'ombre - forme adolescente plus agile et feroce, confiant et combatif ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+199. [tenebrthron.png]  Tenebrthron  -  Ombre (stade 3/3)
+     EN: Tenebrthron: a large powerful and badass dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tenebrthron, Glump d'ombre - forme finale grande et puissante (badass), imposant et menacant ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+200. [lumikit.png]  Lumikit  -  Lumiere (stade 1/3)
+     EN: Lumikit: a small cute baby light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Lumikit, Glump de lumiere - petit bebe mignon, curieux et amical ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+201. [lumicrest.png]  Lumicrest  -  Lumiere (stade 2/3)
+     EN: Lumicrest: a agile and fierce light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Lumicrest, Glump de lumiere - forme adolescente plus agile et feroce, confiant et combatif ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+202. [lumiarch.png]  Lumiarch  -  Lumiere (stade 3/3)
+     EN: Lumiarch: a large powerful and badass light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Lumiarch, Glump de lumiere - forme finale grande et puissante (badass), imposant et menacant ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+203. [sagebud.png]  Sagebud  -  Mystique (stade 1/2)
+     EN: Sagebud: a small cute baby psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sagebud, Glump mystique - petit bebe mignon, curieux et amical ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+204. [sagehorn.png]  Sagehorn  -  Mystique (stade 2/2)
+     EN: Sagehorn: a agile and fierce psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sagehorn, Glump mystique - forme adolescente plus agile et feroce, confiant et combatif ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+205. [titano.png]  Titano  -  Acier (stade 1/2)
+     EN: Titano: a small cute baby steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Titano, Glump d'acier - petit bebe mignon, curieux et amical ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+206. [titancrest.png]  Titancrest  -  Acier (stade 2/2)
+     EN: Titancrest: a agile and fierce steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Titancrest, Glump d'acier - forme adolescente plus agile et feroce, confiant et combatif ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+207. [sludgekit.png]  Sludgekit  -  Poison (legendaire solo)
+     EN: Sludgekit: a majestic legendary, powerful and imposing poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Sludgekit, Glump de poison - legendaire majestueux et imposant, fier et legendaire ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+208. [breezo.png]  Breezo  -  Vent (legendaire solo)
+     EN: Breezo: a majestic legendary, powerful and imposing wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Breezo, Glump de vent - legendaire majestueux et imposant, fier et legendaire ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+209. [beetlo.png]  Beetlo  -  Insecte (stade 1/3)
+     EN: Beetlo: a small cute baby bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Beetlo, Glump insecte - petit bebe mignon, curieux et amical ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+210. [beetljaw.png]  Beetljaw  -  Insecte (stade 2/3)
+     EN: Beetljaw: a agile and fierce bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Beetljaw, Glump insecte - forme adolescente plus agile et feroce, confiant et combatif ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+211. [beetlkhan.png]  Beetlkhan  -  Insecte (stade 3/3)
+     EN: Beetlkhan: a large powerful and badass bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Beetlkhan, Glump insecte - forme finale grande et puissante (badass), imposant et menacant ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+212. [dragny.png]  Dragny  -  Dragon (stade 1/3)
+     EN: Dragny: a small cute baby dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Dragny, Glump dragon - petit bebe mignon, curieux et amical ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+213. [dragnpaw.png]  Dragnpaw  -  Dragon (stade 2/3)
+     EN: Dragnpaw: a agile and fierce dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Dragnpaw, Glump dragon - forme adolescente plus agile et feroce, confiant et combatif ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+214. [dragngoth.png]  Dragngoth  -  Dragon (stade 3/3)
+     EN: Dragngoth: a large powerful and badass dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Dragngoth, Glump dragon - forme finale grande et puissante (badass), imposant et menacant ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+215. [vulcanpup.png]  Vulcanpup  -  Feu (legendaire solo)
+     EN: Vulcanpup: a majestic legendary, powerful and imposing fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Vulcanpup, Glump de feu - legendaire majestueux et imposant, fier et legendaire ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+216. [tidalmite.png]  Tidalmite  -  Eau (legendaire solo)
+     EN: Tidalmite: a majestic legendary, powerful and imposing water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tidalmite, Glump d'eau - legendaire majestueux et imposant, fier et legendaire ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+217. [rootmite.png]  Rootmite  -  Plante (stade 1/3)
+     EN: Rootmite: a small cute baby grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Rootmite, Glump de plante - petit bebe mignon, curieux et amical ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+218. [rootjaw.png]  Rootjaw  -  Plante (stade 2/3)
+     EN: Rootjaw: a agile and fierce grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Rootjaw, Glump de plante - forme adolescente plus agile et feroce, confiant et combatif ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+219. [rootmancer.png]  Rootmancer  -  Plante (stade 3/3)
+     EN: Rootmancer: a large powerful and badass grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Rootmancer, Glump de plante - forme finale grande et puissante (badass), imposant et menacant ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+220. [boltette.png]  Boltette  -  Foudre (stade 1/3)
+     EN: Boltette: a small cute baby electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Boltette, Glump de foudre - petit bebe mignon, curieux et amical ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+221. [bolthorn.png]  Bolthorn  -  Foudre (stade 2/3)
+     EN: Bolthorn: a agile and fierce electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Bolthorn, Glump de foudre - forme adolescente plus agile et feroce, confiant et combatif ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+222. [boltgoth.png]  Boltgoth  -  Foudre (stade 3/3)
+     EN: Boltgoth: a large powerful and badass electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Boltgoth, Glump de foudre - forme finale grande et puissante (badass), imposant et menacant ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+223. [stalago.png]  Stalago  -  Roche (stade 1/3)
+     EN: Stalago: a small cute baby rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stalago, Glump de roche - petit bebe mignon, curieux et amical ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+224. [stalaghorn.png]  Stalaghorn  -  Roche (stade 2/3)
+     EN: Stalaghorn: a agile and fierce rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stalaghorn, Glump de roche - forme adolescente plus agile et feroce, confiant et combatif ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+225. [stalagtitan.png]  Stalagtitan  -  Roche (stade 3/3)
+     EN: Stalagtitan: a large powerful and badass rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Stalagtitan, Glump de roche - forme finale grande et puissante (badass), imposant et menacant ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+226. [permafbud.png]  Permafbud  -  Glace (legendaire solo)
+     EN: Permafbud: a majestic legendary, powerful and imposing ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Permafbud, Glump de glace - legendaire majestueux et imposant, fier et legendaire ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+227. [nyxin.png]  Nyxin  -  Ombre (stade 1/3)
+     EN: Nyxin: a small cute baby dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nyxin, Glump d'ombre - petit bebe mignon, curieux et amical ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+228. [nyxmaw.png]  Nyxmaw  -  Ombre (stade 2/3)
+     EN: Nyxmaw: a agile and fierce dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nyxmaw, Glump d'ombre - forme adolescente plus agile et feroce, confiant et combatif ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+229. [nyxthron.png]  Nyxthron  -  Ombre (stade 3/3)
+     EN: Nyxthron: a large powerful and badass dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nyxthron, Glump d'ombre - forme finale grande et puissante (badass), imposant et menacant ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+230. [luxo1.png]  Luxo1  -  Lumiere (stade 1/2)
+     EN: Luxo1: a small cute baby light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Luxo1, Glump de lumiere - petit bebe mignon, curieux et amical ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+231. [luxpaw.png]  Luxpaw  -  Lumiere (stade 2/2)
+     EN: Luxpaw: a agile and fierce light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Luxpaw, Glump de lumiere - forme adolescente plus agile et feroce, confiant et combatif ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+232. [mystkit.png]  Mystkit  -  Mystique (stade 1/3)
+     EN: Mystkit: a small cute baby psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Mystkit, Glump mystique - petit bebe mignon, curieux et amical ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+233. [mystjaw.png]  Mystjaw  -  Mystique (stade 2/3)
+     EN: Mystjaw: a agile and fierce psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Mystjaw, Glump mystique - forme adolescente plus agile et feroce, confiant et combatif ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+234. [mystgoth.png]  Mystgoth  -  Mystique (stade 3/3)
+     EN: Mystgoth: a large powerful and badass psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Mystgoth, Glump mystique - forme finale grande et puissante (badass), imposant et menacant ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+235. [ironette.png]  Ironette  -  Acier (stade 1/3)
+     EN: Ironette: a small cute baby steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ironette, Glump d'acier - petit bebe mignon, curieux et amical ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+236. [ironwing.png]  Ironwing  -  Acier (stade 2/3)
+     EN: Ironwing: a agile and fierce steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ironwing, Glump d'acier - forme adolescente plus agile et feroce, confiant et combatif ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+237. [irontitan.png]  Irontitan  -  Acier (stade 3/3)
+     EN: Irontitan: a large powerful and badass steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Irontitan, Glump d'acier - forme finale grande et puissante (badass), imposant et menacant ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+238. [banekit.png]  Banekit  -  Poison (stade 1/2)
+     EN: Banekit: a small cute baby poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Banekit, Glump de poison - petit bebe mignon, curieux et amical ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+239. [banejaw1.png]  Banejaw1  -  Poison (stade 2/2)
+     EN: Banejaw1: a agile and fierce poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Banejaw1, Glump de poison - forme adolescente plus agile et feroce, confiant et combatif ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+240. [tempesling.png]  Tempesling  -  Vent (stade 1/3)
+     EN: Tempesling: a small cute baby wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tempesling, Glump de vent - petit bebe mignon, curieux et amical ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+241. [tempesclaw.png]  Tempesclaw  -  Vent (stade 2/3)
+     EN: Tempesclaw: a agile and fierce wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tempesclaw, Glump de vent - forme adolescente plus agile et feroce, confiant et combatif ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+242. [tempesmancer.png]  Tempesmancer  -  Vent (stade 3/3)
+     EN: Tempesmancer: a large powerful and badass wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tempesmancer, Glump de vent - forme finale grande et puissante (badass), imposant et menacant ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+243. [mantimite.png]  Mantimite  -  Insecte (stade 1/2)
+     EN: Mantimite: a small cute baby bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Mantimite, Glump insecte - petit bebe mignon, curieux et amical ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+244. [mantiback.png]  Mantiback  -  Insecte (stade 2/2)
+     EN: Mantiback: a agile and fierce bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Mantiback, Glump insecte - forme adolescente plus agile et feroce, confiant et combatif ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+245. [nidhkit.png]  Nidhkit  -  Dragon (legendaire solo)
+     EN: Nidhkit: a majestic legendary, powerful and imposing dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nidhkit, Glump dragon - legendaire majestueux et imposant, fier et legendaire ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+246. [embrette.png]  Embrette  -  Feu (stade 1/3)
+     EN: Embrette: a small cute baby fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Embrette, Glump de feu - petit bebe mignon, curieux et amical ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+247. [embrmaw.png]  Embrmaw  -  Feu (stade 2/3)
+     EN: Embrmaw: a agile and fierce fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Embrmaw, Glump de feu - forme adolescente plus agile et feroce, confiant et combatif ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+248. [embrzar.png]  Embrzar  -  Feu (stade 3/3)
+     EN: Embrzar: a large powerful and badass fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Embrzar, Glump de feu - forme finale grande et puissante (badass), imposant et menacant ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+249. [hydroy.png]  Hydroy  -  Eau (stade 1/3)
+     EN: Hydroy: a small cute baby water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Hydroy, Glump d'eau - petit bebe mignon, curieux et amical ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+250. [hydrowing.png]  Hydrowing  -  Eau (stade 2/3)
+     EN: Hydrowing: a agile and fierce water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Hydrowing, Glump d'eau - forme adolescente plus agile et feroce, confiant et combatif ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+251. [hydrorex.png]  Hydrorex  -  Eau (stade 3/3)
+     EN: Hydrorex: a large powerful and badass water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Hydrorex, Glump d'eau - forme finale grande et puissante (badass), imposant et menacant ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+252. [foliaette.png]  Foliaette  -  Plante (stade 1/3)
+     EN: Foliaette: a small cute baby grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Foliaette, Glump de plante - petit bebe mignon, curieux et amical ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+253. [foliahorn.png]  Foliahorn  -  Plante (stade 2/3)
+     EN: Foliahorn: a agile and fierce grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Foliahorn, Glump de plante - forme adolescente plus agile et feroce, confiant et combatif ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+254. [foliamancer.png]  Foliamancer  -  Plante (stade 3/3)
+     EN: Foliamancer: a large powerful and badass grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Foliamancer, Glump de plante - forme finale grande et puissante (badass), imposant et menacant ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+255. [zapkit.png]  Zapkit  -  Foudre (stade 1/3)
+     EN: Zapkit: a small cute baby electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zapkit, Glump de foudre - petit bebe mignon, curieux et amical ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+256. [zappaw.png]  Zappaw  -  Foudre (stade 2/3)
+     EN: Zappaw: a agile and fierce electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zappaw, Glump de foudre - forme adolescente plus agile et feroce, confiant et combatif ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+257. [zapkhan.png]  Zapkhan  -  Foudre (stade 3/3)
+     EN: Zapkhan: a large powerful and badass electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Zapkhan, Glump de foudre - forme finale grande et puissante (badass), imposant et menacant ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+258. [pebblo.png]  Pebblo  -  Roche (stade 1/2)
+     EN: Pebblo: a small cute baby rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Pebblo, Glump de roche - petit bebe mignon, curieux et amical ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+259. [pebblback.png]  Pebblback  -  Roche (stade 2/2)
+     EN: Pebblback: a agile and fierce rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Pebblback, Glump de roche - forme adolescente plus agile et feroce, confiant et combatif ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+260. [permafpup1.png]  Permafpup1  -  Glace (legendaire solo)
+     EN: Permafpup1: a majestic legendary, powerful and imposing ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Permafpup1, Glump de glace - legendaire majestueux et imposant, fier et legendaire ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+261. [nyxling.png]  Nyxling  -  Ombre (stade 1/3)
+     EN: Nyxling: a small cute baby dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nyxling, Glump d'ombre - petit bebe mignon, curieux et amical ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+262. [nyxhorn.png]  Nyxhorn  -  Ombre (stade 2/3)
+     EN: Nyxhorn: a agile and fierce dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nyxhorn, Glump d'ombre - forme adolescente plus agile et feroce, confiant et combatif ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+263. [nyxdrake.png]  Nyxdrake  -  Ombre (stade 3/3)
+     EN: Nyxdrake: a large powerful and badass dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Nyxdrake, Glump d'ombre - forme finale grande et puissante (badass), imposant et menacant ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+264. [gleamlet.png]  Gleamlet  -  Lumiere (stade 1/2)
+     EN: Gleamlet: a small cute baby light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Gleamlet, Glump de lumiere - petit bebe mignon, curieux et amical ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+265. [gleamcrest.png]  Gleamcrest  -  Lumiere (stade 2/2)
+     EN: Gleamcrest: a agile and fierce light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Gleamcrest, Glump de lumiere - forme adolescente plus agile et feroce, confiant et combatif ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+
+266. [astray1.png]  Astray1  -  Mystique (stade 1/2)
+     EN: Astray1: a small cute baby psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Astray1, Glump mystique - petit bebe mignon, curieux et amical ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+267. [astramaw.png]  Astramaw  -  Mystique (stade 2/2)
+     EN: Astramaw: a agile and fierce psychic-type monster, iridescent pink and purple, floating runes, gems and a magic aura, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Astramaw, Glump mystique - forme adolescente plus agile et feroce, confiant et combatif ; runes flottantes, gemmes, aura magique ; couleurs rose et violet iridescent.
+
+268. [magnling.png]  Magnling  -  Acier (legendaire solo)
+     EN: Magnling: a majestic legendary, powerful and imposing steel-type monster, silver and steel-blue, metal plates, rivets and joints, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Magnling, Glump d'acier - legendaire majestueux et imposant, fier et legendaire ; plaques metalliques, rivets, articulations ; couleurs argent et acier bleute.
+
+269. [virubud.png]  Virubud  -  Poison (stade 1/3)
+     EN: Virubud: a small cute baby poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Virubud, Glump de poison - petit bebe mignon, curieux et amical ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+270. [virucrest.png]  Virucrest  -  Poison (stade 2/3)
+     EN: Virucrest: a agile and fierce poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Virucrest, Glump de poison - forme adolescente plus agile et feroce, confiant et combatif ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+271. [viruarch.png]  Viruarch  -  Poison (stade 3/3)
+     EN: Viruarch: a large powerful and badass poison-type monster, purple and venomous green, acid spit and toxic bubbles, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Viruarch, Glump de poison - forme finale grande et puissante (badass), imposant et menacant ; crachats acides, bulles toxiques ; couleurs violet et vert venimeux.
+
+272. [tempesette.png]  Tempesette  -  Vent (stade 1/3)
+     EN: Tempesette: a small cute baby wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tempesette, Glump de vent - petit bebe mignon, curieux et amical ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+273. [tempesclaw1.png]  Tempesclaw1  -  Vent (stade 2/3)
+     EN: Tempesclaw1: a agile and fierce wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tempesclaw1, Glump de vent - forme adolescente plus agile et feroce, confiant et combatif ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+274. [tempestitan.png]  Tempestitan  -  Vent (stade 3/3)
+     EN: Tempestitan: a large powerful and badass wind-type monster, white and light cyan, wings and swirling air currents, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tempestitan, Glump de vent - forme finale grande et puissante (badass), imposant et menacant ; ailes, tourbillons d air ; couleurs blanc et cyan leger.
+
+275. [scarabbud.png]  Scarabbud  -  Insecte (stade 1/3)
+     EN: Scarabbud: a small cute baby bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabbud, Glump insecte - petit bebe mignon, curieux et amical ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+276. [scarabcrest1.png]  Scarabcrest1  -  Insecte (stade 2/3)
+     EN: Scarabcrest1: a agile and fierce bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabcrest1, Glump insecte - forme adolescente plus agile et feroce, confiant et combatif ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+277. [scarabkhan.png]  Scarabkhan  -  Insecte (stade 3/3)
+     EN: Scarabkhan: a large powerful and badass bug-type monster, green and chitin-brown, carapace, pincers and antennae, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Scarabkhan, Glump insecte - forme finale grande et puissante (badass), imposant et menacant ; carapace, pinces, antennes ; couleurs vert et brun chitineux.
+
+278. [ryukit1.png]  Ryukit1  -  Dragon (stade 1/3)
+     EN: Ryukit1: a small cute baby dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ryukit1, Glump dragon - petit bebe mignon, curieux et amical ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+279. [ryuback.png]  Ryuback  -  Dragon (stade 2/3)
+     EN: Ryuback: a agile and fierce dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ryuback, Glump dragon - forme adolescente plus agile et feroce, confiant et combatif ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+280. [ryumancer.png]  Ryumancer  -  Dragon (stade 3/3)
+     EN: Ryumancer: a large powerful and badass dragon-type monster, deep purple with sheen, scales, horns and membranous wings, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Ryumancer, Glump dragon - forme finale grande et puissante (badass), imposant et menacant ; ecailles, cornes, ailes membraneuses ; couleurs violet profond et reflets.
+
+281. [cinderette.png]  Cinderette  -  Feu (stade 1/2)
+     EN: Cinderette: a small cute baby fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Cinderette, Glump de feu - petit bebe mignon, curieux et amical ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+282. [cindermaw.png]  Cindermaw  -  Feu (stade 2/2)
+     EN: Cindermaw: a agile and fierce fire-type monster, orange and fiery red, bright flames and glowing embers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Cindermaw, Glump de feu - forme adolescente plus agile et feroce, confiant et combatif ; flammes vives, braises rougeoyantes ; couleurs orange et rouge ardent.
+
+283. [tidalmite1.png]  Tidalmite1  -  Eau (stade 1/3)
+     EN: Tidalmite1: a small cute baby water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tidalmite1, Glump d'eau - petit bebe mignon, curieux et amical ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+284. [tidalclaw.png]  Tidalclaw  -  Eau (stade 2/3)
+     EN: Tidalclaw: a agile and fierce water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tidalclaw, Glump d'eau - forme adolescente plus agile et feroce, confiant et combatif ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+285. [tidalzar.png]  Tidalzar  -  Eau (stade 3/3)
+     EN: Tidalzar: a large powerful and badass water-type monster, blue and turquoise, fins, water motifs and droplets, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Tidalzar, Glump d'eau - forme finale grande et puissante (badass), imposant et menacant ; nageoires, motifs aquatiques, gouttes ; couleurs bleu et turquoise.
+
+286. [foliapup.png]  Foliapup  -  Plante (stade 1/3)
+     EN: Foliapup: a small cute baby grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Foliapup, Glump de plante - petit bebe mignon, curieux et amical ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+287. [foliapaw.png]  Foliapaw  -  Plante (stade 2/3)
+     EN: Foliapaw: a agile and fierce grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Foliapaw, Glump de plante - forme adolescente plus agile et feroce, confiant et combatif ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+288. [folianaught.png]  Folianaught  -  Plante (stade 3/3)
+     EN: Folianaught: a large powerful and badass grass-type monster, vivid green, leaves, vines and flowers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Folianaught, Glump de plante - forme finale grande et puissante (badass), imposant et menacant ; feuilles, vrilles, fleurs ; couleurs vert vif.
+
+289. [boltling.png]  Boltling  -  Foudre (stade 1/3)
+     EN: Boltling: a small cute baby electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Boltling, Glump de foudre - petit bebe mignon, curieux et amical ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+290. [boltmaw.png]  Boltmaw  -  Foudre (stade 2/3)
+     EN: Boltmaw: a agile and fierce electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Boltmaw, Glump de foudre - forme adolescente plus agile et feroce, confiant et combatif ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+291. [boltthron.png]  Boltthron  -  Foudre (stade 3/3)
+     EN: Boltthron: a large powerful and badass electric-type monster, electric yellow, lightning bolts and crackling sparks, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Boltthron, Glump de foudre - forme finale grande et puissante (badass), imposant et menacant ; eclairs, etincelles, energie crepitante ; couleurs jaune electrique.
+
+292. [granito.png]  Granito  -  Roche (stade 1/3)
+     EN: Granito: a small cute baby rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Granito, Glump de roche - petit bebe mignon, curieux et amical ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+293. [granithorn1.png]  Granithorn1  -  Roche (stade 2/3)
+     EN: Granithorn1: a agile and fierce rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Granithorn1, Glump de roche - forme adolescente plus agile et feroce, confiant et combatif ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+294. [granitthron.png]  Granitthron  -  Roche (stade 3/3)
+     EN: Granitthron: a large powerful and badass rock-type monster, brown and stone-grey, rocky plates and mineral crystals, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Granitthron, Glump de roche - forme finale grande et puissante (badass), imposant et menacant ; plaques rocheuses, cristaux mineraux ; couleurs brun et gris pierre.
+
+295. [glacipup.png]  Glacipup  -  Glace (stade 1/3)
+     EN: Glacipup: a small cute baby ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Glacipup, Glump de glace - petit bebe mignon, curieux et amical ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+296. [glacipaw.png]  Glacipaw  -  Glace (stade 2/3)
+     EN: Glacipaw: a agile and fierce ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Glacipaw, Glump de glace - forme adolescente plus agile et feroce, confiant et combatif ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+297. [glacititan.png]  Glacititan  -  Glace (stade 3/3)
+     EN: Glacititan: a large powerful and badass ice-type monster, pale glacial blue, ice crystals, frost and frozen shards, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Glacititan, Glump de glace - forme finale grande et puissante (badass), imposant et menacant ; cristaux de glace, givre, eclats gelis ; couleurs bleu glacial clair.
+
+298. [eclipspup.png]  Eclipspup  -  Ombre (stade 1/2)
+     EN: Eclipspup: a small cute baby dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Eclipspup, Glump d'ombre - petit bebe mignon, curieux et amical ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+299. [eclipsjaw.png]  Eclipsjaw  -  Ombre (stade 2/2)
+     EN: Eclipsjaw: a agile and fierce dark-type monster, dark purple and black, wisps of shadow and glowing eyes, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Eclipsjaw, Glump d'ombre - forme adolescente plus agile et feroce, confiant et combatif ; volutes d ombre, yeux luisants ; couleurs violet sombre et noir.
+
+300. [gleamette.png]  Gleamette  -  Lumiere (legendaire solo)
+     EN: Gleamette: a majestic legendary, powerful and imposing light-type monster, gold and radiant white, glowing halo and shining feathers, stylized game mascot, cel-shading, bold clean outlines, rim lighting, vibrant colors, full body, centered, transparent background, no text.
+     FR: Gleamette, Glump de lumiere - legendaire majestueux et imposant, fier et legendaire ; halo lumineux, plumes brillantes ; couleurs dore et blanc eclatant.
+

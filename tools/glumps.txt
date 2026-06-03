@@ -1,43 +1,126 @@
-# =====================================================================
-#  LISTE DES GLUMPS  ->  genere server/species.json
-#  Lance ensuite :  npm run gen
-# =====================================================================
-#
-#  Une ligne = une chaine d'evolution.
-#  Format :   Type | Nom1 > Nom2 > Nom3
-#
-#  - Le "|" separe le TYPE de la chaine.
-#  - Le ">" separe les formes (stade 1 > stade 2 > stade 3...).
-#  - Rarete optionnelle par forme avec ":" ->  Nom:rarete   (1 a 5)
-#    (si absente, rarete auto par stade : 1, 2, 4, 5, 5...)
-#  - Mets une "*" au debut de la ligne pour que la 1re forme soit un STARTER.
-#  - Lignes vides et lignes commencant par "#" = ignorees.
-#
-#  Types disponibles (couleur + emoji deja prets) :
-#    Feu Eau Plante Foudre Roche Glace Ombre Lumiere Mystique Acier Poison Vent Insecte Dragon
-# =====================================================================
+# Genere par tools/make300.mjs (300 Glumps). Edite librement puis 'npm run gen'.
+# Format : Type | Nom1 > Nom2 > Nom3   ( * = starter , Nom:rarete = rarete forcee )
 
-# --- Starters ---
-* Feu     | Flammkit > Pyrokit > Infernaught
-* Eau     | Aquolet > Tidolet > Leviaqua
-* Plante  | Sprouty > Floracub > Verdantaur
-
-# --- Lignees classiques ---
-Foudre    | Voltling > Sparkfang > Tempestrike
-Roche     | Pebblit > Cragmaw > Tectonarch
-Glace     | Frostnip > Glacelynx > Cryovern
-Ombre     | Shadepaw > Nocturnyx > Umbrakhan
-Lumiere   | Lumikit > Solflare > Radiantos
-Mystique  | Psyling > Mystwhisper > Oraclex
-Acier     | Cogling > Ferrobeast > Titanforge
-Poison    | Venomite > Toxifang > Malavenom
-Vent      | Gustling > Zephyron > Skytempest
-Insecte   | Larvox > Chitinaut > Mantiskar
-
-# --- Lignee dragon (final legendaire) ---
-Dragon    | Drakelet > Wyverock > Dracovoid:5
-
-# --- Legendaires solo (pas d'evolution) ---
-Mystique  | Mythira:5
-Lumiere   | Aurorking:5
-Ombre     | Eclipsewraith:5
+* Feu      | Flammkit > Pyrokit > Infernaught
+* Eau      | Aquolet > Tidolet > Leviaqua
+* Plante   | Sprouty > Floracub > Verdantaur
+Feu      | Pyroy > Pyrocrest
+Eau      | Wavo > Wavjaw
+Plante   | Verdpup > Verdclaw > Verdmancer
+Foudre   | Sparkbud:5
+Roche    | Terrapup > Terramaw > Terrazar
+Glace    | Rimeling > Rimetail
+Ombre    | Vespermite:5
+Lumiere  | Gleamling:5
+Mystique | Astray > Astrajaw
+Acier    | Titanling > Titanhorn > Titanlord
+Poison   | Virumite > Viruback > Virugoth
+Vent     | Galewin > Galewtail > Galewkhan
+Insecte  | Scarabling > Scarabtail > Scarabtitan
+Dragon   | Wyvery > Wyverwing > Wyverkhan
+Feu      | Cinderling > Cinderhorn > Cindermyr
+Eau      | Wavkit > Wavfang
+Plante   | Thorny > Thorntail > Thorndrake
+Foudre   | Fulgurbud:5
+Roche    | Stalagy > Stalagmaw > Stalagdrake
+Glace    | Glaciling > Glaciback > Glacirex
+Ombre    | Umbrin > Umbrpaw > Umbrkhan
+Lumiere  | Luxette > Luxtail > Luxmyr
+Mystique | Sageette > Sagetail > Sagethron
+Acier    | Forgelet:5
+Poison   | Baney > Banehorn > Banerex
+Vent     | Aerobud:5
+Insecte  | Vespiling > Vespimaw
+Dragon   | Ryukit > Ryucrest > Ryuzar
+Feu      | Vulcanin > Vulcanhorn > Vulcanmyr
+Eau      | Nautilbud > Nautilcrest > Nautilthron
+Plante   | Petalbud > Petalcrest
+Foudre   | Zapling > Zaptail > Zapthron
+Roche    | Stalagkit > Stalagtail > Stalaggoth
+Glace    | Permafpup > Permaffang > Permafthron
+Ombre    | Gloompup > Gloomwing > Gloomarch
+Lumiere  | Luxo > Luxjaw
+Mystique | Aethermite > Aetherback > Aethertitan
+Acier    | Rivetling:5
+Poison   | Miasbud > Miaspaw > Miasmyr
+Vent     | Cyclony > Cycloncrest > Cyclonrex
+Insecte  | Scarabmite > Scarabcrest > Scarabarch
+Dragon   | Saurbud:5
+Feu      | Igniskit > Ignispaw > Ignisdrake
+Eau      | Hydrolet > Hydrojaw > Hydrothron
+Plante   | Foliao:5
+Foudre   | Zapbud:5
+Roche    | Granitlet > Granithorn > Granitmyr
+Glace    | Shiverbud > Shiverjaw > Shiverrex
+Ombre    | Sombrkit > Sombrcrest > Sombrthron
+Lumiere  | Dawno > Dawnback > Dawnthron
+Mystique | Sageling > Sagecrest > Sagelord
+Acier    | Steelette:5
+Poison   | Baney1 > Banejaw > Banedrake
+Vent     | Stratolet > Stratowing
+Insecte  | Scarabin > Scarabwing > Scarabnaught
+Dragon   | Broodo:5
+Feu      | Blazpup > Blazcrest > Blazthron
+Eau      | Wavkit1 > Wavback > Wavzar
+Plante   | Thornling > Thornmaw > Thornrex
+Foudre   | Fulgurmite > Fulgurcrest > Fulgurmyr
+Roche    | Slatelet > Slatetail > Slatemyr
+Glace    | Frostlet > Frostfang
+Ombre    | Noctkit > Noctclaw
+Lumiere  | Clariling > Clariclaw
+Mystique | Psypup > Psyclaw > Psygoth
+Acier    | Irony > Ironpaw > Ironrex
+Poison   | Miaso > Miasfang
+Vent     | Galewy > Galewpaw > Galewrex
+Insecte  | Vespimite > Vespijaw > Vespithron
+Dragon   | Dracolet > Dracojaw
+Feu      | Brimstlet > Brimsthorn > Brimstgoth
+Eau      | Coraly > Coralback > Coraldrake
+Plante   | Sproutlet > Sproutpaw
+Foudre   | Zapmite > Zapclaw > Zapnaught
+Roche    | Pebblkit > Pebblmaw > Pebblrex
+Glace    | Gelidy:5
+Ombre    | Tenebrin > Tenebrmaw > Tenebrthron
+Lumiere  | Lumikit > Lumicrest > Lumiarch
+Mystique | Sagebud > Sagehorn
+Acier    | Titano > Titancrest
+Poison   | Sludgekit:5
+Vent     | Breezo:5
+Insecte  | Beetlo > Beetljaw > Beetlkhan
+Dragon   | Dragny > Dragnpaw > Dragngoth
+Feu      | Vulcanpup:5
+Eau      | Tidalmite:5
+Plante   | Rootmite > Rootjaw > Rootmancer
+Foudre   | Boltette > Bolthorn > Boltgoth
+Roche    | Stalago > Stalaghorn > Stalagtitan
+Glace    | Permafbud:5
+Ombre    | Nyxin > Nyxmaw > Nyxthron
+Lumiere  | Luxo1 > Luxpaw
+Mystique | Mystkit > Mystjaw > Mystgoth
+Acier    | Ironette > Ironwing > Irontitan
+Poison   | Banekit > Banejaw1
+Vent     | Tempesling > Tempesclaw > Tempesmancer
+Insecte  | Mantimite > Mantiback
+Dragon   | Nidhkit:5
+Feu      | Embrette > Embrmaw > Embrzar
+Eau      | Hydroy > Hydrowing > Hydrorex
+Plante   | Foliaette > Foliahorn > Foliamancer
+Foudre   | Zapkit > Zappaw > Zapkhan
+Roche    | Pebblo > Pebblback
+Glace    | Permafpup1:5
+Ombre    | Nyxling > Nyxhorn > Nyxdrake
+Lumiere  | Gleamlet > Gleamcrest
+Mystique | Astray1 > Astramaw
+Acier    | Magnling:5
+Poison   | Virubud > Virucrest > Viruarch
+Vent     | Tempesette > Tempesclaw1 > Tempestitan
+Insecte  | Scarabbud > Scarabcrest1 > Scarabkhan
+Dragon   | Ryukit1 > Ryuback > Ryumancer
+Feu      | Cinderette > Cindermaw
+Eau      | Tidalmite1 > Tidalclaw > Tidalzar
+Plante   | Foliapup > Foliapaw > Folianaught
+Foudre   | Boltling > Boltmaw > Boltthron
+Roche    | Granito > Granithorn1 > Granitthron
+Glace    | Glacipup > Glacipaw > Glacititan
+Ombre    | Eclipspup > Eclipsjaw
+Lumiere  | Gleamette:5

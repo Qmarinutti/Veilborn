@@ -4,7 +4,7 @@
     "type": "Feu",
     "rarity": 1,
     "color": "#ff7a45",
-    "shape": "beast",
+    "shape": "serpent",
     "line": "flammkit",
     "stage": 1,
     "evolvesTo": "pyrokit",
@@ -15,7 +15,7 @@
     "type": "Feu",
     "rarity": 2,
     "color": "#e06b3d",
-    "shape": "beast",
+    "shape": "dino",
     "line": "flammkit",
     "stage": 2,
     "evolvesTo": "infernaught"
@@ -56,7 +56,7 @@
     "type": "Eau",
     "rarity": 4,
     "color": "#3586b6",
-    "shape": "serpent",
+    "shape": "beast",
     "line": "aquolet",
     "stage": 3,
     "evolvesTo": null
@@ -66,7 +66,7 @@
     "type": "Plante",
     "rarity": 1,
     "color": "#5fc463",
-    "shape": "sprout",
+    "shape": "serpent",
     "line": "sprouty",
     "stage": 1,
     "evolvesTo": "floracub",
@@ -87,128 +87,1908 @@
     "type": "Plante",
     "rarity": 4,
     "color": "#48954b",
-    "shape": "dino",
+    "shape": "serpent",
     "line": "sprouty",
     "stage": 3,
     "evolvesTo": null
   },
-  "voltling": {
-    "name": "Voltling",
-    "type": "Foudre",
+  "pyroy": {
+    "name": "Pyroy",
+    "type": "Feu",
     "rarity": 1,
-    "color": "#f2c037",
-    "shape": "beast",
-    "line": "voltling",
+    "color": "#ff7a45",
+    "shape": "sprout",
+    "line": "pyroy",
     "stage": 1,
-    "evolvesTo": "sparkfang"
+    "evolvesTo": "pyrocrest"
   },
-  "sparkfang": {
-    "name": "Sparkfang",
-    "type": "Foudre",
+  "pyrocrest": {
+    "name": "Pyrocrest",
+    "type": "Feu",
     "rarity": 2,
-    "color": "#d5a930",
-    "shape": "beast",
-    "line": "voltling",
-    "stage": 2,
-    "evolvesTo": "tempestrike"
-  },
-  "tempestrike": {
-    "name": "Tempestrike",
-    "type": "Foudre",
-    "rarity": 4,
-    "color": "#b8922a",
+    "color": "#e06b3d",
     "shape": "dino",
-    "line": "voltling",
+    "line": "pyroy",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "wavo": {
+    "name": "Wavo",
+    "type": "Eau",
+    "rarity": 1,
+    "color": "#46b0ef",
+    "shape": "blob",
+    "line": "wavo",
+    "stage": 1,
+    "evolvesTo": "wavjaw"
+  },
+  "wavjaw": {
+    "name": "Wavjaw",
+    "type": "Eau",
+    "rarity": 2,
+    "color": "#3e9bd2",
+    "shape": "serpent",
+    "line": "wavo",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "verdpup": {
+    "name": "Verdpup",
+    "type": "Plante",
+    "rarity": 1,
+    "color": "#5fc463",
+    "shape": "sprout",
+    "line": "verdpup",
+    "stage": 1,
+    "evolvesTo": "verdclaw"
+  },
+  "verdclaw": {
+    "name": "Verdclaw",
+    "type": "Plante",
+    "rarity": 2,
+    "color": "#54ac57",
+    "shape": "sprout",
+    "line": "verdpup",
+    "stage": 2,
+    "evolvesTo": "verdmancer"
+  },
+  "verdmancer": {
+    "name": "Verdmancer",
+    "type": "Plante",
+    "rarity": 4,
+    "color": "#48954b",
+    "shape": "serpent",
+    "line": "verdpup",
     "stage": 3,
     "evolvesTo": null
   },
-  "pebblit": {
-    "name": "Pebblit",
+  "sparkbud": {
+    "name": "Sparkbud",
+    "type": "Foudre",
+    "rarity": 5,
+    "color": "#f2c037",
+    "shape": "beast",
+    "line": "sparkbud",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "terrapup": {
+    "name": "Terrapup",
     "type": "Roche",
     "rarity": 1,
     "color": "#9b7a55",
-    "shape": "beast",
-    "line": "pebblit",
+    "shape": "sprout",
+    "line": "terrapup",
     "stage": 1,
-    "evolvesTo": "cragmaw"
+    "evolvesTo": "terramaw"
   },
-  "cragmaw": {
-    "name": "Cragmaw",
+  "terramaw": {
+    "name": "Terramaw",
     "type": "Roche",
     "rarity": 2,
     "color": "#886b4b",
-    "shape": "beast",
-    "line": "pebblit",
+    "shape": "dino",
+    "line": "terrapup",
     "stage": 2,
-    "evolvesTo": "tectonarch"
+    "evolvesTo": "terrazar"
   },
-  "tectonarch": {
-    "name": "Tectonarch",
+  "terrazar": {
+    "name": "Terrazar",
     "type": "Roche",
     "rarity": 4,
     "color": "#765d41",
     "shape": "dino",
-    "line": "pebblit",
+    "line": "terrapup",
     "stage": 3,
     "evolvesTo": null
   },
-  "frostnip": {
-    "name": "Frostnip",
+  "rimeling": {
+    "name": "Rimeling",
     "type": "Glace",
     "rarity": 1,
     "color": "#7ed4e6",
-    "shape": "beast",
-    "line": "frostnip",
+    "shape": "dino",
+    "line": "rimeling",
     "stage": 1,
-    "evolvesTo": "glacelynx"
+    "evolvesTo": "rimetail"
   },
-  "glacelynx": {
-    "name": "Glacelynx",
+  "rimetail": {
+    "name": "Rimetail",
     "type": "Glace",
     "rarity": 2,
     "color": "#6fbbca",
-    "shape": "beast",
-    "line": "frostnip",
+    "shape": "dino",
+    "line": "rimeling",
     "stage": 2,
-    "evolvesTo": "cryovern"
+    "evolvesTo": null
   },
-  "cryovern": {
-    "name": "Cryovern",
+  "vespermite": {
+    "name": "Vespermite",
+    "type": "Ombre",
+    "rarity": 5,
+    "color": "#6a5acd",
+    "shape": "dino",
+    "line": "vespermite",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "gleamling": {
+    "name": "Gleamling",
+    "type": "Lumiere",
+    "rarity": 5,
+    "color": "#ffd966",
+    "shape": "serpent",
+    "line": "gleamling",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "astray": {
+    "name": "Astray",
+    "type": "Mystique",
+    "rarity": 1,
+    "color": "#e75da8",
+    "shape": "beast",
+    "line": "astray",
+    "stage": 1,
+    "evolvesTo": "astrajaw"
+  },
+  "astrajaw": {
+    "name": "Astrajaw",
+    "type": "Mystique",
+    "rarity": 2,
+    "color": "#cb5294",
+    "shape": "blob",
+    "line": "astray",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "titanling": {
+    "name": "Titanling",
+    "type": "Acier",
+    "rarity": 1,
+    "color": "#9fb0c9",
+    "shape": "dino",
+    "line": "titanling",
+    "stage": 1,
+    "evolvesTo": "titanhorn"
+  },
+  "titanhorn": {
+    "name": "Titanhorn",
+    "type": "Acier",
+    "rarity": 2,
+    "color": "#8c9bb1",
+    "shape": "blob",
+    "line": "titanling",
+    "stage": 2,
+    "evolvesTo": "titanlord"
+  },
+  "titanlord": {
+    "name": "Titanlord",
+    "type": "Acier",
+    "rarity": 4,
+    "color": "#798699",
+    "shape": "dino",
+    "line": "titanling",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "virumite": {
+    "name": "Virumite",
+    "type": "Poison",
+    "rarity": 1,
+    "color": "#a96bd6",
+    "shape": "serpent",
+    "line": "virumite",
+    "stage": 1,
+    "evolvesTo": "viruback"
+  },
+  "viruback": {
+    "name": "Viruback",
+    "type": "Poison",
+    "rarity": 2,
+    "color": "#955ebc",
+    "shape": "serpent",
+    "line": "virumite",
+    "stage": 2,
+    "evolvesTo": "virugoth"
+  },
+  "virugoth": {
+    "name": "Virugoth",
+    "type": "Poison",
+    "rarity": 4,
+    "color": "#8051a3",
+    "shape": "beast",
+    "line": "virumite",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "galewin": {
+    "name": "Galewin",
+    "type": "Vent",
+    "rarity": 1,
+    "color": "#8fe3c2",
+    "shape": "serpent",
+    "line": "galewin",
+    "stage": 1,
+    "evolvesTo": "galewtail"
+  },
+  "galewtail": {
+    "name": "Galewtail",
+    "type": "Vent",
+    "rarity": 2,
+    "color": "#7ec8ab",
+    "shape": "blob",
+    "line": "galewin",
+    "stage": 2,
+    "evolvesTo": "galewkhan"
+  },
+  "galewkhan": {
+    "name": "Galewkhan",
+    "type": "Vent",
+    "rarity": 4,
+    "color": "#6dad93",
+    "shape": "beast",
+    "line": "galewin",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "scarabling": {
+    "name": "Scarabling",
+    "type": "Insecte",
+    "rarity": 1,
+    "color": "#9bbf3a",
+    "shape": "serpent",
+    "line": "scarabling",
+    "stage": 1,
+    "evolvesTo": "scarabtail"
+  },
+  "scarabtail": {
+    "name": "Scarabtail",
+    "type": "Insecte",
+    "rarity": 2,
+    "color": "#88a833",
+    "shape": "serpent",
+    "line": "scarabling",
+    "stage": 2,
+    "evolvesTo": "scarabtitan"
+  },
+  "scarabtitan": {
+    "name": "Scarabtitan",
+    "type": "Insecte",
+    "rarity": 4,
+    "color": "#76912c",
+    "shape": "dino",
+    "line": "scarabling",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "wyvery": {
+    "name": "Wyvery",
+    "type": "Dragon",
+    "rarity": 1,
+    "color": "#7a5cff",
+    "shape": "sprout",
+    "line": "wyvery",
+    "stage": 1,
+    "evolvesTo": "wyverwing"
+  },
+  "wyverwing": {
+    "name": "Wyverwing",
+    "type": "Dragon",
+    "rarity": 2,
+    "color": "#6b51e0",
+    "shape": "sprout",
+    "line": "wyvery",
+    "stage": 2,
+    "evolvesTo": "wyverkhan"
+  },
+  "wyverkhan": {
+    "name": "Wyverkhan",
+    "type": "Dragon",
+    "rarity": 4,
+    "color": "#5d46c2",
+    "shape": "beast",
+    "line": "wyvery",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "cinderling": {
+    "name": "Cinderling",
+    "type": "Feu",
+    "rarity": 1,
+    "color": "#ff7a45",
+    "shape": "sprout",
+    "line": "cinderling",
+    "stage": 1,
+    "evolvesTo": "cinderhorn"
+  },
+  "cinderhorn": {
+    "name": "Cinderhorn",
+    "type": "Feu",
+    "rarity": 2,
+    "color": "#e06b3d",
+    "shape": "serpent",
+    "line": "cinderling",
+    "stage": 2,
+    "evolvesTo": "cindermyr"
+  },
+  "cindermyr": {
+    "name": "Cindermyr",
+    "type": "Feu",
+    "rarity": 4,
+    "color": "#c25d34",
+    "shape": "serpent",
+    "line": "cinderling",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "wavkit": {
+    "name": "Wavkit",
+    "type": "Eau",
+    "rarity": 1,
+    "color": "#46b0ef",
+    "shape": "blob",
+    "line": "wavkit",
+    "stage": 1,
+    "evolvesTo": "wavfang"
+  },
+  "wavfang": {
+    "name": "Wavfang",
+    "type": "Eau",
+    "rarity": 2,
+    "color": "#3e9bd2",
+    "shape": "serpent",
+    "line": "wavkit",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "thorny": {
+    "name": "Thorny",
+    "type": "Plante",
+    "rarity": 1,
+    "color": "#5fc463",
+    "shape": "blob",
+    "line": "thorny",
+    "stage": 1,
+    "evolvesTo": "thorntail"
+  },
+  "thorntail": {
+    "name": "Thorntail",
+    "type": "Plante",
+    "rarity": 2,
+    "color": "#54ac57",
+    "shape": "blob",
+    "line": "thorny",
+    "stage": 2,
+    "evolvesTo": "thorndrake"
+  },
+  "thorndrake": {
+    "name": "Thorndrake",
+    "type": "Plante",
+    "rarity": 4,
+    "color": "#48954b",
+    "shape": "beast",
+    "line": "thorny",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "fulgurbud": {
+    "name": "Fulgurbud",
+    "type": "Foudre",
+    "rarity": 5,
+    "color": "#f2c037",
+    "shape": "sprout",
+    "line": "fulgurbud",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "stalagy": {
+    "name": "Stalagy",
+    "type": "Roche",
+    "rarity": 1,
+    "color": "#9b7a55",
+    "shape": "dino",
+    "line": "stalagy",
+    "stage": 1,
+    "evolvesTo": "stalagmaw"
+  },
+  "stalagmaw": {
+    "name": "Stalagmaw",
+    "type": "Roche",
+    "rarity": 2,
+    "color": "#886b4b",
+    "shape": "blob",
+    "line": "stalagy",
+    "stage": 2,
+    "evolvesTo": "stalagdrake"
+  },
+  "stalagdrake": {
+    "name": "Stalagdrake",
+    "type": "Roche",
+    "rarity": 4,
+    "color": "#765d41",
+    "shape": "dino",
+    "line": "stalagy",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "glaciling": {
+    "name": "Glaciling",
+    "type": "Glace",
+    "rarity": 1,
+    "color": "#7ed4e6",
+    "shape": "serpent",
+    "line": "glaciling",
+    "stage": 1,
+    "evolvesTo": "glaciback"
+  },
+  "glaciback": {
+    "name": "Glaciback",
+    "type": "Glace",
+    "rarity": 2,
+    "color": "#6fbbca",
+    "shape": "serpent",
+    "line": "glaciling",
+    "stage": 2,
+    "evolvesTo": "glacirex"
+  },
+  "glacirex": {
+    "name": "Glacirex",
     "type": "Glace",
     "rarity": 4,
     "color": "#60a1af",
     "shape": "dino",
-    "line": "frostnip",
+    "line": "glaciling",
     "stage": 3,
     "evolvesTo": null
   },
-  "shadepaw": {
-    "name": "Shadepaw",
+  "umbrin": {
+    "name": "Umbrin",
     "type": "Ombre",
     "rarity": 1,
     "color": "#6a5acd",
-    "shape": "beast",
-    "line": "shadepaw",
+    "shape": "dino",
+    "line": "umbrin",
     "stage": 1,
-    "evolvesTo": "nocturnyx"
+    "evolvesTo": "umbrpaw"
   },
-  "nocturnyx": {
-    "name": "Nocturnyx",
+  "umbrpaw": {
+    "name": "Umbrpaw",
     "type": "Ombre",
     "rarity": 2,
     "color": "#5d4fb4",
-    "shape": "beast",
-    "line": "shadepaw",
+    "shape": "serpent",
+    "line": "umbrin",
     "stage": 2,
-    "evolvesTo": "umbrakhan"
+    "evolvesTo": "umbrkhan"
   },
-  "umbrakhan": {
-    "name": "Umbrakhan",
+  "umbrkhan": {
+    "name": "Umbrkhan",
     "type": "Ombre",
     "rarity": 4,
     "color": "#51449c",
     "shape": "dino",
-    "line": "shadepaw",
+    "line": "umbrin",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "luxette": {
+    "name": "Luxette",
+    "type": "Lumiere",
+    "rarity": 1,
+    "color": "#ffd966",
+    "shape": "blob",
+    "line": "luxette",
+    "stage": 1,
+    "evolvesTo": "luxtail"
+  },
+  "luxtail": {
+    "name": "Luxtail",
+    "type": "Lumiere",
+    "rarity": 2,
+    "color": "#e0bf5a",
+    "shape": "dino",
+    "line": "luxette",
+    "stage": 2,
+    "evolvesTo": "luxmyr"
+  },
+  "luxmyr": {
+    "name": "Luxmyr",
+    "type": "Lumiere",
+    "rarity": 4,
+    "color": "#c2a54e",
+    "shape": "beast",
+    "line": "luxette",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "sageette": {
+    "name": "Sageette",
+    "type": "Mystique",
+    "rarity": 1,
+    "color": "#e75da8",
+    "shape": "dino",
+    "line": "sageette",
+    "stage": 1,
+    "evolvesTo": "sagetail"
+  },
+  "sagetail": {
+    "name": "Sagetail",
+    "type": "Mystique",
+    "rarity": 2,
+    "color": "#cb5294",
+    "shape": "beast",
+    "line": "sageette",
+    "stage": 2,
+    "evolvesTo": "sagethron"
+  },
+  "sagethron": {
+    "name": "Sagethron",
+    "type": "Mystique",
+    "rarity": 4,
+    "color": "#b04780",
+    "shape": "serpent",
+    "line": "sageette",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "forgelet": {
+    "name": "Forgelet",
+    "type": "Acier",
+    "rarity": 5,
+    "color": "#9fb0c9",
+    "shape": "sprout",
+    "line": "forgelet",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "baney": {
+    "name": "Baney",
+    "type": "Poison",
+    "rarity": 1,
+    "color": "#a96bd6",
+    "shape": "serpent",
+    "line": "baney",
+    "stage": 1,
+    "evolvesTo": "banehorn"
+  },
+  "banehorn": {
+    "name": "Banehorn",
+    "type": "Poison",
+    "rarity": 2,
+    "color": "#955ebc",
+    "shape": "serpent",
+    "line": "baney",
+    "stage": 2,
+    "evolvesTo": "banerex"
+  },
+  "banerex": {
+    "name": "Banerex",
+    "type": "Poison",
+    "rarity": 4,
+    "color": "#8051a3",
+    "shape": "serpent",
+    "line": "baney",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "aerobud": {
+    "name": "Aerobud",
+    "type": "Vent",
+    "rarity": 5,
+    "color": "#8fe3c2",
+    "shape": "dino",
+    "line": "aerobud",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "vespiling": {
+    "name": "Vespiling",
+    "type": "Insecte",
+    "rarity": 1,
+    "color": "#9bbf3a",
+    "shape": "sprout",
+    "line": "vespiling",
+    "stage": 1,
+    "evolvesTo": "vespimaw"
+  },
+  "vespimaw": {
+    "name": "Vespimaw",
+    "type": "Insecte",
+    "rarity": 2,
+    "color": "#88a833",
+    "shape": "sprout",
+    "line": "vespiling",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "ryukit": {
+    "name": "Ryukit",
+    "type": "Dragon",
+    "rarity": 1,
+    "color": "#7a5cff",
+    "shape": "beast",
+    "line": "ryukit",
+    "stage": 1,
+    "evolvesTo": "ryucrest"
+  },
+  "ryucrest": {
+    "name": "Ryucrest",
+    "type": "Dragon",
+    "rarity": 2,
+    "color": "#6b51e0",
+    "shape": "blob",
+    "line": "ryukit",
+    "stage": 2,
+    "evolvesTo": "ryuzar"
+  },
+  "ryuzar": {
+    "name": "Ryuzar",
+    "type": "Dragon",
+    "rarity": 4,
+    "color": "#5d46c2",
+    "shape": "serpent",
+    "line": "ryukit",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "vulcanin": {
+    "name": "Vulcanin",
+    "type": "Feu",
+    "rarity": 1,
+    "color": "#ff7a45",
+    "shape": "sprout",
+    "line": "vulcanin",
+    "stage": 1,
+    "evolvesTo": "vulcanhorn"
+  },
+  "vulcanhorn": {
+    "name": "Vulcanhorn",
+    "type": "Feu",
+    "rarity": 2,
+    "color": "#e06b3d",
+    "shape": "sprout",
+    "line": "vulcanin",
+    "stage": 2,
+    "evolvesTo": "vulcanmyr"
+  },
+  "vulcanmyr": {
+    "name": "Vulcanmyr",
+    "type": "Feu",
+    "rarity": 4,
+    "color": "#c25d34",
+    "shape": "dino",
+    "line": "vulcanin",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "nautilbud": {
+    "name": "Nautilbud",
+    "type": "Eau",
+    "rarity": 1,
+    "color": "#46b0ef",
+    "shape": "blob",
+    "line": "nautilbud",
+    "stage": 1,
+    "evolvesTo": "nautilcrest"
+  },
+  "nautilcrest": {
+    "name": "Nautilcrest",
+    "type": "Eau",
+    "rarity": 2,
+    "color": "#3e9bd2",
+    "shape": "serpent",
+    "line": "nautilbud",
+    "stage": 2,
+    "evolvesTo": "nautilthron"
+  },
+  "nautilthron": {
+    "name": "Nautilthron",
+    "type": "Eau",
+    "rarity": 4,
+    "color": "#3586b6",
+    "shape": "beast",
+    "line": "nautilbud",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "petalbud": {
+    "name": "Petalbud",
+    "type": "Plante",
+    "rarity": 1,
+    "color": "#5fc463",
+    "shape": "beast",
+    "line": "petalbud",
+    "stage": 1,
+    "evolvesTo": "petalcrest"
+  },
+  "petalcrest": {
+    "name": "Petalcrest",
+    "type": "Plante",
+    "rarity": 2,
+    "color": "#54ac57",
+    "shape": "serpent",
+    "line": "petalbud",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "zapling": {
+    "name": "Zapling",
+    "type": "Foudre",
+    "rarity": 1,
+    "color": "#f2c037",
+    "shape": "serpent",
+    "line": "zapling",
+    "stage": 1,
+    "evolvesTo": "zaptail"
+  },
+  "zaptail": {
+    "name": "Zaptail",
+    "type": "Foudre",
+    "rarity": 2,
+    "color": "#d5a930",
+    "shape": "serpent",
+    "line": "zapling",
+    "stage": 2,
+    "evolvesTo": "zapthron"
+  },
+  "zapthron": {
+    "name": "Zapthron",
+    "type": "Foudre",
+    "rarity": 4,
+    "color": "#b8922a",
+    "shape": "dino",
+    "line": "zapling",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "stalagkit": {
+    "name": "Stalagkit",
+    "type": "Roche",
+    "rarity": 1,
+    "color": "#9b7a55",
+    "shape": "sprout",
+    "line": "stalagkit",
+    "stage": 1,
+    "evolvesTo": "stalagtail"
+  },
+  "stalagtail": {
+    "name": "Stalagtail",
+    "type": "Roche",
+    "rarity": 2,
+    "color": "#886b4b",
+    "shape": "dino",
+    "line": "stalagkit",
+    "stage": 2,
+    "evolvesTo": "stalaggoth"
+  },
+  "stalaggoth": {
+    "name": "Stalaggoth",
+    "type": "Roche",
+    "rarity": 4,
+    "color": "#765d41",
+    "shape": "serpent",
+    "line": "stalagkit",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "permafpup": {
+    "name": "Permafpup",
+    "type": "Glace",
+    "rarity": 1,
+    "color": "#7ed4e6",
+    "shape": "sprout",
+    "line": "permafpup",
+    "stage": 1,
+    "evolvesTo": "permaffang"
+  },
+  "permaffang": {
+    "name": "Permaffang",
+    "type": "Glace",
+    "rarity": 2,
+    "color": "#6fbbca",
+    "shape": "blob",
+    "line": "permafpup",
+    "stage": 2,
+    "evolvesTo": "permafthron"
+  },
+  "permafthron": {
+    "name": "Permafthron",
+    "type": "Glace",
+    "rarity": 4,
+    "color": "#60a1af",
+    "shape": "beast",
+    "line": "permafpup",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "gloompup": {
+    "name": "Gloompup",
+    "type": "Ombre",
+    "rarity": 1,
+    "color": "#6a5acd",
+    "shape": "blob",
+    "line": "gloompup",
+    "stage": 1,
+    "evolvesTo": "gloomwing"
+  },
+  "gloomwing": {
+    "name": "Gloomwing",
+    "type": "Ombre",
+    "rarity": 2,
+    "color": "#5d4fb4",
+    "shape": "beast",
+    "line": "gloompup",
+    "stage": 2,
+    "evolvesTo": "gloomarch"
+  },
+  "gloomarch": {
+    "name": "Gloomarch",
+    "type": "Ombre",
+    "rarity": 4,
+    "color": "#51449c",
+    "shape": "serpent",
+    "line": "gloompup",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "luxo": {
+    "name": "Luxo",
+    "type": "Lumiere",
+    "rarity": 1,
+    "color": "#ffd966",
+    "shape": "blob",
+    "line": "luxo",
+    "stage": 1,
+    "evolvesTo": "luxjaw"
+  },
+  "luxjaw": {
+    "name": "Luxjaw",
+    "type": "Lumiere",
+    "rarity": 2,
+    "color": "#e0bf5a",
+    "shape": "serpent",
+    "line": "luxo",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "aethermite": {
+    "name": "Aethermite",
+    "type": "Mystique",
+    "rarity": 1,
+    "color": "#e75da8",
+    "shape": "beast",
+    "line": "aethermite",
+    "stage": 1,
+    "evolvesTo": "aetherback"
+  },
+  "aetherback": {
+    "name": "Aetherback",
+    "type": "Mystique",
+    "rarity": 2,
+    "color": "#cb5294",
+    "shape": "beast",
+    "line": "aethermite",
+    "stage": 2,
+    "evolvesTo": "aethertitan"
+  },
+  "aethertitan": {
+    "name": "Aethertitan",
+    "type": "Mystique",
+    "rarity": 4,
+    "color": "#b04780",
+    "shape": "serpent",
+    "line": "aethermite",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "rivetling": {
+    "name": "Rivetling",
+    "type": "Acier",
+    "rarity": 5,
+    "color": "#9fb0c9",
+    "shape": "beast",
+    "line": "rivetling",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "miasbud": {
+    "name": "Miasbud",
+    "type": "Poison",
+    "rarity": 1,
+    "color": "#a96bd6",
+    "shape": "dino",
+    "line": "miasbud",
+    "stage": 1,
+    "evolvesTo": "miaspaw"
+  },
+  "miaspaw": {
+    "name": "Miaspaw",
+    "type": "Poison",
+    "rarity": 2,
+    "color": "#955ebc",
+    "shape": "blob",
+    "line": "miasbud",
+    "stage": 2,
+    "evolvesTo": "miasmyr"
+  },
+  "miasmyr": {
+    "name": "Miasmyr",
+    "type": "Poison",
+    "rarity": 4,
+    "color": "#8051a3",
+    "shape": "dino",
+    "line": "miasbud",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "cyclony": {
+    "name": "Cyclony",
+    "type": "Vent",
+    "rarity": 1,
+    "color": "#8fe3c2",
+    "shape": "dino",
+    "line": "cyclony",
+    "stage": 1,
+    "evolvesTo": "cycloncrest"
+  },
+  "cycloncrest": {
+    "name": "Cycloncrest",
+    "type": "Vent",
+    "rarity": 2,
+    "color": "#7ec8ab",
+    "shape": "beast",
+    "line": "cyclony",
+    "stage": 2,
+    "evolvesTo": "cyclonrex"
+  },
+  "cyclonrex": {
+    "name": "Cyclonrex",
+    "type": "Vent",
+    "rarity": 4,
+    "color": "#6dad93",
+    "shape": "serpent",
+    "line": "cyclony",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "scarabmite": {
+    "name": "Scarabmite",
+    "type": "Insecte",
+    "rarity": 1,
+    "color": "#9bbf3a",
+    "shape": "serpent",
+    "line": "scarabmite",
+    "stage": 1,
+    "evolvesTo": "scarabcrest"
+  },
+  "scarabcrest": {
+    "name": "Scarabcrest",
+    "type": "Insecte",
+    "rarity": 2,
+    "color": "#88a833",
+    "shape": "blob",
+    "line": "scarabmite",
+    "stage": 2,
+    "evolvesTo": "scarabarch"
+  },
+  "scarabarch": {
+    "name": "Scarabarch",
+    "type": "Insecte",
+    "rarity": 4,
+    "color": "#76912c",
+    "shape": "serpent",
+    "line": "scarabmite",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "saurbud": {
+    "name": "Saurbud",
+    "type": "Dragon",
+    "rarity": 5,
+    "color": "#7a5cff",
+    "shape": "sprout",
+    "line": "saurbud",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "igniskit": {
+    "name": "Igniskit",
+    "type": "Feu",
+    "rarity": 1,
+    "color": "#ff7a45",
+    "shape": "serpent",
+    "line": "igniskit",
+    "stage": 1,
+    "evolvesTo": "ignispaw"
+  },
+  "ignispaw": {
+    "name": "Ignispaw",
+    "type": "Feu",
+    "rarity": 2,
+    "color": "#e06b3d",
+    "shape": "serpent",
+    "line": "igniskit",
+    "stage": 2,
+    "evolvesTo": "ignisdrake"
+  },
+  "ignisdrake": {
+    "name": "Ignisdrake",
+    "type": "Feu",
+    "rarity": 4,
+    "color": "#c25d34",
+    "shape": "dino",
+    "line": "igniskit",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "hydrolet": {
+    "name": "Hydrolet",
+    "type": "Eau",
+    "rarity": 1,
+    "color": "#46b0ef",
+    "shape": "blob",
+    "line": "hydrolet",
+    "stage": 1,
+    "evolvesTo": "hydrojaw"
+  },
+  "hydrojaw": {
+    "name": "Hydrojaw",
+    "type": "Eau",
+    "rarity": 2,
+    "color": "#3e9bd2",
+    "shape": "serpent",
+    "line": "hydrolet",
+    "stage": 2,
+    "evolvesTo": "hydrothron"
+  },
+  "hydrothron": {
+    "name": "Hydrothron",
+    "type": "Eau",
+    "rarity": 4,
+    "color": "#3586b6",
+    "shape": "dino",
+    "line": "hydrolet",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "foliao": {
+    "name": "Foliao",
+    "type": "Plante",
+    "rarity": 5,
+    "color": "#5fc463",
+    "shape": "sprout",
+    "line": "foliao",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "zapbud": {
+    "name": "Zapbud",
+    "type": "Foudre",
+    "rarity": 5,
+    "color": "#f2c037",
+    "shape": "blob",
+    "line": "zapbud",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "granitlet": {
+    "name": "Granitlet",
+    "type": "Roche",
+    "rarity": 1,
+    "color": "#9b7a55",
+    "shape": "blob",
+    "line": "granitlet",
+    "stage": 1,
+    "evolvesTo": "granithorn"
+  },
+  "granithorn": {
+    "name": "Granithorn",
+    "type": "Roche",
+    "rarity": 2,
+    "color": "#886b4b",
+    "shape": "dino",
+    "line": "granitlet",
+    "stage": 2,
+    "evolvesTo": "granitmyr"
+  },
+  "granitmyr": {
+    "name": "Granitmyr",
+    "type": "Roche",
+    "rarity": 4,
+    "color": "#765d41",
+    "shape": "beast",
+    "line": "granitlet",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "shiverbud": {
+    "name": "Shiverbud",
+    "type": "Glace",
+    "rarity": 1,
+    "color": "#7ed4e6",
+    "shape": "serpent",
+    "line": "shiverbud",
+    "stage": 1,
+    "evolvesTo": "shiverjaw"
+  },
+  "shiverjaw": {
+    "name": "Shiverjaw",
+    "type": "Glace",
+    "rarity": 2,
+    "color": "#6fbbca",
+    "shape": "sprout",
+    "line": "shiverbud",
+    "stage": 2,
+    "evolvesTo": "shiverrex"
+  },
+  "shiverrex": {
+    "name": "Shiverrex",
+    "type": "Glace",
+    "rarity": 4,
+    "color": "#60a1af",
+    "shape": "dino",
+    "line": "shiverbud",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "sombrkit": {
+    "name": "Sombrkit",
+    "type": "Ombre",
+    "rarity": 1,
+    "color": "#6a5acd",
+    "shape": "beast",
+    "line": "sombrkit",
+    "stage": 1,
+    "evolvesTo": "sombrcrest"
+  },
+  "sombrcrest": {
+    "name": "Sombrcrest",
+    "type": "Ombre",
+    "rarity": 2,
+    "color": "#5d4fb4",
+    "shape": "blob",
+    "line": "sombrkit",
+    "stage": 2,
+    "evolvesTo": "sombrthron"
+  },
+  "sombrthron": {
+    "name": "Sombrthron",
+    "type": "Ombre",
+    "rarity": 4,
+    "color": "#51449c",
+    "shape": "dino",
+    "line": "sombrkit",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "dawno": {
+    "name": "Dawno",
+    "type": "Lumiere",
+    "rarity": 1,
+    "color": "#ffd966",
+    "shape": "serpent",
+    "line": "dawno",
+    "stage": 1,
+    "evolvesTo": "dawnback"
+  },
+  "dawnback": {
+    "name": "Dawnback",
+    "type": "Lumiere",
+    "rarity": 2,
+    "color": "#e0bf5a",
+    "shape": "blob",
+    "line": "dawno",
+    "stage": 2,
+    "evolvesTo": "dawnthron"
+  },
+  "dawnthron": {
+    "name": "Dawnthron",
+    "type": "Lumiere",
+    "rarity": 4,
+    "color": "#c2a54e",
+    "shape": "serpent",
+    "line": "dawno",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "sageling": {
+    "name": "Sageling",
+    "type": "Mystique",
+    "rarity": 1,
+    "color": "#e75da8",
+    "shape": "beast",
+    "line": "sageling",
+    "stage": 1,
+    "evolvesTo": "sagecrest"
+  },
+  "sagecrest": {
+    "name": "Sagecrest",
+    "type": "Mystique",
+    "rarity": 2,
+    "color": "#cb5294",
+    "shape": "serpent",
+    "line": "sageling",
+    "stage": 2,
+    "evolvesTo": "sagelord"
+  },
+  "sagelord": {
+    "name": "Sagelord",
+    "type": "Mystique",
+    "rarity": 4,
+    "color": "#b04780",
+    "shape": "beast",
+    "line": "sageling",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "steelette": {
+    "name": "Steelette",
+    "type": "Acier",
+    "rarity": 5,
+    "color": "#9fb0c9",
+    "shape": "sprout",
+    "line": "steelette",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "baney1": {
+    "name": "Baney1",
+    "type": "Poison",
+    "rarity": 1,
+    "color": "#a96bd6",
+    "shape": "blob",
+    "line": "baney1",
+    "stage": 1,
+    "evolvesTo": "banejaw"
+  },
+  "banejaw": {
+    "name": "Banejaw",
+    "type": "Poison",
+    "rarity": 2,
+    "color": "#955ebc",
+    "shape": "dino",
+    "line": "baney1",
+    "stage": 2,
+    "evolvesTo": "banedrake"
+  },
+  "banedrake": {
+    "name": "Banedrake",
+    "type": "Poison",
+    "rarity": 4,
+    "color": "#8051a3",
+    "shape": "beast",
+    "line": "baney1",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "stratolet": {
+    "name": "Stratolet",
+    "type": "Vent",
+    "rarity": 1,
+    "color": "#8fe3c2",
+    "shape": "blob",
+    "line": "stratolet",
+    "stage": 1,
+    "evolvesTo": "stratowing"
+  },
+  "stratowing": {
+    "name": "Stratowing",
+    "type": "Vent",
+    "rarity": 2,
+    "color": "#7ec8ab",
+    "shape": "beast",
+    "line": "stratolet",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "scarabin": {
+    "name": "Scarabin",
+    "type": "Insecte",
+    "rarity": 1,
+    "color": "#9bbf3a",
+    "shape": "dino",
+    "line": "scarabin",
+    "stage": 1,
+    "evolvesTo": "scarabwing"
+  },
+  "scarabwing": {
+    "name": "Scarabwing",
+    "type": "Insecte",
+    "rarity": 2,
+    "color": "#88a833",
+    "shape": "dino",
+    "line": "scarabin",
+    "stage": 2,
+    "evolvesTo": "scarabnaught"
+  },
+  "scarabnaught": {
+    "name": "Scarabnaught",
+    "type": "Insecte",
+    "rarity": 4,
+    "color": "#76912c",
+    "shape": "serpent",
+    "line": "scarabin",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "broodo": {
+    "name": "Broodo",
+    "type": "Dragon",
+    "rarity": 5,
+    "color": "#7a5cff",
+    "shape": "beast",
+    "line": "broodo",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "blazpup": {
+    "name": "Blazpup",
+    "type": "Feu",
+    "rarity": 1,
+    "color": "#ff7a45",
+    "shape": "blob",
+    "line": "blazpup",
+    "stage": 1,
+    "evolvesTo": "blazcrest"
+  },
+  "blazcrest": {
+    "name": "Blazcrest",
+    "type": "Feu",
+    "rarity": 2,
+    "color": "#e06b3d",
+    "shape": "serpent",
+    "line": "blazpup",
+    "stage": 2,
+    "evolvesTo": "blazthron"
+  },
+  "blazthron": {
+    "name": "Blazthron",
+    "type": "Feu",
+    "rarity": 4,
+    "color": "#c25d34",
+    "shape": "serpent",
+    "line": "blazpup",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "wavkit1": {
+    "name": "Wavkit1",
+    "type": "Eau",
+    "rarity": 1,
+    "color": "#46b0ef",
+    "shape": "blob",
+    "line": "wavkit1",
+    "stage": 1,
+    "evolvesTo": "wavback"
+  },
+  "wavback": {
+    "name": "Wavback",
+    "type": "Eau",
+    "rarity": 2,
+    "color": "#3e9bd2",
+    "shape": "serpent",
+    "line": "wavkit1",
+    "stage": 2,
+    "evolvesTo": "wavzar"
+  },
+  "wavzar": {
+    "name": "Wavzar",
+    "type": "Eau",
+    "rarity": 4,
+    "color": "#3586b6",
+    "shape": "serpent",
+    "line": "wavkit1",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "thornling": {
+    "name": "Thornling",
+    "type": "Plante",
+    "rarity": 1,
+    "color": "#5fc463",
+    "shape": "blob",
+    "line": "thornling",
+    "stage": 1,
+    "evolvesTo": "thornmaw"
+  },
+  "thornmaw": {
+    "name": "Thornmaw",
+    "type": "Plante",
+    "rarity": 2,
+    "color": "#54ac57",
+    "shape": "beast",
+    "line": "thornling",
+    "stage": 2,
+    "evolvesTo": "thornrex"
+  },
+  "thornrex": {
+    "name": "Thornrex",
+    "type": "Plante",
+    "rarity": 4,
+    "color": "#48954b",
+    "shape": "beast",
+    "line": "thornling",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "fulgurmite": {
+    "name": "Fulgurmite",
+    "type": "Foudre",
+    "rarity": 1,
+    "color": "#f2c037",
+    "shape": "serpent",
+    "line": "fulgurmite",
+    "stage": 1,
+    "evolvesTo": "fulgurcrest"
+  },
+  "fulgurcrest": {
+    "name": "Fulgurcrest",
+    "type": "Foudre",
+    "rarity": 2,
+    "color": "#d5a930",
+    "shape": "blob",
+    "line": "fulgurmite",
+    "stage": 2,
+    "evolvesTo": "fulgurmyr"
+  },
+  "fulgurmyr": {
+    "name": "Fulgurmyr",
+    "type": "Foudre",
+    "rarity": 4,
+    "color": "#b8922a",
+    "shape": "dino",
+    "line": "fulgurmite",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "slatelet": {
+    "name": "Slatelet",
+    "type": "Roche",
+    "rarity": 1,
+    "color": "#9b7a55",
+    "shape": "dino",
+    "line": "slatelet",
+    "stage": 1,
+    "evolvesTo": "slatetail"
+  },
+  "slatetail": {
+    "name": "Slatetail",
+    "type": "Roche",
+    "rarity": 2,
+    "color": "#886b4b",
+    "shape": "sprout",
+    "line": "slatelet",
+    "stage": 2,
+    "evolvesTo": "slatemyr"
+  },
+  "slatemyr": {
+    "name": "Slatemyr",
+    "type": "Roche",
+    "rarity": 4,
+    "color": "#765d41",
+    "shape": "beast",
+    "line": "slatelet",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "frostlet": {
+    "name": "Frostlet",
+    "type": "Glace",
+    "rarity": 1,
+    "color": "#7ed4e6",
+    "shape": "blob",
+    "line": "frostlet",
+    "stage": 1,
+    "evolvesTo": "frostfang"
+  },
+  "frostfang": {
+    "name": "Frostfang",
+    "type": "Glace",
+    "rarity": 2,
+    "color": "#6fbbca",
+    "shape": "blob",
+    "line": "frostlet",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "noctkit": {
+    "name": "Noctkit",
+    "type": "Ombre",
+    "rarity": 1,
+    "color": "#6a5acd",
+    "shape": "blob",
+    "line": "noctkit",
+    "stage": 1,
+    "evolvesTo": "noctclaw"
+  },
+  "noctclaw": {
+    "name": "Noctclaw",
+    "type": "Ombre",
+    "rarity": 2,
+    "color": "#5d4fb4",
+    "shape": "blob",
+    "line": "noctkit",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "clariling": {
+    "name": "Clariling",
+    "type": "Lumiere",
+    "rarity": 1,
+    "color": "#ffd966",
+    "shape": "dino",
+    "line": "clariling",
+    "stage": 1,
+    "evolvesTo": "clariclaw"
+  },
+  "clariclaw": {
+    "name": "Clariclaw",
+    "type": "Lumiere",
+    "rarity": 2,
+    "color": "#e0bf5a",
+    "shape": "beast",
+    "line": "clariling",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "psypup": {
+    "name": "Psypup",
+    "type": "Mystique",
+    "rarity": 1,
+    "color": "#e75da8",
+    "shape": "sprout",
+    "line": "psypup",
+    "stage": 1,
+    "evolvesTo": "psyclaw"
+  },
+  "psyclaw": {
+    "name": "Psyclaw",
+    "type": "Mystique",
+    "rarity": 2,
+    "color": "#cb5294",
+    "shape": "dino",
+    "line": "psypup",
+    "stage": 2,
+    "evolvesTo": "psygoth"
+  },
+  "psygoth": {
+    "name": "Psygoth",
+    "type": "Mystique",
+    "rarity": 4,
+    "color": "#b04780",
+    "shape": "dino",
+    "line": "psypup",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "irony": {
+    "name": "Irony",
+    "type": "Acier",
+    "rarity": 1,
+    "color": "#9fb0c9",
+    "shape": "blob",
+    "line": "irony",
+    "stage": 1,
+    "evolvesTo": "ironpaw"
+  },
+  "ironpaw": {
+    "name": "Ironpaw",
+    "type": "Acier",
+    "rarity": 2,
+    "color": "#8c9bb1",
+    "shape": "blob",
+    "line": "irony",
+    "stage": 2,
+    "evolvesTo": "ironrex"
+  },
+  "ironrex": {
+    "name": "Ironrex",
+    "type": "Acier",
+    "rarity": 4,
+    "color": "#798699",
+    "shape": "dino",
+    "line": "irony",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "miaso": {
+    "name": "Miaso",
+    "type": "Poison",
+    "rarity": 1,
+    "color": "#a96bd6",
+    "shape": "serpent",
+    "line": "miaso",
+    "stage": 1,
+    "evolvesTo": "miasfang"
+  },
+  "miasfang": {
+    "name": "Miasfang",
+    "type": "Poison",
+    "rarity": 2,
+    "color": "#955ebc",
+    "shape": "dino",
+    "line": "miaso",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "galewy": {
+    "name": "Galewy",
+    "type": "Vent",
+    "rarity": 1,
+    "color": "#8fe3c2",
+    "shape": "sprout",
+    "line": "galewy",
+    "stage": 1,
+    "evolvesTo": "galewpaw"
+  },
+  "galewpaw": {
+    "name": "Galewpaw",
+    "type": "Vent",
+    "rarity": 2,
+    "color": "#7ec8ab",
+    "shape": "blob",
+    "line": "galewy",
+    "stage": 2,
+    "evolvesTo": "galewrex"
+  },
+  "galewrex": {
+    "name": "Galewrex",
+    "type": "Vent",
+    "rarity": 4,
+    "color": "#6dad93",
+    "shape": "dino",
+    "line": "galewy",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "vespimite": {
+    "name": "Vespimite",
+    "type": "Insecte",
+    "rarity": 1,
+    "color": "#9bbf3a",
+    "shape": "sprout",
+    "line": "vespimite",
+    "stage": 1,
+    "evolvesTo": "vespijaw"
+  },
+  "vespijaw": {
+    "name": "Vespijaw",
+    "type": "Insecte",
+    "rarity": 2,
+    "color": "#88a833",
+    "shape": "blob",
+    "line": "vespimite",
+    "stage": 2,
+    "evolvesTo": "vespithron"
+  },
+  "vespithron": {
+    "name": "Vespithron",
+    "type": "Insecte",
+    "rarity": 4,
+    "color": "#76912c",
+    "shape": "beast",
+    "line": "vespimite",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "dracolet": {
+    "name": "Dracolet",
+    "type": "Dragon",
+    "rarity": 1,
+    "color": "#7a5cff",
+    "shape": "serpent",
+    "line": "dracolet",
+    "stage": 1,
+    "evolvesTo": "dracojaw"
+  },
+  "dracojaw": {
+    "name": "Dracojaw",
+    "type": "Dragon",
+    "rarity": 2,
+    "color": "#6b51e0",
+    "shape": "sprout",
+    "line": "dracolet",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "brimstlet": {
+    "name": "Brimstlet",
+    "type": "Feu",
+    "rarity": 1,
+    "color": "#ff7a45",
+    "shape": "sprout",
+    "line": "brimstlet",
+    "stage": 1,
+    "evolvesTo": "brimsthorn"
+  },
+  "brimsthorn": {
+    "name": "Brimsthorn",
+    "type": "Feu",
+    "rarity": 2,
+    "color": "#e06b3d",
+    "shape": "sprout",
+    "line": "brimstlet",
+    "stage": 2,
+    "evolvesTo": "brimstgoth"
+  },
+  "brimstgoth": {
+    "name": "Brimstgoth",
+    "type": "Feu",
+    "rarity": 4,
+    "color": "#c25d34",
+    "shape": "serpent",
+    "line": "brimstlet",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "coraly": {
+    "name": "Coraly",
+    "type": "Eau",
+    "rarity": 1,
+    "color": "#46b0ef",
+    "shape": "blob",
+    "line": "coraly",
+    "stage": 1,
+    "evolvesTo": "coralback"
+  },
+  "coralback": {
+    "name": "Coralback",
+    "type": "Eau",
+    "rarity": 2,
+    "color": "#3e9bd2",
+    "shape": "serpent",
+    "line": "coraly",
+    "stage": 2,
+    "evolvesTo": "coraldrake"
+  },
+  "coraldrake": {
+    "name": "Coraldrake",
+    "type": "Eau",
+    "rarity": 4,
+    "color": "#3586b6",
+    "shape": "serpent",
+    "line": "coraly",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "sproutlet": {
+    "name": "Sproutlet",
+    "type": "Plante",
+    "rarity": 1,
+    "color": "#5fc463",
+    "shape": "serpent",
+    "line": "sproutlet",
+    "stage": 1,
+    "evolvesTo": "sproutpaw"
+  },
+  "sproutpaw": {
+    "name": "Sproutpaw",
+    "type": "Plante",
+    "rarity": 2,
+    "color": "#54ac57",
+    "shape": "beast",
+    "line": "sproutlet",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "zapmite": {
+    "name": "Zapmite",
+    "type": "Foudre",
+    "rarity": 1,
+    "color": "#f2c037",
+    "shape": "serpent",
+    "line": "zapmite",
+    "stage": 1,
+    "evolvesTo": "zapclaw"
+  },
+  "zapclaw": {
+    "name": "Zapclaw",
+    "type": "Foudre",
+    "rarity": 2,
+    "color": "#d5a930",
+    "shape": "sprout",
+    "line": "zapmite",
+    "stage": 2,
+    "evolvesTo": "zapnaught"
+  },
+  "zapnaught": {
+    "name": "Zapnaught",
+    "type": "Foudre",
+    "rarity": 4,
+    "color": "#b8922a",
+    "shape": "beast",
+    "line": "zapmite",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "pebblkit": {
+    "name": "Pebblkit",
+    "type": "Roche",
+    "rarity": 1,
+    "color": "#9b7a55",
+    "shape": "serpent",
+    "line": "pebblkit",
+    "stage": 1,
+    "evolvesTo": "pebblmaw"
+  },
+  "pebblmaw": {
+    "name": "Pebblmaw",
+    "type": "Roche",
+    "rarity": 2,
+    "color": "#886b4b",
+    "shape": "sprout",
+    "line": "pebblkit",
+    "stage": 2,
+    "evolvesTo": "pebblrex"
+  },
+  "pebblrex": {
+    "name": "Pebblrex",
+    "type": "Roche",
+    "rarity": 4,
+    "color": "#765d41",
+    "shape": "dino",
+    "line": "pebblkit",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "gelidy": {
+    "name": "Gelidy",
+    "type": "Glace",
+    "rarity": 5,
+    "color": "#7ed4e6",
+    "shape": "dino",
+    "line": "gelidy",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "tenebrin": {
+    "name": "Tenebrin",
+    "type": "Ombre",
+    "rarity": 1,
+    "color": "#6a5acd",
+    "shape": "blob",
+    "line": "tenebrin",
+    "stage": 1,
+    "evolvesTo": "tenebrmaw"
+  },
+  "tenebrmaw": {
+    "name": "Tenebrmaw",
+    "type": "Ombre",
+    "rarity": 2,
+    "color": "#5d4fb4",
+    "shape": "beast",
+    "line": "tenebrin",
+    "stage": 2,
+    "evolvesTo": "tenebrthron"
+  },
+  "tenebrthron": {
+    "name": "Tenebrthron",
+    "type": "Ombre",
+    "rarity": 4,
+    "color": "#51449c",
+    "shape": "dino",
+    "line": "tenebrin",
     "stage": 3,
     "evolvesTo": null
   },
@@ -217,238 +1997,1008 @@
     "type": "Lumiere",
     "rarity": 1,
     "color": "#ffd966",
-    "shape": "beast",
+    "shape": "sprout",
     "line": "lumikit",
     "stage": 1,
-    "evolvesTo": "solflare"
+    "evolvesTo": "lumicrest"
   },
-  "solflare": {
-    "name": "Solflare",
+  "lumicrest": {
+    "name": "Lumicrest",
     "type": "Lumiere",
     "rarity": 2,
     "color": "#e0bf5a",
     "shape": "beast",
     "line": "lumikit",
     "stage": 2,
-    "evolvesTo": "radiantos"
+    "evolvesTo": "lumiarch"
   },
-  "radiantos": {
-    "name": "Radiantos",
+  "lumiarch": {
+    "name": "Lumiarch",
     "type": "Lumiere",
     "rarity": 4,
     "color": "#c2a54e",
-    "shape": "dino",
+    "shape": "beast",
     "line": "lumikit",
     "stage": 3,
     "evolvesTo": null
   },
-  "psyling": {
-    "name": "Psyling",
+  "sagebud": {
+    "name": "Sagebud",
     "type": "Mystique",
     "rarity": 1,
     "color": "#e75da8",
-    "shape": "beast",
-    "line": "psyling",
+    "shape": "serpent",
+    "line": "sagebud",
     "stage": 1,
-    "evolvesTo": "mystwhisper"
+    "evolvesTo": "sagehorn"
   },
-  "mystwhisper": {
-    "name": "Mystwhisper",
+  "sagehorn": {
+    "name": "Sagehorn",
     "type": "Mystique",
     "rarity": 2,
     "color": "#cb5294",
-    "shape": "beast",
-    "line": "psyling",
-    "stage": 2,
-    "evolvesTo": "oraclex"
-  },
-  "oraclex": {
-    "name": "Oraclex",
-    "type": "Mystique",
-    "rarity": 4,
-    "color": "#b04780",
     "shape": "dino",
-    "line": "psyling",
-    "stage": 3,
+    "line": "sagebud",
+    "stage": 2,
     "evolvesTo": null
   },
-  "cogling": {
-    "name": "Cogling",
+  "titano": {
+    "name": "Titano",
     "type": "Acier",
     "rarity": 1,
     "color": "#9fb0c9",
     "shape": "beast",
-    "line": "cogling",
+    "line": "titano",
     "stage": 1,
-    "evolvesTo": "ferrobeast"
+    "evolvesTo": "titancrest"
   },
-  "ferrobeast": {
-    "name": "Ferrobeast",
+  "titancrest": {
+    "name": "Titancrest",
     "type": "Acier",
     "rarity": 2,
     "color": "#8c9bb1",
-    "shape": "beast",
-    "line": "cogling",
+    "shape": "sprout",
+    "line": "titano",
     "stage": 2,
-    "evolvesTo": "titanforge"
-  },
-  "titanforge": {
-    "name": "Titanforge",
-    "type": "Acier",
-    "rarity": 4,
-    "color": "#798699",
-    "shape": "dino",
-    "line": "cogling",
-    "stage": 3,
     "evolvesTo": null
   },
-  "venomite": {
-    "name": "Venomite",
+  "sludgekit": {
+    "name": "Sludgekit",
     "type": "Poison",
-    "rarity": 1,
+    "rarity": 5,
     "color": "#a96bd6",
-    "shape": "beast",
-    "line": "venomite",
+    "shape": "sprout",
+    "line": "sludgekit",
     "stage": 1,
-    "evolvesTo": "toxifang"
-  },
-  "toxifang": {
-    "name": "Toxifang",
-    "type": "Poison",
-    "rarity": 2,
-    "color": "#955ebc",
-    "shape": "beast",
-    "line": "venomite",
-    "stage": 2,
-    "evolvesTo": "malavenom"
-  },
-  "malavenom": {
-    "name": "Malavenom",
-    "type": "Poison",
-    "rarity": 4,
-    "color": "#8051a3",
-    "shape": "dino",
-    "line": "venomite",
-    "stage": 3,
     "evolvesTo": null
   },
-  "gustling": {
-    "name": "Gustling",
+  "breezo": {
+    "name": "Breezo",
     "type": "Vent",
-    "rarity": 1,
+    "rarity": 5,
     "color": "#8fe3c2",
-    "shape": "beast",
-    "line": "gustling",
+    "shape": "serpent",
+    "line": "breezo",
     "stage": 1,
-    "evolvesTo": "zephyron"
-  },
-  "zephyron": {
-    "name": "Zephyron",
-    "type": "Vent",
-    "rarity": 2,
-    "color": "#7ec8ab",
-    "shape": "beast",
-    "line": "gustling",
-    "stage": 2,
-    "evolvesTo": "skytempest"
-  },
-  "skytempest": {
-    "name": "Skytempest",
-    "type": "Vent",
-    "rarity": 4,
-    "color": "#6dad93",
-    "shape": "dino",
-    "line": "gustling",
-    "stage": 3,
     "evolvesTo": null
   },
-  "larvox": {
-    "name": "Larvox",
+  "beetlo": {
+    "name": "Beetlo",
     "type": "Insecte",
     "rarity": 1,
     "color": "#9bbf3a",
     "shape": "beast",
-    "line": "larvox",
+    "line": "beetlo",
     "stage": 1,
-    "evolvesTo": "chitinaut"
+    "evolvesTo": "beetljaw"
   },
-  "chitinaut": {
-    "name": "Chitinaut",
+  "beetljaw": {
+    "name": "Beetljaw",
     "type": "Insecte",
     "rarity": 2,
     "color": "#88a833",
-    "shape": "beast",
-    "line": "larvox",
+    "shape": "serpent",
+    "line": "beetlo",
     "stage": 2,
-    "evolvesTo": "mantiskar"
+    "evolvesTo": "beetlkhan"
   },
-  "mantiskar": {
-    "name": "Mantiskar",
+  "beetlkhan": {
+    "name": "Beetlkhan",
     "type": "Insecte",
     "rarity": 4,
     "color": "#76912c",
-    "shape": "dino",
-    "line": "larvox",
+    "shape": "serpent",
+    "line": "beetlo",
     "stage": 3,
     "evolvesTo": null
   },
-  "drakelet": {
-    "name": "Drakelet",
+  "dragny": {
+    "name": "Dragny",
     "type": "Dragon",
     "rarity": 1,
     "color": "#7a5cff",
     "shape": "beast",
-    "line": "drakelet",
+    "line": "dragny",
     "stage": 1,
-    "evolvesTo": "wyverock"
+    "evolvesTo": "dragnpaw"
   },
-  "wyverock": {
-    "name": "Wyverock",
+  "dragnpaw": {
+    "name": "Dragnpaw",
     "type": "Dragon",
     "rarity": 2,
     "color": "#6b51e0",
-    "shape": "beast",
-    "line": "drakelet",
+    "shape": "dino",
+    "line": "dragny",
     "stage": 2,
-    "evolvesTo": "dracovoid"
+    "evolvesTo": "dragngoth"
   },
-  "dracovoid": {
-    "name": "Dracovoid",
+  "dragngoth": {
+    "name": "Dragngoth",
     "type": "Dragon",
-    "rarity": 5,
+    "rarity": 4,
     "color": "#5d46c2",
     "shape": "dino",
-    "line": "drakelet",
+    "line": "dragny",
     "stage": 3,
     "evolvesTo": null
   },
-  "mythira": {
-    "name": "Mythira",
-    "type": "Mystique",
+  "vulcanpup": {
+    "name": "Vulcanpup",
+    "type": "Feu",
     "rarity": 5,
-    "color": "#e75da8",
-    "shape": "beast",
-    "line": "mythira",
+    "color": "#ff7a45",
+    "shape": "blob",
+    "line": "vulcanpup",
     "stage": 1,
     "evolvesTo": null
   },
-  "aurorking": {
-    "name": "Aurorking",
+  "tidalmite": {
+    "name": "Tidalmite",
+    "type": "Eau",
+    "rarity": 5,
+    "color": "#46b0ef",
+    "shape": "blob",
+    "line": "tidalmite",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "rootmite": {
+    "name": "Rootmite",
+    "type": "Plante",
+    "rarity": 1,
+    "color": "#5fc463",
+    "shape": "beast",
+    "line": "rootmite",
+    "stage": 1,
+    "evolvesTo": "rootjaw"
+  },
+  "rootjaw": {
+    "name": "Rootjaw",
+    "type": "Plante",
+    "rarity": 2,
+    "color": "#54ac57",
+    "shape": "beast",
+    "line": "rootmite",
+    "stage": 2,
+    "evolvesTo": "rootmancer"
+  },
+  "rootmancer": {
+    "name": "Rootmancer",
+    "type": "Plante",
+    "rarity": 4,
+    "color": "#48954b",
+    "shape": "dino",
+    "line": "rootmite",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "boltette": {
+    "name": "Boltette",
+    "type": "Foudre",
+    "rarity": 1,
+    "color": "#f2c037",
+    "shape": "blob",
+    "line": "boltette",
+    "stage": 1,
+    "evolvesTo": "bolthorn"
+  },
+  "bolthorn": {
+    "name": "Bolthorn",
+    "type": "Foudre",
+    "rarity": 2,
+    "color": "#d5a930",
+    "shape": "blob",
+    "line": "boltette",
+    "stage": 2,
+    "evolvesTo": "boltgoth"
+  },
+  "boltgoth": {
+    "name": "Boltgoth",
+    "type": "Foudre",
+    "rarity": 4,
+    "color": "#b8922a",
+    "shape": "dino",
+    "line": "boltette",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "stalago": {
+    "name": "Stalago",
+    "type": "Roche",
+    "rarity": 1,
+    "color": "#9b7a55",
+    "shape": "dino",
+    "line": "stalago",
+    "stage": 1,
+    "evolvesTo": "stalaghorn"
+  },
+  "stalaghorn": {
+    "name": "Stalaghorn",
+    "type": "Roche",
+    "rarity": 2,
+    "color": "#886b4b",
+    "shape": "blob",
+    "line": "stalago",
+    "stage": 2,
+    "evolvesTo": "stalagtitan"
+  },
+  "stalagtitan": {
+    "name": "Stalagtitan",
+    "type": "Roche",
+    "rarity": 4,
+    "color": "#765d41",
+    "shape": "serpent",
+    "line": "stalago",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "permafbud": {
+    "name": "Permafbud",
+    "type": "Glace",
+    "rarity": 5,
+    "color": "#7ed4e6",
+    "shape": "dino",
+    "line": "permafbud",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "nyxin": {
+    "name": "Nyxin",
+    "type": "Ombre",
+    "rarity": 1,
+    "color": "#6a5acd",
+    "shape": "blob",
+    "line": "nyxin",
+    "stage": 1,
+    "evolvesTo": "nyxmaw"
+  },
+  "nyxmaw": {
+    "name": "Nyxmaw",
+    "type": "Ombre",
+    "rarity": 2,
+    "color": "#5d4fb4",
+    "shape": "blob",
+    "line": "nyxin",
+    "stage": 2,
+    "evolvesTo": "nyxthron"
+  },
+  "nyxthron": {
+    "name": "Nyxthron",
+    "type": "Ombre",
+    "rarity": 4,
+    "color": "#51449c",
+    "shape": "beast",
+    "line": "nyxin",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "luxo1": {
+    "name": "Luxo1",
+    "type": "Lumiere",
+    "rarity": 1,
+    "color": "#ffd966",
+    "shape": "beast",
+    "line": "luxo1",
+    "stage": 1,
+    "evolvesTo": "luxpaw"
+  },
+  "luxpaw": {
+    "name": "Luxpaw",
+    "type": "Lumiere",
+    "rarity": 2,
+    "color": "#e0bf5a",
+    "shape": "dino",
+    "line": "luxo1",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "mystkit": {
+    "name": "Mystkit",
+    "type": "Mystique",
+    "rarity": 1,
+    "color": "#e75da8",
+    "shape": "blob",
+    "line": "mystkit",
+    "stage": 1,
+    "evolvesTo": "mystjaw"
+  },
+  "mystjaw": {
+    "name": "Mystjaw",
+    "type": "Mystique",
+    "rarity": 2,
+    "color": "#cb5294",
+    "shape": "beast",
+    "line": "mystkit",
+    "stage": 2,
+    "evolvesTo": "mystgoth"
+  },
+  "mystgoth": {
+    "name": "Mystgoth",
+    "type": "Mystique",
+    "rarity": 4,
+    "color": "#b04780",
+    "shape": "dino",
+    "line": "mystkit",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "ironette": {
+    "name": "Ironette",
+    "type": "Acier",
+    "rarity": 1,
+    "color": "#9fb0c9",
+    "shape": "dino",
+    "line": "ironette",
+    "stage": 1,
+    "evolvesTo": "ironwing"
+  },
+  "ironwing": {
+    "name": "Ironwing",
+    "type": "Acier",
+    "rarity": 2,
+    "color": "#8c9bb1",
+    "shape": "blob",
+    "line": "ironette",
+    "stage": 2,
+    "evolvesTo": "irontitan"
+  },
+  "irontitan": {
+    "name": "Irontitan",
+    "type": "Acier",
+    "rarity": 4,
+    "color": "#798699",
+    "shape": "beast",
+    "line": "ironette",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "banekit": {
+    "name": "Banekit",
+    "type": "Poison",
+    "rarity": 1,
+    "color": "#a96bd6",
+    "shape": "sprout",
+    "line": "banekit",
+    "stage": 1,
+    "evolvesTo": "banejaw1"
+  },
+  "banejaw1": {
+    "name": "Banejaw1",
+    "type": "Poison",
+    "rarity": 2,
+    "color": "#955ebc",
+    "shape": "sprout",
+    "line": "banekit",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "tempesling": {
+    "name": "Tempesling",
+    "type": "Vent",
+    "rarity": 1,
+    "color": "#8fe3c2",
+    "shape": "blob",
+    "line": "tempesling",
+    "stage": 1,
+    "evolvesTo": "tempesclaw"
+  },
+  "tempesclaw": {
+    "name": "Tempesclaw",
+    "type": "Vent",
+    "rarity": 2,
+    "color": "#7ec8ab",
+    "shape": "dino",
+    "line": "tempesling",
+    "stage": 2,
+    "evolvesTo": "tempesmancer"
+  },
+  "tempesmancer": {
+    "name": "Tempesmancer",
+    "type": "Vent",
+    "rarity": 4,
+    "color": "#6dad93",
+    "shape": "serpent",
+    "line": "tempesling",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "mantimite": {
+    "name": "Mantimite",
+    "type": "Insecte",
+    "rarity": 1,
+    "color": "#9bbf3a",
+    "shape": "dino",
+    "line": "mantimite",
+    "stage": 1,
+    "evolvesTo": "mantiback"
+  },
+  "mantiback": {
+    "name": "Mantiback",
+    "type": "Insecte",
+    "rarity": 2,
+    "color": "#88a833",
+    "shape": "dino",
+    "line": "mantimite",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "nidhkit": {
+    "name": "Nidhkit",
+    "type": "Dragon",
+    "rarity": 5,
+    "color": "#7a5cff",
+    "shape": "sprout",
+    "line": "nidhkit",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "embrette": {
+    "name": "Embrette",
+    "type": "Feu",
+    "rarity": 1,
+    "color": "#ff7a45",
+    "shape": "blob",
+    "line": "embrette",
+    "stage": 1,
+    "evolvesTo": "embrmaw"
+  },
+  "embrmaw": {
+    "name": "Embrmaw",
+    "type": "Feu",
+    "rarity": 2,
+    "color": "#e06b3d",
+    "shape": "blob",
+    "line": "embrette",
+    "stage": 2,
+    "evolvesTo": "embrzar"
+  },
+  "embrzar": {
+    "name": "Embrzar",
+    "type": "Feu",
+    "rarity": 4,
+    "color": "#c25d34",
+    "shape": "beast",
+    "line": "embrette",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "hydroy": {
+    "name": "Hydroy",
+    "type": "Eau",
+    "rarity": 1,
+    "color": "#46b0ef",
+    "shape": "blob",
+    "line": "hydroy",
+    "stage": 1,
+    "evolvesTo": "hydrowing"
+  },
+  "hydrowing": {
+    "name": "Hydrowing",
+    "type": "Eau",
+    "rarity": 2,
+    "color": "#3e9bd2",
+    "shape": "serpent",
+    "line": "hydroy",
+    "stage": 2,
+    "evolvesTo": "hydrorex"
+  },
+  "hydrorex": {
+    "name": "Hydrorex",
+    "type": "Eau",
+    "rarity": 4,
+    "color": "#3586b6",
+    "shape": "beast",
+    "line": "hydroy",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "foliaette": {
+    "name": "Foliaette",
+    "type": "Plante",
+    "rarity": 1,
+    "color": "#5fc463",
+    "shape": "dino",
+    "line": "foliaette",
+    "stage": 1,
+    "evolvesTo": "foliahorn"
+  },
+  "foliahorn": {
+    "name": "Foliahorn",
+    "type": "Plante",
+    "rarity": 2,
+    "color": "#54ac57",
+    "shape": "dino",
+    "line": "foliaette",
+    "stage": 2,
+    "evolvesTo": "foliamancer"
+  },
+  "foliamancer": {
+    "name": "Foliamancer",
+    "type": "Plante",
+    "rarity": 4,
+    "color": "#48954b",
+    "shape": "serpent",
+    "line": "foliaette",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "zapkit": {
+    "name": "Zapkit",
+    "type": "Foudre",
+    "rarity": 1,
+    "color": "#f2c037",
+    "shape": "sprout",
+    "line": "zapkit",
+    "stage": 1,
+    "evolvesTo": "zappaw"
+  },
+  "zappaw": {
+    "name": "Zappaw",
+    "type": "Foudre",
+    "rarity": 2,
+    "color": "#d5a930",
+    "shape": "sprout",
+    "line": "zapkit",
+    "stage": 2,
+    "evolvesTo": "zapkhan"
+  },
+  "zapkhan": {
+    "name": "Zapkhan",
+    "type": "Foudre",
+    "rarity": 4,
+    "color": "#b8922a",
+    "shape": "serpent",
+    "line": "zapkit",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "pebblo": {
+    "name": "Pebblo",
+    "type": "Roche",
+    "rarity": 1,
+    "color": "#9b7a55",
+    "shape": "dino",
+    "line": "pebblo",
+    "stage": 1,
+    "evolvesTo": "pebblback"
+  },
+  "pebblback": {
+    "name": "Pebblback",
+    "type": "Roche",
+    "rarity": 2,
+    "color": "#886b4b",
+    "shape": "beast",
+    "line": "pebblo",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "permafpup1": {
+    "name": "Permafpup1",
+    "type": "Glace",
+    "rarity": 5,
+    "color": "#7ed4e6",
+    "shape": "sprout",
+    "line": "permafpup1",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "nyxling": {
+    "name": "Nyxling",
+    "type": "Ombre",
+    "rarity": 1,
+    "color": "#6a5acd",
+    "shape": "sprout",
+    "line": "nyxling",
+    "stage": 1,
+    "evolvesTo": "nyxhorn"
+  },
+  "nyxhorn": {
+    "name": "Nyxhorn",
+    "type": "Ombre",
+    "rarity": 2,
+    "color": "#5d4fb4",
+    "shape": "serpent",
+    "line": "nyxling",
+    "stage": 2,
+    "evolvesTo": "nyxdrake"
+  },
+  "nyxdrake": {
+    "name": "Nyxdrake",
+    "type": "Ombre",
+    "rarity": 4,
+    "color": "#51449c",
+    "shape": "beast",
+    "line": "nyxling",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "gleamlet": {
+    "name": "Gleamlet",
+    "type": "Lumiere",
+    "rarity": 1,
+    "color": "#ffd966",
+    "shape": "blob",
+    "line": "gleamlet",
+    "stage": 1,
+    "evolvesTo": "gleamcrest"
+  },
+  "gleamcrest": {
+    "name": "Gleamcrest",
+    "type": "Lumiere",
+    "rarity": 2,
+    "color": "#e0bf5a",
+    "shape": "blob",
+    "line": "gleamlet",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "astray1": {
+    "name": "Astray1",
+    "type": "Mystique",
+    "rarity": 1,
+    "color": "#e75da8",
+    "shape": "sprout",
+    "line": "astray1",
+    "stage": 1,
+    "evolvesTo": "astramaw"
+  },
+  "astramaw": {
+    "name": "Astramaw",
+    "type": "Mystique",
+    "rarity": 2,
+    "color": "#cb5294",
+    "shape": "sprout",
+    "line": "astray1",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "magnling": {
+    "name": "Magnling",
+    "type": "Acier",
+    "rarity": 5,
+    "color": "#9fb0c9",
+    "shape": "serpent",
+    "line": "magnling",
+    "stage": 1,
+    "evolvesTo": null
+  },
+  "virubud": {
+    "name": "Virubud",
+    "type": "Poison",
+    "rarity": 1,
+    "color": "#a96bd6",
+    "shape": "sprout",
+    "line": "virubud",
+    "stage": 1,
+    "evolvesTo": "virucrest"
+  },
+  "virucrest": {
+    "name": "Virucrest",
+    "type": "Poison",
+    "rarity": 2,
+    "color": "#955ebc",
+    "shape": "beast",
+    "line": "virubud",
+    "stage": 2,
+    "evolvesTo": "viruarch"
+  },
+  "viruarch": {
+    "name": "Viruarch",
+    "type": "Poison",
+    "rarity": 4,
+    "color": "#8051a3",
+    "shape": "dino",
+    "line": "virubud",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "tempesette": {
+    "name": "Tempesette",
+    "type": "Vent",
+    "rarity": 1,
+    "color": "#8fe3c2",
+    "shape": "sprout",
+    "line": "tempesette",
+    "stage": 1,
+    "evolvesTo": "tempesclaw1"
+  },
+  "tempesclaw1": {
+    "name": "Tempesclaw1",
+    "type": "Vent",
+    "rarity": 2,
+    "color": "#7ec8ab",
+    "shape": "sprout",
+    "line": "tempesette",
+    "stage": 2,
+    "evolvesTo": "tempestitan"
+  },
+  "tempestitan": {
+    "name": "Tempestitan",
+    "type": "Vent",
+    "rarity": 4,
+    "color": "#6dad93",
+    "shape": "serpent",
+    "line": "tempesette",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "scarabbud": {
+    "name": "Scarabbud",
+    "type": "Insecte",
+    "rarity": 1,
+    "color": "#9bbf3a",
+    "shape": "sprout",
+    "line": "scarabbud",
+    "stage": 1,
+    "evolvesTo": "scarabcrest1"
+  },
+  "scarabcrest1": {
+    "name": "Scarabcrest1",
+    "type": "Insecte",
+    "rarity": 2,
+    "color": "#88a833",
+    "shape": "beast",
+    "line": "scarabbud",
+    "stage": 2,
+    "evolvesTo": "scarabkhan"
+  },
+  "scarabkhan": {
+    "name": "Scarabkhan",
+    "type": "Insecte",
+    "rarity": 4,
+    "color": "#76912c",
+    "shape": "beast",
+    "line": "scarabbud",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "ryukit1": {
+    "name": "Ryukit1",
+    "type": "Dragon",
+    "rarity": 1,
+    "color": "#7a5cff",
+    "shape": "beast",
+    "line": "ryukit1",
+    "stage": 1,
+    "evolvesTo": "ryuback"
+  },
+  "ryuback": {
+    "name": "Ryuback",
+    "type": "Dragon",
+    "rarity": 2,
+    "color": "#6b51e0",
+    "shape": "sprout",
+    "line": "ryukit1",
+    "stage": 2,
+    "evolvesTo": "ryumancer"
+  },
+  "ryumancer": {
+    "name": "Ryumancer",
+    "type": "Dragon",
+    "rarity": 4,
+    "color": "#5d46c2",
+    "shape": "beast",
+    "line": "ryukit1",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "cinderette": {
+    "name": "Cinderette",
+    "type": "Feu",
+    "rarity": 1,
+    "color": "#ff7a45",
+    "shape": "serpent",
+    "line": "cinderette",
+    "stage": 1,
+    "evolvesTo": "cindermaw"
+  },
+  "cindermaw": {
+    "name": "Cindermaw",
+    "type": "Feu",
+    "rarity": 2,
+    "color": "#e06b3d",
+    "shape": "sprout",
+    "line": "cinderette",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "tidalmite1": {
+    "name": "Tidalmite1",
+    "type": "Eau",
+    "rarity": 1,
+    "color": "#46b0ef",
+    "shape": "blob",
+    "line": "tidalmite1",
+    "stage": 1,
+    "evolvesTo": "tidalclaw"
+  },
+  "tidalclaw": {
+    "name": "Tidalclaw",
+    "type": "Eau",
+    "rarity": 2,
+    "color": "#3e9bd2",
+    "shape": "serpent",
+    "line": "tidalmite1",
+    "stage": 2,
+    "evolvesTo": "tidalzar"
+  },
+  "tidalzar": {
+    "name": "Tidalzar",
+    "type": "Eau",
+    "rarity": 4,
+    "color": "#3586b6",
+    "shape": "serpent",
+    "line": "tidalmite1",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "foliapup": {
+    "name": "Foliapup",
+    "type": "Plante",
+    "rarity": 1,
+    "color": "#5fc463",
+    "shape": "serpent",
+    "line": "foliapup",
+    "stage": 1,
+    "evolvesTo": "foliapaw"
+  },
+  "foliapaw": {
+    "name": "Foliapaw",
+    "type": "Plante",
+    "rarity": 2,
+    "color": "#54ac57",
+    "shape": "sprout",
+    "line": "foliapup",
+    "stage": 2,
+    "evolvesTo": "folianaught"
+  },
+  "folianaught": {
+    "name": "Folianaught",
+    "type": "Plante",
+    "rarity": 4,
+    "color": "#48954b",
+    "shape": "dino",
+    "line": "foliapup",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "boltling": {
+    "name": "Boltling",
+    "type": "Foudre",
+    "rarity": 1,
+    "color": "#f2c037",
+    "shape": "dino",
+    "line": "boltling",
+    "stage": 1,
+    "evolvesTo": "boltmaw"
+  },
+  "boltmaw": {
+    "name": "Boltmaw",
+    "type": "Foudre",
+    "rarity": 2,
+    "color": "#d5a930",
+    "shape": "serpent",
+    "line": "boltling",
+    "stage": 2,
+    "evolvesTo": "boltthron"
+  },
+  "boltthron": {
+    "name": "Boltthron",
+    "type": "Foudre",
+    "rarity": 4,
+    "color": "#b8922a",
+    "shape": "dino",
+    "line": "boltling",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "granito": {
+    "name": "Granito",
+    "type": "Roche",
+    "rarity": 1,
+    "color": "#9b7a55",
+    "shape": "sprout",
+    "line": "granito",
+    "stage": 1,
+    "evolvesTo": "granithorn1"
+  },
+  "granithorn1": {
+    "name": "Granithorn1",
+    "type": "Roche",
+    "rarity": 2,
+    "color": "#886b4b",
+    "shape": "sprout",
+    "line": "granito",
+    "stage": 2,
+    "evolvesTo": "granitthron"
+  },
+  "granitthron": {
+    "name": "Granitthron",
+    "type": "Roche",
+    "rarity": 4,
+    "color": "#765d41",
+    "shape": "serpent",
+    "line": "granito",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "glacipup": {
+    "name": "Glacipup",
+    "type": "Glace",
+    "rarity": 1,
+    "color": "#7ed4e6",
+    "shape": "blob",
+    "line": "glacipup",
+    "stage": 1,
+    "evolvesTo": "glacipaw"
+  },
+  "glacipaw": {
+    "name": "Glacipaw",
+    "type": "Glace",
+    "rarity": 2,
+    "color": "#6fbbca",
+    "shape": "dino",
+    "line": "glacipup",
+    "stage": 2,
+    "evolvesTo": "glacititan"
+  },
+  "glacititan": {
+    "name": "Glacititan",
+    "type": "Glace",
+    "rarity": 4,
+    "color": "#60a1af",
+    "shape": "beast",
+    "line": "glacipup",
+    "stage": 3,
+    "evolvesTo": null
+  },
+  "eclipspup": {
+    "name": "Eclipspup",
+    "type": "Ombre",
+    "rarity": 1,
+    "color": "#6a5acd",
+    "shape": "dino",
+    "line": "eclipspup",
+    "stage": 1,
+    "evolvesTo": "eclipsjaw"
+  },
+  "eclipsjaw": {
+    "name": "Eclipsjaw",
+    "type": "Ombre",
+    "rarity": 2,
+    "color": "#5d4fb4",
+    "shape": "sprout",
+    "line": "eclipspup",
+    "stage": 2,
+    "evolvesTo": null
+  },
+  "gleamette": {
+    "name": "Gleamette",
     "type": "Lumiere",
     "rarity": 5,
     "color": "#ffd966",
     "shape": "beast",
-    "line": "aurorking",
-    "stage": 1,
-    "evolvesTo": null
-  },
-  "eclipsewraith": {
-    "name": "Eclipsewraith",
-    "type": "Ombre",
-    "rarity": 5,
-    "color": "#6a5acd",
-    "shape": "beast",
-    "line": "eclipsewraith",
+    "line": "gleamette",
     "stage": 1,
     "evolvesTo": null
   }
