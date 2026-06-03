@@ -7,6 +7,10 @@ import { createClient } from '@libsql/client';
 const url = process.env.TURSO_DATABASE_URL || 'file:data.db';
 const authToken = process.env.TURSO_AUTH_TOKEN;
 
+export const usingTurso = !!process.env.TURSO_DATABASE_URL;
+export const dbUrl = url;
+export const hasToken = !!authToken;
+
 export const db = createClient(authToken ? { url, authToken } : { url });
 
 // Helpers : args positionnels avec "?".

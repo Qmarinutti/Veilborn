@@ -3,7 +3,7 @@ import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { get, all, run, insert, initDb } from './db.js';
+import { get, all, run, insert, initDb, usingTurso, dbUrl, hasToken } from './db.js';
 import {
   hashPassword, verifyPassword, createSession, destroySession,
   userFromRequest, requireAuth, tokenFromRequest,
@@ -197,7 +197,16 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 initDb().then(() => {
   app.listen(PORT, () => {
-    console.log(`\n  Veilborn en ligne -> http://localhost:${PORT}\n`);
+    console.log(`\n  Veilborn en ligne -> http://localhost:${PORT}`);
+    if (usingTurso) {
+      console.log(`  Base de donnees: TURSO (persistante) -> ${dbUrl}`);
+      if (!hasToken) console.log('  /!\\ ATTENTION: TURSO_AUTH_TOKEN manquant -> la connexion va echouer.');
+    } else {
+      console.log('  Base de donnees: FICHIER LOCAL data.db');
+      console.log('  /!\\ NON persistant en ligne : les comptes seront effaces a chaque redemarrage.');
+      console.log('      -> definis TURSO_DATABASE_URL et TURSO_AUTH_TOKEN pour persister.');
+    }
+    console.log('');
   });
 }).catch((err) => {
   console.error('Echec init base de donnees:', err);
