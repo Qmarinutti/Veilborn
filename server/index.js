@@ -17,6 +17,7 @@ import {
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser } from './state.js';
 import { hasArt } from './art.js';
+import { simulateBattle } from './battle.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -371,6 +372,72 @@ app.post('/api/social/remove', requireAuth, h(async (req, res) => {
   await run('DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)',
     [req.user.id, fid, fid, req.user.id]);
   res.json({ ok: true });
+}));
+
+// ---------- PvP / Arene ----------
+function fighterFiche(row) {
+  const pc = publicCreature(row);
+  return {
+    id: row.id, name: pc.nickname || pc.speciesName, species: pc.species, type: pc.type,
+    variant: pc.variant, color: pc.color, shape: pc.shape, hasArt: pc.hasArt,
+    rarity: pc.rarity, level: pc.level, stats: pc.stats, power: pc.power,
+  };
+}
+async function topTeam(userId) {
+  const rows = await all("SELECT * FROM creatures WHERE owner_id = ? AND stage = 'adult'", [userId]);
+  return rows.map(fighterFiche).sort((a, b) => b.power - a.power).slice(0, 3);
+}
+
+app.get('/api/pvp/opponent', requireAuth, h(async (req, res) => {
+  const candidates = await all(
+    "SELECT DISTINCT u.id, u.username, u.pvp_trophies FROM users u JOIN creatures c ON c.owner_id = u.id AND c.stage = 'adult' WHERE u.id != ?",
+    [req.user.id]);
+  if (!candidates.length) return res.status(404).json({ error: 'Aucun adversaire disponible (invite des amis !).' });
+  const opp = candidates[Math.floor(Math.random() * candidates.length)];
+  res.json({ id: opp.id, username: opp.username, trophies: opp.pvp_trophies, team: await topTeam(opp.id) });
+}));
+
+app.post('/api/pvp/fight', requireAuth, h(async (req, res) => {
+  const { opponentId, team } = req.body || {};
+  if (!Array.isArray(team) || team.length < 1 || team.length > BALANCE.pvpTeamSize) {
+    return res.status(400).json({ error: `Choisis 1 a ${BALANCE.pvpTeamSize} Glumps.` });
+  }
+  const mine = [];
+  for (const id of team) {
+    const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage = 'adult'", [id, req.user.id]);
+    if (!c) return res.status(400).json({ error: 'Equipe invalide (adultes uniquement).' });
+    mine.push(c);
+  }
+  const opp = await get('SELECT id, username FROM users WHERE id = ?', [opponentId]);
+  if (!opp) return res.status(404).json({ error: 'Adversaire introuvable.' });
+  const oppFiches = await topTeam(opponentId);
+  if (!oppFiches.length) return res.status(400).json({ error: "Cet adversaire n'a pas d'equipe." });
+
+  const result = simulateBattle(mine.map(fighterFiche), oppFiches);
+  const iWon = result.winner === 'a';
+
+  const user = await reloadUser(req.user.id);
+  let trophies = user.pvp_trophies, essence = 0;
+  const xp = iWon ? 60 : 20;
+  if (iWon) { trophies += BALANCE.pvpWinTrophies; essence = BALANCE.pvpWinEssence; }
+  else { trophies = Math.max(0, trophies - BALANCE.pvpLoseTrophies); }
+  await run('UPDATE users SET pvp_trophies = ?, essence = essence + ? WHERE id = ?', [trophies, essence, req.user.id]);
+  for (const c of mine) await run('UPDATE creatures SET xp = xp + ? WHERE id = ?', [xp, c.id]);
+
+  res.json({
+    winner: iWon ? 'me' : 'opp',
+    log: result.log,
+    myTeam: result.teamA,
+    oppTeam: result.teamB,
+    oppName: opp.username,
+    rewards: { trophies: iWon ? BALANCE.pvpWinTrophies : -BALANCE.pvpLoseTrophies, essence, xp },
+    trophies,
+  });
+}));
+
+app.get('/api/pvp/ranking', h(async (req, res) => {
+  const ranking = await all('SELECT id, username, pvp_trophies AS trophies FROM users ORDER BY pvp_trophies DESC LIMIT 50');
+  res.json({ ranking });
 }));
 
 // ---------- Donnees statiques de jeu ----------

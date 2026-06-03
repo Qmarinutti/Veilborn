@@ -38,6 +38,12 @@ export const BALANCE = {
   offlineCapHours: 12,
   shinyChance: 0.002, // 0.2% (~1/500) : chromatique tres tres rare
   shinyChanceWithShinyParent: 0.02, // repro avec un parent shiny : 2%
+  // PvP / Arene
+  pvpStartTrophies: 1000,
+  pvpWinTrophies: 25,
+  pvpLoseTrophies: 15,
+  pvpWinEssence: 200,
+  pvpTeamSize: 3,
   mutationRange: 4, // +/- sur les genes herites
   maxGene: 31,
 };

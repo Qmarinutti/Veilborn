@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=23" />
+  <link rel="stylesheet" href="css/style.css?v=24" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -110,6 +110,20 @@
         </div>
       </section>
 
+      <!-- Vue Arene (PvP) -->
+      <section id="view-arena" class="view hidden">
+        <div class="panel">
+          <h2>⚔️ Arène <span id="pvp-trophies" class="prairie-info"></span></h2>
+          <p class="hint">Compose ton équipe (max 3 adultes), trouve un adversaire et combats pour des trophées 🏆, de l'essence et de l'XP. Les <b>types</b> comptent (Eau bat Feu, etc.) !</p>
+          <h3 style="margin:6px 0 8px;">Ton équipe</h3>
+          <div id="pvp-team" class="pvp-team"></div>
+          <button id="pvp-find" class="btn primary" style="margin-top:14px;">🔍 Chercher un adversaire</button>
+          <div id="pvp-opponent"></div>
+          <h3 style="margin:20px 0 8px;">🏆 Classement Arène</h3>
+          <div id="pvp-ranking"></div>
+        </div>
+      </section>
+
       <!-- Vue visite -->
       <section id="view-visit" class="view hidden">
         <div class="panel">
@@ -136,6 +150,7 @@
       <button class="navbtn" data-view="prairie"><span class="ic">🌳</span><span class="lbl">Prairie</span></button>
       <button class="navbtn" data-view="dex"><span class="ic">📖</span><span class="lbl">Dex</span></button>
       <button class="navbtn" data-view="leaderboard"><span class="ic">🏆</span><span class="lbl">Rang</span></button>
+      <button class="navbtn" data-view="arena"><span class="ic">⚔️</span><span class="lbl">Arène</span></button>
     </nav>
 
     <!-- Selecteur de Glump pour la prairie -->
@@ -173,6 +188,16 @@
         <div id="shop-item" class="shop-pane hidden"></div>
         <div id="shop-bonus" class="shop-pane hidden"></div>
       </div>
+    </div>
+
+    <!-- Modale de combat PvP -->
+    <div id="battle-overlay" class="overlay hidden"></div>
+    <div id="battle-modal" class="center-modal hidden">
+      <div class="drawer-head"><h3 id="battle-title">⚔️ Combat</h3><button id="battle-close" class="btn small hidden">✕</button></div>
+      <div class="battle-side"><div class="battle-label">Adversaire</div><div id="battle-opp" class="battle-team"></div></div>
+      <div class="battle-vs">⚔️</div>
+      <div class="battle-side"><div class="battle-label">Toi</div><div id="battle-me" class="battle-team"></div></div>
+      <div id="battle-result" class="battle-result hidden"></div>
     </div>
 
     <!-- Boite de confirmation (jolie, remplace confirm()) -->
@@ -235,6 +260,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=26" type="module"></script>
+  <script src="js/app.js?v=27" type="module"></script>
 </body>
 </html>

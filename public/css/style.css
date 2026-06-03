@@ -258,6 +258,49 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .breed-cell.unlock:hover { border-color: var(--gold); color: var(--text); background: rgba(255,211,77,.06); }
 .unlock-lock { font-size: 22px; }
 .unlock-cost { color: var(--gold); font-weight: 700; }
+
+/* ---------- Arene PvP ---------- */
+.pvp-team { display: flex; gap: 10px; flex-wrap: wrap; }
+.pvp-slot { width: 104px; min-height: 112px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--panel2); border: 1px solid var(--line-strong); border-radius: 14px; padding: 8px; position: relative; }
+.pvp-slot.empty { border-style: dashed; cursor: pointer; color: var(--muted); }
+.pvp-slot.empty:hover { border-color: var(--primary); color: var(--text); }
+.pvp-slot.empty .add { font-size: 28px; }
+.pvp-slot.filled { cursor: pointer; }
+.pvp-slot span { font-size: 11px; color: var(--muted); text-align: center; max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pvp-slot .rm { position: absolute; top: 5px; right: 8px; color: var(--danger); }
+.opp-card { background: var(--panel2); border: 1px solid var(--line-strong); border-radius: 14px; padding: 14px; margin-top: 14px; }
+.opp-head { font-weight: 600; margin-bottom: 10px; }
+.opp-team { display: flex; gap: 8px; flex-wrap: wrap; }
+.fighter-mini { width: 86px; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+.fm-name { font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fm-lvl { font-size: 10px; color: var(--muted); }
+.rank-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.rank-row.me { color: var(--gold); font-weight: 700; }
+.rank-pos { width: 24px; color: var(--muted); font-weight: 700; }
+.rank-name { flex: 1; }
+
+/* Modale de combat */
+#battle-modal { width: min(440px, 94vw); }
+.battle-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin: 10px 0 6px; }
+.battle-team { display: flex; gap: 10px; justify-content: center; }
+.battle-vs { text-align: center; font-size: 22px; margin: 6px 0; opacity: .55; }
+.bf { width: 88px; text-align: center; transition: transform .12s; position: relative; }
+.bf-sprite { width: 66px; height: 66px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.bf-hpbar { height: 7px; background: rgba(0,0,0,.35); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+.bf-hpbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--good), #b6e84f); transition: width .25s; }
+.bf.ko { opacity: .35; filter: grayscale(1); }
+.bf.hit { animation: shake .18s; }
+.bf.atk { transform: translateY(-7px) scale(1.06); }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.dmg-pop { position: absolute; top: 0; left: 50%; font-weight: 700; color: #fff; font-size: 14px; text-shadow: 0 1px 3px #000; animation: dmgUp .65s ease-out forwards; pointer-events: none; }
+.dmg-pop.super { color: #ffe066; font-size: 17px; }
+.dmg-pop.weak { color: #9fb0c9; font-size: 12px; }
+@keyframes dmgUp { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, -28px); } }
+.battle-result { text-align: center; margin-top: 16px; padding: 16px; border-radius: 14px; }
+.battle-result.win { background: rgba(81,216,138,.15); border: 1px solid var(--good); }
+.battle-result.lose { background: rgba(255,107,125,.12); border: 1px solid var(--danger); }
+.br-title { font-size: 22px; font-weight: 700; font-family: 'Fredoka', sans-serif; }
+.br-rewards { color: var(--muted); margin-top: 6px; }
 @keyframes beat { 0%,100% { transform: scale(1); } 25% { transform: scale(1.25); } }
 
 /* ---------- Cards ---------- */

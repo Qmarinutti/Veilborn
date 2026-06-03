@@ -114,6 +114,7 @@ export async function getPlayerState(user) {
       breedingCells: fresh.breeding_cells,
       breedingUsed,
       nextCellCost: fresh.breeding_cells < BALANCE.breedingMaxCells ? breedingCellCost(fresh.breeding_cells) : null,
+      pvpTrophies: fresh.pvp_trophies ?? 1000,
     },
     essencePerSec: Number(ratePerSec.toFixed(3)),
     creatures,

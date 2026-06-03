@@ -43,6 +43,7 @@ export async function initDb() {
       prairie_slots   INTEGER NOT NULL DEFAULT 4,
       breeding_cells  INTEGER NOT NULL DEFAULT 1,
       friend_code     TEXT,
+      pvp_trophies    INTEGER NOT NULL DEFAULT 1000,
       last_tick       INTEGER NOT NULL,
       created_at      INTEGER NOT NULL
     );
@@ -101,6 +102,7 @@ export async function initDb() {
     'ALTER TABLE users ADD COLUMN friend_code TEXT',
     'ALTER TABLE creatures ADD COLUMN parent_a INTEGER',
     'ALTER TABLE creatures ADD COLUMN parent_b INTEGER',
+    'ALTER TABLE users ADD COLUMN pvp_trophies INTEGER NOT NULL DEFAULT 1000',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }

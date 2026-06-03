@@ -134,6 +134,7 @@ function switchView(view) {
   if (el) el.classList.remove('hidden');
   if (view === 'leaderboard') loadLeaderboard();
   if (view === 'dex') loadDex();
+  if (view === 'arena') loadArena();
   if (view === 'prairie') startPrairie(); else stopPrairie();
 }
 $$('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
@@ -915,6 +916,133 @@ $('#tuto-prev').addEventListener('click', () => { if (tutoStep > 0) { tutoStep--
 $('#tuto-skip').addEventListener('click', hideTuto);
 $('#tuto-overlay').addEventListener('click', hideTuto);
 $('#replay-tuto').addEventListener('click', () => { closeDrawer(); showTuto(0); });
+
+// ============================================================
+//  Arene (PvP)
+// ============================================================
+let pvpTeam = [];        // ids de mon equipe (max 3)
+let pvpOpponent = null;
+
+async function loadArena() {
+  $('#pvp-trophies').textContent = `🏆 ${STATE.user.pvpTrophies}`;
+  pvpTeam = pvpTeam.filter(id => STATE.creatures.some(c => c.id === id && c.stage === 'adult'));
+  renderArenaTeam();
+  $('#pvp-opponent').innerHTML = '';
+  pvpOpponent = null;
+  loadPvpRanking();
+}
+function renderArenaTeam() {
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    const c = pvpTeam[i] && STATE.creatures.find(x => x.id === pvpTeam[i]);
+    html += c
+      ? `<div class="pvp-slot filled" data-team-rm="${c.id}">${creatureVisual(c, 56)}<span>${c.nickname || c.speciesName}</span><b class="rm">✕</b></div>`
+      : `<div class="pvp-slot empty" data-team-add="1"><div class="add">+</div><span>Glump</span></div>`;
+  }
+  $('#pvp-team').innerHTML = html;
+}
+$('#pvp-team').addEventListener('click', (e) => {
+  const rm = e.target.closest('[data-team-rm]');
+  const add = e.target.closest('[data-team-add]');
+  if (rm) { pvpTeam = pvpTeam.filter(id => id !== Number(rm.dataset.teamRm)); renderArenaTeam(); }
+  else if (add) {
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !pvpTeam.includes(c.id));
+    openPicker('Ajouter à ton équipe', avail, pickCardHtml, (id) => {
+      if (pvpTeam.length < 3 && !pvpTeam.includes(id)) pvpTeam.push(id);
+      closePicker(); renderArenaTeam();
+    });
+  }
+});
+function fighterMini(c) {
+  return `<div class="fighter-mini" data-rarity="${c.rarity}">
+    <div class="fm-sprite">${creatureVisual(c, 50)}</div>
+    <div class="fm-name">${c.name || c.speciesName}</div>
+    <div class="fm-lvl">Niv ${c.level} · P${c.power}</div>
+  </div>`;
+}
+$('#pvp-find').addEventListener('click', async () => {
+  try {
+    pvpOpponent = await api('/pvp/opponent');
+    $('#pvp-opponent').innerHTML = `
+      <div class="opp-card">
+        <div class="opp-head"><b>${pvpOpponent.username}</b> · 🏆 ${pvpOpponent.trophies}</div>
+        <div class="opp-team">${pvpOpponent.team.map(fighterMini).join('')}</div>
+        <button id="pvp-fight" class="btn primary" style="width:100%;margin-top:10px;">⚔️ Combattre !</button>
+      </div>`;
+  } catch (err) { $('#pvp-opponent').innerHTML = `<p class="hint">${err.message}</p>`; }
+});
+$('#pvp-opponent').addEventListener('click', async (e) => {
+  if (!e.target.closest('#pvp-fight')) return;
+  if (!pvpTeam.length) { flash("Compose ton équipe d'abord !", 'err'); return; }
+  if (!pvpOpponent) return;
+  try {
+    const res = await api('/pvp/fight', { method: 'POST', body: { opponentId: pvpOpponent.id, team: pvpTeam } });
+    await playBattle(res);
+    await refresh(); loadArena();
+  } catch (err) { flash(err.message, 'err'); }
+});
+async function loadPvpRanking() {
+  try {
+    const { ranking } = await api('/pvp/ranking');
+    const me = STATE?.user?.id;
+    $('#pvp-ranking').innerHTML = ranking.map((r, i) => `
+      <div class="rank-row ${r.id === me ? 'me' : ''}"><span class="rank-pos">${i + 1}</span><span class="rank-name">${r.username}</span><span class="rank-tr">🏆 ${r.trophies}</span></div>`).join('') || '<p class="hint">Personne au classement.</p>';
+  } catch { $('#pvp-ranking').innerHTML = ''; }
+}
+
+// --- Animation du combat ---
+function battleCardHtml(f, side, i) {
+  return `<div class="bf" id="bf-${side}-${i}">
+    <div class="bf-sprite">${creatureVisual(f, 52)}</div>
+    <div class="bf-hpbar"><i id="hp-${side}-${i}" style="width:100%"></i></div>
+  </div>`;
+}
+function playBattle(res) {
+  return new Promise((resolve) => {
+    $('#battle-modal').classList.remove('hidden');
+    $('#battle-overlay').classList.remove('hidden');
+    $('#battle-result').classList.add('hidden');
+    $('#battle-close').classList.add('hidden');
+    $('#battle-title').textContent = `⚔️ vs ${res.oppName}`;
+    $('#battle-opp').innerHTML = res.oppTeam.map((f, i) => battleCardHtml(f, 'b', i)).join('');
+    $('#battle-me').innerHTML = res.myTeam.map((f, i) => battleCardHtml(f, 'a', i)).join('');
+    const maxHp = { a: res.myTeam.map(f => f.maxHp), b: res.oppTeam.map(f => f.maxHp) };
+    let k = 0;
+    const finish = () => {
+      const win = res.winner === 'me';
+      const rb = $('#battle-result');
+      rb.className = 'battle-result ' + (win ? 'win' : 'lose');
+      rb.innerHTML = `<div class="br-title">${win ? '🏆 Victoire !' : '💀 Défaite'}</div>
+        <div class="br-rewards">${win ? `+${res.rewards.trophies} 🏆 · +${res.rewards.essence} ✨ · +${res.rewards.xp} XP` : `${res.rewards.trophies} 🏆 · +${res.rewards.xp} XP`}</div>`;
+      rb.classList.remove('hidden');
+      $('#battle-close').classList.remove('hidden');
+      resolve();
+    };
+    const step = () => {
+      if (k >= res.log.length) return finish();
+      const ev = res.log[k++];
+      const tSide = ev.side === 'a' ? 'b' : 'a';
+      const bar = document.getElementById(`hp-${tSide}-${ev.ti}`);
+      const card = document.getElementById(`bf-${tSide}-${ev.ti}`);
+      const att = document.getElementById(`bf-${ev.side}-${ev.ai}`);
+      if (bar) bar.style.width = Math.round(100 * ev.hp / (maxHp[tSide][ev.ti] || 1)) + '%';
+      if (att) { att.classList.add('atk'); setTimeout(() => att.classList.remove('atk'), 180); }
+      if (card) {
+        card.classList.add('hit'); setTimeout(() => card.classList.remove('hit'), 180);
+        const d = document.createElement('div');
+        d.className = 'dmg-pop' + (ev.mult > 1 ? ' super' : ev.mult < 1 ? ' weak' : '');
+        d.textContent = '-' + ev.dmg + (ev.mult > 1 ? '!' : '');
+        card.appendChild(d); setTimeout(() => d.remove(), 650);
+        if (ev.ko) card.classList.add('ko');
+      }
+      setTimeout(step, 240);
+    };
+    setTimeout(step, 450);
+  });
+}
+function closeBattle() { $('#battle-modal').classList.add('hidden'); $('#battle-overlay').classList.add('hidden'); }
+$('#battle-close').addEventListener('click', closeBattle);
+$('#battle-overlay').addEventListener('click', () => { if (!$('#battle-close').classList.contains('hidden')) closeBattle(); });
 
 // ============================================================
 //  Demarrage
