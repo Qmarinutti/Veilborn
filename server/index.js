@@ -10,7 +10,7 @@ import {
 } from './auth.js';
 import {
   BALANCE, STARTER_IDS, SPECIES, wildCreature, breed,
-  incubationSeconds, nextSlotCost, creatureValue,
+  incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveCost,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser } from './state.js';
 
@@ -142,6 +142,28 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   await run('DELETE FROM creatures WHERE id = ?', [id]);
   await run('UPDATE users SET essence = essence + ? WHERE id = ?', [refund, req.user.id]);
   res.json({ ok: true, refund });
+}));
+
+// ---------- Faire evoluer ----------
+app.post('/api/creature/evolve', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent evoluer.' });
+
+  const target = evolutionOf(c.species);
+  if (!target) return res.status(400).json({ error: 'Ce Glump est deja a sa forme finale.' });
+
+  const user = await reloadUser(req.user.id);
+  const cost = evolveCost(target);
+  if (user.essence < cost) {
+    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
+  }
+
+  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [cost, req.user.id]);
+  await run('UPDATE creatures SET species = ? WHERE id = ?', [target, id]);
+  const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
+  res.json({ ok: true, creature: publicCreature(row), cost, fromName: SPECIES[c.species].name });
 }));
 
 // ---------- Renommer ----------

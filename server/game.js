@@ -140,3 +140,15 @@ export function maturationSeconds(speciesId) {
 export function nextSlotCost(currentSlots) {
   return Math.round(BALANCE.slotCostBase * Math.pow(currentSlots, 1.6));
 }
+
+// Cout en essence pour faire evoluer vers une espece cible (selon sa rarete).
+export function evolveCost(targetSpeciesId) {
+  const r = rarityOf(targetSpeciesId);
+  return Math.round(80 * Math.pow(r, 1.6));
+}
+
+// Espece suivante dans la lignee (ou null si forme finale / inconnue).
+export function evolutionOf(speciesId) {
+  const evo = SPECIES[speciesId]?.evolvesTo;
+  return evo && SPECIES[evo] ? evo : null;
+}

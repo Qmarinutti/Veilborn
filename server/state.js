@@ -4,6 +4,7 @@
 import { get, all, run } from './db.js';
 import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
+  evolutionOf, evolveCost,
 } from './game.js';
 
 const HOUR_MS = 3600 * 1000;
@@ -107,5 +108,13 @@ export function publicCreature(c, now = Date.now()) {
   if (c.stage === 'egg') out.readyAt = c.hatch_at;
   if (c.stage === 'baby') out.readyAt = c.mature_at;
   if (out.readyAt) out.remainingMs = Math.max(0, out.readyAt - now);
+
+  // Evolution disponible ?
+  const evo = evolutionOf(c.species);
+  if (evo) {
+    out.evolvesTo = evo;
+    out.evolvesToName = SPECIES[evo].name;
+    out.evolveCost = evolveCost(evo);
+  }
   return out;
 }

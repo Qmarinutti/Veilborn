@@ -245,6 +245,22 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .rarity-dots { text-align: center; font-size: 13px; letter-spacing: 2px; margin-bottom: 6px; color: var(--rc); }
 .card-actions { display: flex; gap: 8px; margin-top: 12px; }
 .card-actions .btn { flex: 1; }
+.btn.evo {
+  display: block; width: 100%; margin-top: 12px;
+  background: linear-gradient(135deg, #51d88a, #34e1c4); color: #06281c;
+  border: none; font-weight: 700;
+}
+.btn.evo:hover { box-shadow: 0 8px 20px rgba(81,216,138,.45); transform: translateY(-1px); }
+.btn.evo .evo-cost { opacity: .8; font-weight: 600; }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%) translateY(20px);
+  background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff;
+  padding: 12px 20px; border-radius: 12px; font-weight: 700; z-index: 60;
+  box-shadow: 0 14px 34px rgba(0,0,0,.5); opacity: 0; pointer-events: none; transition: .25s;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ---------- Prairie ---------- */
 .meadow {

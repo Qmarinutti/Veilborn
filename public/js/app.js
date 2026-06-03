@@ -19,6 +19,16 @@ async function api(path, opts = {}) {
   return data;
 }
 
+// Petite notification ephemere (toast)
+function flash(msg) {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(flash._t);
+  flash._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
 // ============================================================
 //  Authentification
 // ============================================================
@@ -216,6 +226,9 @@ function cardHtml(c) {
   const badges = [];
   if (c.variant) badges.push('<span class="badge shiny">SHINY</span>');
   if (baby) badges.push('<span class="badge baby">Bebe</span>');
+  const evo = (c.stage === 'adult' && c.evolvesTo)
+    ? `<button class="btn small evo" data-evolve="${c.id}">⬆ ${c.evolvesToName} <span class="evo-cost">✨${c.evolveCost}</span></button>`
+    : '';
   return `<div class="card" data-id="${c.id}" data-rarity="${c.rarity}">
     ${badges.join('')}
     ${avatar(c)}
@@ -227,6 +240,7 @@ function cardHtml(c) {
       <span><b>${c.stats.vita}</b>VIT</span>
       <span><b>${c.stats.speed}</b>VIT.</span>
     </div>
+    ${evo}
     <div class="card-actions">
       <button class="btn small" data-rename="${c.id}">Renommer</button>
       <button class="btn small" data-release="${c.id}">Relacher</button>
@@ -289,9 +303,19 @@ $('#buy-slot').addEventListener('click', async () => {
 
 // Delegation pour relacher / renommer
 $('#collection').addEventListener('click', async (e) => {
-  const rel = e.target.dataset.release;
-  const ren = e.target.dataset.rename;
-  if (rel) {
+  const btn = e.target.closest('button');
+  const rel = btn?.dataset.release;
+  const ren = btn?.dataset.rename;
+  const evo = btn?.dataset.evolve;
+  if (evo) {
+    const c = STATE.creatures.find(x => x.id === Number(evo));
+    if (c && !confirm(`Faire evoluer ${c.nickname || c.speciesName} en ${c.evolvesToName} pour ${c.evolveCost} essence ?`)) return;
+    try {
+      const r = await api('/creature/evolve', { method: 'POST', body: { id: Number(evo) } });
+      await refresh();
+      flash(`✨ ${r.fromName} a evolue en ${r.creature.speciesName} !`);
+    } catch (err) { alert(err.message); }
+  } else if (rel) {
     if (!confirm('Relacher ce Glump contre de l\'essence ?')) return;
     try { await api('/creature/release', { method: 'POST', body: { id: Number(rel) } }); await refresh(); }
     catch (err) { alert(err.message); }
