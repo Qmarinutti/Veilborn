@@ -10,16 +10,34 @@
 #  - Le ">" separe les formes (stade 1 > stade 2 > stade 3...).
 #  - Rarete optionnelle par forme avec ":" ->  Nom:rarete   (1 a 5)
 #    (si absente, rarete auto par stade : 1, 2, 4, 5, 5...)
-#  - Mets une "*" au debut de la ligne pour que la 1re forme soit un STARTER
-#    (les nouveaux joueurs recoivent les starters au depart).
+#  - Mets une "*" au debut de la ligne pour que la 1re forme soit un STARTER.
 #  - Lignes vides et lignes commencant par "#" = ignorees.
 #
-#  Exemples :
-#    Feu    | Flammkit > Pyrokit > Infernaught
-#    Foudre | Sparkit:2 > Voltron:4
-#    Roche  | Boulder                      (un Glump seul, sans evolution)
+#  Types disponibles (couleur + emoji deja prets) :
+#    Feu Eau Plante Foudre Roche Glace Ombre Lumiere Mystique Acier Poison Vent Insecte Dragon
 # =====================================================================
 
-* Feu    | Flammkit > Pyrokit > Infernaught
-* Eau    | Aquolet > Tidolet > Leviaqua
-* Plante | Sprouty > Floracub > Verdantaur
+# --- Starters ---
+* Feu     | Flammkit > Pyrokit > Infernaught
+* Eau     | Aquolet > Tidolet > Leviaqua
+* Plante  | Sprouty > Floracub > Verdantaur
+
+# --- Lignees classiques ---
+Foudre    | Voltling > Sparkfang > Tempestrike
+Roche     | Pebblit > Cragmaw > Tectonarch
+Glace     | Frostnip > Glacelynx > Cryovern
+Ombre     | Shadepaw > Nocturnyx > Umbrakhan
+Lumiere   | Lumikit > Solflare > Radiantos
+Mystique  | Psyling > Mystwhisper > Oraclex
+Acier     | Cogling > Ferrobeast > Titanforge
+Poison    | Venomite > Toxifang > Malavenom
+Vent      | Gustling > Zephyron > Skytempest
+Insecte   | Larvox > Chitinaut > Mantiskar
+
+# --- Lignee dragon (final legendaire) ---
+Dragon    | Drakelet > Wyverock > Dracovoid:5
+
+# --- Legendaires solo (pas d'evolution) ---
+Mystique  | Mythira:5
+Lumiere   | Aurorking:5
+Ombre     | Eclipsewraith:5

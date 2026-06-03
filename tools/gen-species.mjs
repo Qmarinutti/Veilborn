@@ -15,6 +15,7 @@ const TYPE_COLOR = {
   Feu: '#ff7a45', Eau: '#46b0ef', Plante: '#5fc463', Foudre: '#f2c037',
   Roche: '#9b7a55', Glace: '#7ed4e6', Ombre: '#6a5acd', Lumiere: '#ffd966',
   Mystique: '#e75da8', Acier: '#9fb0c9', Poison: '#a96bd6', Vent: '#8fe3c2',
+  Insecte: '#9bbf3a', Dragon: '#7a5cff',
 };
 const DEFAULT_COLOR = '#8aa0c0';
 // Rarete auto par stade si non precisee.

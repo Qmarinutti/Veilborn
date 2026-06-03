@@ -80,7 +80,7 @@ $$('.navbtn').forEach(b => b.addEventListener('click', () => {
 // ============================================================
 //  Glumpdex : lignees d'evolution
 // ============================================================
-const TYPE_EMOJI = { Feu: '🔥', Eau: '💧', Plante: '🌿', Foudre: '⚡', Roche: '🪨', Glace: '❄️', Ombre: '🌑', Lumiere: '✨', Mystique: '🔮' };
+const TYPE_EMOJI = { Feu: '🔥', Eau: '💧', Plante: '🌿', Foudre: '⚡', Roche: '🪨', Glace: '❄️', Ombre: '🌑', Lumiere: '✨', Mystique: '🔮', Acier: '⚙️', Poison: '☠️', Vent: '🌪️', Insecte: '🐛', Dragon: '🐉' };
 async function loadDex() {
   const { species } = await api('/species');
   // Regroupe par lignee (l'id de lignee = l'id du Glump de base), ordre d'apparition.
