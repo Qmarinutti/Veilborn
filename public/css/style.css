@@ -233,9 +233,27 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 5px; transition: width .3s; }
 
 /* ---------- Breeding ---------- */
-.breed-pickers { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.breed-pickers select { min-width: 210px; }
 .heart { color: #ff7a98; font-size: 22px; animation: beat 1.3s ease-in-out infinite; }
+
+/* Cellules de reproduction : parent gauche | oeuf | parent droite */
+.breed-cells { display: flex; flex-direction: column; gap: 12px; }
+.breed-cell {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--panel2); border: 1px solid var(--line-strong); border-radius: 14px; padding: 14px;
+}
+.breed-cell.composer { border-style: dashed; }
+.breed-cell.locked-cell { justify-content: center; color: var(--muted); border-style: dashed; min-height: 64px; }
+.breed-parent { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 92px; flex: none; }
+.breed-parent.slot { cursor: pointer; border-radius: 12px; padding: 4px; transition: .15s; }
+.breed-parent.slot:hover { background: rgba(108,140,255,.12); }
+.bp-sprite { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; }
+.bp-sprite.ghost { font-size: 30px; color: var(--muted); }
+.bp-add { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--muted); border: 2px dashed var(--line-strong); border-radius: 50%; }
+.breed-parent span { font-size: 12px; color: var(--muted); text-align: center; max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.breed-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 64px; }
+.breed-egg { font-size: 42px; animation: wobble 2.5s ease-in-out infinite; }
+.breed-mid .countdown { font-weight: 700; color: var(--warn); font-variant-numeric: tabular-nums; }
+.breed-mid .heart { font-size: 26px; }
 @keyframes beat { 0%,100% { transform: scale(1); } 25% { transform: scale(1.25); } }
 
 /* ---------- Cards ---------- */

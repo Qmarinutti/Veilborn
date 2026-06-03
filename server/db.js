@@ -60,6 +60,8 @@ export async function initDb() {
       nickname    TEXT,
       in_prairie  INTEGER NOT NULL DEFAULT 0,
       from_breeding INTEGER NOT NULL DEFAULT 0,
+      parent_a    INTEGER,
+      parent_b    INTEGER,
       xp          INTEGER NOT NULL DEFAULT 0,
       hatch_at    INTEGER,
       mature_at   INTEGER,
@@ -97,6 +99,8 @@ export async function initDb() {
     'ALTER TABLE users ADD COLUMN breeding_cells INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE creatures ADD COLUMN from_breeding INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE users ADD COLUMN friend_code TEXT',
+    'ALTER TABLE creatures ADD COLUMN parent_a INTEGER',
+    'ALTER TABLE creatures ADD COLUMN parent_b INTEGER',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }

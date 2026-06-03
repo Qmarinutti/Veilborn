@@ -201,7 +201,6 @@ function renderAll() {
   $('#rate').textContent = '+' + STATE.essencePerSec.toFixed(2) + '/s';
   renderIncubators();
   renderBreedingCells();
-  renderBreedPickers();
   renderCollection();
   if (prairieActive) { buildMeadow(); renderPrairieSlots(); }
 }
@@ -240,38 +239,68 @@ function renderIncubators() {
   else { buyBtn.disabled = false; buyBtn.textContent = '+ Incubateur'; }
 }
 
+let breedSelA = null, breedSelB = null; // parents selectionnes dans la cellule "composer"
 function renderBreedingCells() {
-  const slots = STATE.user.breedingCells;
-  const e = bredEggs();
-  $('#breeding-info').textContent = `${e.length}/${slots} cellule${slots > 1 ? 's' : ''}`;
+  const max = STATE.user.breedingCells;
+  const eggsList = bredEggs();
+  $('#breeding-info').textContent = `${eggsList.length}/${max}`;
+  const find = (id) => STATE.creatures.find(c => c.id === id);
+  const parentBox = (c, extra = '') => c
+    ? `<div class="breed-parent ${extra}"><div class="bp-sprite">${creatureVisual(c, 60)}</div><span>${c.nickname || c.speciesName}</span></div>`
+    : `<div class="breed-parent ${extra}"><div class="bp-sprite ghost">?</div></div>`;
+
   let html = '';
-  for (let i = 0; i < slots; i++) {
-    html += e[i] ? eggCellHtml(e[i], true) // mystere : on decouvre le bebe a l'eclosion
-      : `<div class="incubator empty"><div class="egg">⬚</div><div>Libre</div></div>`;
+  let composerPlaced = false;
+  for (let i = 0; i < max; i++) {
+    const egg = eggsList[i];
+    if (egg) {
+      // cellule occupee : parent gauche | oeuf | parent droite
+      html += `<div class="breed-cell">
+        ${parentBox(find(egg.parentA))}
+        <div class="breed-mid"><div class="breed-egg">🥚</div><div class="countdown" data-ready="${egg.readyAt}"></div></div>
+        ${parentBox(find(egg.parentB))}
+      </div>`;
+    } else if (!composerPlaced) {
+      // premiere cellule libre = composer (choix des 2 parents)
+      composerPlaced = true;
+      const a = breedSelA && find(breedSelA), b = breedSelB && find(breedSelB);
+      const slot = (c, side) => c
+        ? `<div class="breed-parent slot" data-pick-parent="${side}"><div class="bp-sprite">${creatureVisual(c, 60)}</div><span>${c.nickname || c.speciesName}</span></div>`
+        : `<div class="breed-parent slot" data-pick-parent="${side}"><div class="bp-add">+</div><span>Parent</span></div>`;
+      const mid = (a && b) ? `<button class="btn primary" id="do-breed">❤ Reproduire</button>` : `<span class="heart">❤</span>`;
+      html += `<div class="breed-cell composer">${slot(a, 'a')}<div class="breed-mid">${mid}</div>${slot(b, 'b')}</div>`;
+    } else {
+      html += `<div class="breed-cell locked-cell"><span>Cellule libre</span></div>`;
+    }
   }
   $('#breeding-cells').innerHTML = html;
+
   const buyBtn = $('#buy-cell');
-  if (slots >= 5) { buyBtn.disabled = true; buyBtn.textContent = 'Max (5)'; }
+  if (max >= 5) { buyBtn.disabled = true; buyBtn.textContent = 'Max (5)'; }
   else { buyBtn.disabled = false; buyBtn.textContent = '+ Cellule'; }
 }
 
-function renderBreedPickers() {
-  const adults = STATE.creatures.filter(c => c.stage === 'adult');
-  const opt = (c) => `<option value="${c.id}">${label(c)}</option>`;
-  const a = $('#parentA'), b = $('#parentB');
-  const prevA = a.value, prevB = b.value;
-  const options = adults.map(opt).join('');
-  a.innerHTML = '<option value="">— parent 1 —</option>' + options;
-  b.innerHTML = '<option value="">— parent 2 —</option>' + options;
-  if (adults.find(c => String(c.id) === prevA)) a.value = prevA;
-  if (adults.find(c => String(c.id) === prevB)) b.value = prevB;
-  $('#breed-btn').disabled = adults.length < 2;
-}
-
-function label(c) {
-  const name = c.nickname || c.speciesName;
-  return `${c.variant ? '✨ ' : ''}${name} (P${c.power})`;
-}
+$('#breeding-cells').addEventListener('click', async (e) => {
+  const slot = e.target.closest('[data-pick-parent]');
+  const doBreed = e.target.closest('#do-breed');
+  if (slot) {
+    const side = slot.dataset.pickParent;
+    const other = side === 'a' ? breedSelB : breedSelA;
+    const adults = STATE.creatures.filter(c => c.stage === 'adult' && c.id !== other);
+    openPicker('Choisir le parent', adults, pickCardHtml, (id) => {
+      if (side === 'a') breedSelA = id; else breedSelB = id;
+      closePicker(); renderBreedingCells();
+    });
+  } else if (doBreed) {
+    const msg = $('#breed-msg'); msg.className = 'msg';
+    try {
+      await api('/breed', { method: 'POST', body: { parentA: breedSelA, parentB: breedSelB } });
+      breedSelA = null; breedSelB = null;
+      msg.textContent = 'Œuf en couvaison dans la cellule ! 🥚'; msg.classList.add('ok');
+      await refresh();
+    } catch (err) { msg.textContent = err.message; msg.classList.add('err'); }
+  }
+});
 
 function renderCollection() {
   const owned = STATE.creatures.filter(c => c.stage !== 'egg');
@@ -347,19 +376,6 @@ function fmt(ms) {
 // ============================================================
 //  Actions
 // ============================================================
-$('#breed-btn').addEventListener('click', async () => {
-  const parentA = $('#parentA').value, parentB = $('#parentB').value;
-  const msg = $('#breed-msg');
-  msg.className = 'msg';
-  if (!parentA || !parentB) { msg.textContent = 'Choisis deux parents.'; msg.classList.add('err'); return; }
-  try {
-    await api('/breed', { method: 'POST', body: { parentA, parentB } });
-    msg.textContent = 'Œuf en couvaison dans une cellule ! Tu découvriras le bébé à l\'éclosion 🥚';
-    msg.classList.add('ok');
-    await refresh();
-  } catch (err) { msg.textContent = err.message; msg.classList.add('err'); }
-});
-
 $('#buy-slot').addEventListener('click', async () => {
   try { await api('/incubator/buy', { method: 'POST' }); await refresh(); }
   catch (err) { alert(err.message); }

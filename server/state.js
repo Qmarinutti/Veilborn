@@ -137,6 +137,8 @@ export function publicCreature(c, now = Date.now()) {
     tierName: TIER_NAMES[tierOf(c.species)],
     powerRarity: rarityOf(c.species),   // rarete de puissance (stade/evolution)
     fromBreeding: c.from_breeding === 1,
+    parentA: c.parent_a ?? null,
+    parentB: c.parent_b ?? null,
     stage: c.stage,
     variant: c.variant,
     nickname: c.nickname,

@@ -30,11 +30,12 @@ async function insertCreature(ownerId, c, extra = {}) {
   const now = Date.now();
   return insert(`
     INSERT INTO creatures
-      (owner_id, species, stage, gene_force, gene_vita, gene_speed, variant, nature, nickname, in_prairie, from_breeding, hatch_at, mature_at, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (owner_id, species, stage, gene_force, gene_vita, gene_speed, variant, nature, nickname, in_prairie, from_breeding, parent_a, parent_b, hatch_at, mature_at, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [ownerId, c.species, c.stage ?? 'adult',
      c.gene_force, c.gene_vita, c.gene_speed, c.variant ?? 0, c.nature ?? 'Equilibre',
      extra.nickname ?? null, extra.in_prairie ?? 0, extra.from_breeding ?? 0,
+     extra.parent_a ?? null, extra.parent_b ?? null,
      extra.hatch_at ?? null, extra.mature_at ?? null, now]);
 }
 
@@ -134,7 +135,7 @@ app.post('/api/breed', requireAuth, h(async (req, res) => {
 
   const child = breed(a, b); // toujours une forme de BASE (bebe), rarete d'acquisition tiree
   const hatchAt = Date.now() + breedingSeconds(child.species) * 1000;
-  const id = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 1 });
+  const id = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 1, parent_a: a.id, parent_b: b.id });
   const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
   res.json({ ok: true, egg: publicCreature(row) });
 }));

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=21" />
+  <link rel="stylesheet" href="css/style.css?v=22" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -74,16 +74,9 @@
         <div class="panel">
           <h2>💞 Reproduction <span id="breeding-info" class="prairie-info"></span>
             <button id="buy-cell" class="btn small">+ Cellule</button></h2>
-          <p class="hint">Deux adultes → un œuf qui donne un <b>bébé</b> (forme de base). La rareté est tirée au sort : plus elle est haute, plus le Glump est rare et long à couver.</p>
-          <div class="breed-pickers">
-            <select id="parentA"></select>
-            <span class="heart">❤</span>
-            <select id="parentB"></select>
-            <button id="breed-btn" class="btn primary">Reproduire</button>
-          </div>
+          <p class="hint">Dans une cellule libre, choisis le <b>parent gauche</b> et le <b>parent droit</b> → l'<b>œuf</b> apparaît au milieu (un bébé, rareté tirée au sort).</p>
           <p id="breed-msg" class="msg"></p>
-          <h3 style="margin:18px 0 10px;">Cellules de reproduction</h3>
-          <div id="breeding-cells" class="incubators"></div>
+          <div id="breeding-cells" class="breed-cells"></div>
         </div>
       </section>
 
@@ -233,6 +226,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=24" type="module"></script>
+  <script src="js/app.js?v=25" type="module"></script>
 </body>
 </html>
