@@ -8,6 +8,20 @@
 
 let UID = 0;
 
+// Especes disposant d'une VRAIE image (fichier public/sprites/<id>.png).
+// Des qu'une image est prete, on ajoute l'id ici -> elle remplace le sprite SVG.
+export const ART = new Set([
+  // ex : 'flammkit', 'pyrokit', 'infernaught', ...
+]);
+
+// Renvoie l'image si elle existe pour cette espece, sinon le sprite SVG dessine.
+export function creatureVisual(creature, size = 80) {
+  if (creature && creature.species && ART.has(creature.species)) {
+    return `<img class="sprite art" src="sprites/${creature.species}.png" width="${size}" height="${size}" alt="${creature.speciesName || ''}" loading="lazy">`;
+  }
+  return creatureSVG(creature, size);
+}
+
 function clamp(n) { return Math.max(0, Math.min(255, Math.round(n))); }
 function hexToRgb(h) { h = h.replace('#', ''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
 function rgbToHex([r,g,b]) { return '#' + [r,g,b].map(v=>clamp(v).toString(16).padStart(2,'0')).join(''); }

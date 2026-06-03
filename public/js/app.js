@@ -1,5 +1,5 @@
 // ---------- Client Veilborn ----------
-import { creatureSVG } from './sprites.js?v=6';
+import { creatureSVG, creatureVisual } from './sprites.js?v=7';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -95,9 +95,9 @@ async function loadDex() {
     if (!arr.length) continue;
     html += `<div class="dexline"><div class="dexline-title">${LINE_NAMES[ln] || ln}</div><div class="dexchain">`;
     arr.forEach((sp, i) => {
-      const cr = { color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, variant: 0 };
+      const cr = { species: id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, variant: 0 };
       html += `<div class="dexmon" data-rarity="${sp.rarity}">
-        <div class="avatar">${creatureSVG(cr, 96)}</div>
+        <div class="avatar">${creatureVisual(cr, 96)}</div>
         <div class="rarity-dots">${RARITY_DOTS(sp.rarity)}</div>
         <div class="name">${sp.name}</div>
         <div class="sub">${sp.type}</div>
@@ -165,7 +165,7 @@ function renderAll() {
 const RARITY_DOTS = (r) => '★'.repeat(r) + '☆'.repeat(5 - r);
 
 function avatar(c) {
-  return `<div class="avatar">${creatureSVG(c, 74)}</div>`;
+  return `<div class="avatar">${creatureVisual(c, 74)}</div>`;
 }
 
 function eggs() { return STATE.creatures.filter(c => c.stage === 'egg'); }
@@ -435,7 +435,7 @@ function buildMeadow() {
     const el = document.createElement('div');
     el.className = 'critter' + (baby ? ' baby' : '');
     el.style.width = size + 'px';
-    el.innerHTML = creatureSVG(c, size) +
+    el.innerHTML = creatureVisual(c, size) +
       `<span class="label">${c.variant ? '✨ ' : ''}${c.nickname || c.speciesName}</span>`;
     el.addEventListener('click', () => {
       el.classList.add('show-label');

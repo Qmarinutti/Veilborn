@@ -1,0 +1,16 @@
+DOSSIER DES IMAGES DE GLUMPS (art IA)
+=====================================
+
+Depose ici une image PNG par Glump, nommee EXACTEMENT avec son identifiant :
+
+  flammkit.png      pyrokit.png       infernaught.png      (lignee Feu)
+  aquolet.png       tidolet.png       leviaqua.png         (lignee Eau)
+  sprouty.png       floracub.png      verdantaur.png       (lignee Plante)
+
+- Format : PNG carre (ex. 512x512 ou 1024x1024), personnage centre.
+- Fond transparent = ideal (surtout pour la prairie). Sinon un fond simple
+  marche aussi : dans les cartes/Dex l'image est recadree en rond.
+
+Une fois les images deposees, dis-le a l'assistant : il active leur affichage
+(il ajoute les identifiants dans la liste ART de public/js/sprites.js).
+Tant qu'une image manque, le Glump garde son sprite dessine (SVG) par defaut.
