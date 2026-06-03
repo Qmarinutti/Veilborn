@@ -42,15 +42,26 @@
     </header>
 
     <main>
-      <!-- Vue elevage -->
-      <section id="view-farm" class="view">
+      <!-- Vue collection (box) -->
+      <section id="view-box" class="view">
         <div class="panel">
-          <h2>Incubateurs <button id="buy-slot" class="btn small">+ Incubateur</button></h2>
+          <h2>📦 Ma collection (<span id="coll-count">0</span>)</h2>
+          <div id="collection" class="cards"></div>
+        </div>
+      </section>
+
+      <!-- Vue oeufs / incubateurs -->
+      <section id="view-eggs" class="view hidden">
+        <div class="panel">
+          <h2>🥚 Incubateurs <button id="buy-slot" class="btn small">+ Incubateur</button></h2>
           <div id="incubators" class="incubators"></div>
         </div>
+      </section>
 
+      <!-- Vue reproduction -->
+      <section id="view-breed" class="view hidden">
         <div class="panel">
-          <h2>Reproduction</h2>
+          <h2>💞 Reproduction</h2>
           <p class="hint">Choisis deux adultes pour pondre un oeuf.</p>
           <div class="breed-pickers">
             <select id="parentA"></select>
@@ -59,11 +70,6 @@
             <button id="breed-btn" class="btn primary">Reproduire</button>
           </div>
           <p id="breed-msg" class="msg"></p>
-        </div>
-
-        <div class="panel">
-          <h2>Ma collection (<span id="coll-count">0</span>)</h2>
-          <div id="collection" class="cards"></div>
         </div>
       </section>
 
@@ -115,11 +121,13 @@
 
     <!-- Barre de navigation du bas (avec symboles) -->
     <nav class="bottomnav">
-      <button class="navbtn active" data-view="farm"><span class="ic">🥚</span><span class="lbl">Elevage</span></button>
+      <button class="navbtn active" data-view="box"><span class="ic">📦</span><span class="lbl">Collection</span></button>
+      <button class="navbtn" data-view="eggs"><span class="ic">🥚</span><span class="lbl">Oeufs</span></button>
+      <button class="navbtn" data-view="breed"><span class="ic">💞</span><span class="lbl">Repro</span></button>
       <button class="navbtn" data-view="prairie"><span class="ic">🌳</span><span class="lbl">Prairie</span></button>
-      <button class="navbtn" data-view="dex"><span class="ic">📖</span><span class="lbl">Glumpdex</span></button>
-      <button class="navbtn" data-view="leaderboard"><span class="ic">🏆</span><span class="lbl">Classement</span></button>
-      <button class="navbtn" data-view="visit"><span class="ic">🔭</span><span class="lbl">Visiter</span></button>
+      <button class="navbtn" data-view="dex"><span class="ic">📖</span><span class="lbl">Dex</span></button>
+      <button class="navbtn" data-view="leaderboard"><span class="ic">🏆</span><span class="lbl">Rang</span></button>
+      <button class="navbtn" data-view="visit"><span class="ic">🔭</span><span class="lbl">Visite</span></button>
     </nav>
 
     <!-- Panneau coulissant (drawer) -->
