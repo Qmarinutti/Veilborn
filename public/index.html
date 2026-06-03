@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=19" />
+  <link rel="stylesheet" href="css/style.css?v=20" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -133,6 +133,7 @@
       <button class="railbtn" data-drawer="events" title="Evenements">🎉</button>
       <button class="railbtn" data-drawer="shop" title="Boutique">🛒</button>
       <button class="railbtn" data-drawer="settings" title="Reglages">⚙️</button>
+      <button class="railbtn" data-drawer="social" title="Social / Amis">👥</button>
     </div>
 
     <!-- Barre de navigation du bas (avec symboles) -->
@@ -143,7 +144,6 @@
       <button class="navbtn" data-view="prairie"><span class="ic">🌳</span><span class="lbl">Prairie</span></button>
       <button class="navbtn" data-view="dex"><span class="ic">📖</span><span class="lbl">Dex</span></button>
       <button class="navbtn" data-view="leaderboard"><span class="ic">🏆</span><span class="lbl">Rang</span></button>
-      <button class="navbtn" data-view="visit"><span class="ic">🔭</span><span class="lbl">Visite</span></button>
     </nav>
 
     <!-- Selecteur de Glump pour la prairie -->
@@ -187,6 +187,18 @@
           <button id="replay-tuto" class="btn">❓ Revoir le tutoriel</button>
           <button id="logout" class="btn">Se deconnecter</button>
         </div>
+        <div id="drawer-social" class="drawer-section hidden">
+          <p class="hint">Ton code ami (partage-le) :</p>
+          <div class="friend-code"><span id="my-code">—</span><button id="copy-code" class="btn small">Copier</button></div>
+          <p class="hint" style="margin-top:14px;">Ajouter un ami par son code :</p>
+          <div class="add-friend">
+            <input id="friend-code-input" type="text" placeholder="CODE AMI" maxlength="8" />
+            <button id="add-friend-btn" class="btn primary">Ajouter</button>
+          </div>
+          <p id="social-msg" class="msg"></p>
+          <h3 style="margin:16px 0 8px; font-size:15px;">Mes amis (<span id="friends-count">0</span>)</h3>
+          <div id="friends-list"></div>
+        </div>
       </div>
     </aside>
 
@@ -205,6 +217,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=22" type="module"></script>
+  <script src="js/app.js?v=23" type="module"></script>
 </body>
 </html>

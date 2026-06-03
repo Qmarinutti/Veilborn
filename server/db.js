@@ -42,6 +42,7 @@ export async function initDb() {
       incubator_slots INTEGER NOT NULL DEFAULT 2,
       prairie_slots   INTEGER NOT NULL DEFAULT 4,
       breeding_cells  INTEGER NOT NULL DEFAULT 1,
+      friend_code     TEXT,
       last_tick       INTEGER NOT NULL,
       created_at      INTEGER NOT NULL
     );
@@ -72,6 +73,13 @@ export async function initDb() {
       created_at  INTEGER NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS friends (
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      friend_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id, friend_id)
+    );
+
     CREATE TABLE IF NOT EXISTS discoveries (
       user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       species  TEXT NOT NULL,
@@ -88,6 +96,7 @@ export async function initDb() {
     "ALTER TABLE creatures ADD COLUMN nature TEXT NOT NULL DEFAULT 'Equilibre'",
     'ALTER TABLE users ADD COLUMN breeding_cells INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE creatures ADD COLUMN from_breeding INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN friend_code TEXT',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }

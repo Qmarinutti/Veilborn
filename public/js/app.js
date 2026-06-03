@@ -688,16 +688,59 @@ function prairieLoop() {
 // ============================================================
 //  Drawer lateral : evenements / boutique / reglages
 // ============================================================
-const DRAWER_TITLES = { events: '🎉 Evenements', shop: '🛒 Boutique', settings: '⚙️ Reglages' };
+const DRAWER_TITLES = { events: '🎉 Evenements', shop: '🛒 Boutique', settings: '⚙️ Reglages', social: '👥 Social' };
 function openDrawer(type) {
   $('#drawer-title').textContent = DRAWER_TITLES[type] || '';
   $$('.drawer-section').forEach(s => s.classList.add('hidden'));
   const sec = $('#drawer-' + type);
   if (sec) sec.classList.remove('hidden');
   if (type === 'shop') loadShop();
+  if (type === 'social') loadSocial();
   $('#drawer').classList.remove('hidden');
   $('#drawer-overlay').classList.remove('hidden');
 }
+
+// ---------- Social : amis & code ami ----------
+async function loadSocial() {
+  try {
+    const { code, friends } = await api('/social');
+    $('#my-code').textContent = code;
+    $('#friends-count').textContent = friends.length;
+    $('#friends-list').innerHTML = friends.map(f => `
+      <div class="friend-row">
+        <span class="friend-name">${f.username}</span>
+        <button class="btn small" data-visit-friend="${f.id}" data-name="${f.username}">Visiter</button>
+        <button class="btn small" data-remove-friend="${f.id}">✕</button>
+      </div>`).join('') || '<p class="hint">Aucun ami pour l\'instant. Ajoute un code !</p>';
+  } catch (err) { $('#friends-list').innerHTML = `<p class="hint">${err.message}</p>`; }
+}
+$('#copy-code').addEventListener('click', () => {
+  const code = $('#my-code').textContent;
+  navigator.clipboard?.writeText(code);
+  flash('Code copié : ' + code);
+});
+$('#add-friend-btn').addEventListener('click', async () => {
+  const code = $('#friend-code-input').value.trim();
+  const msg = $('#social-msg'); msg.className = 'msg';
+  try {
+    const r = await api('/social/add', { method: 'POST', body: { code } });
+    msg.textContent = `${r.friend.username} ajouté !`; msg.classList.add('ok');
+    $('#friend-code-input').value = '';
+    loadSocial();
+  } catch (err) { msg.textContent = err.message; msg.classList.add('err'); }
+});
+$('#friends-list').addEventListener('click', async (e) => {
+  const visit = e.target.closest('[data-visit-friend]');
+  const rem = e.target.closest('[data-remove-friend]');
+  if (visit) {
+    closeDrawer();
+    visitFarm(Number(visit.dataset.visitFriend), visit.dataset.name);
+  } else if (rem) {
+    if (!confirm('Retirer cet ami ?')) return;
+    try { await api('/social/remove', { method: 'POST', body: { friendId: Number(rem.dataset.removeFriend) } }); loadSocial(); }
+    catch (err) { alert(err.message); }
+  }
+});
 
 // Boutique d'oeufs
 async function loadShop() {

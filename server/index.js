@@ -1,5 +1,6 @@
 // Serveur principal : API REST + service des fichiers statiques.
 import express from 'express';
+import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -42,6 +43,21 @@ function setCookie(res, token) {
     `sid=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`);
 }
 
+// Code ami (8 caracteres, alphabet sans I/O/0/1 pour eviter les confusions).
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function genFriendCode() {
+  const b = randomBytes(8);
+  let s = '';
+  for (let i = 0; i < 8; i++) s += CODE_ALPHABET[b[i] % CODE_ALPHABET.length];
+  return s;
+}
+async function ensureFriendCode(user) {
+  if (user.friend_code) return user.friend_code;
+  const code = genFriendCode();
+  await run('UPDATE users SET friend_code = ? WHERE id = ?', [code, user.id]);
+  return code;
+}
+
 // ---------- Auth ----------
 app.post('/api/register', h(async (req, res) => {
   const { username, password, starter } = req.body || {};
@@ -57,8 +73,8 @@ app.post('/api/register', h(async (req, res) => {
   const { hash, salt } = hashPassword(password);
   const now = Date.now();
   const userId = await insert(
-    'INSERT INTO users (username, pass_hash, pass_salt, essence, incubator_slots, last_tick, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [username, hash, salt, BALANCE.startEssence, BALANCE.startSlots, now, now]);
+    'INSERT INTO users (username, pass_hash, pass_salt, essence, incubator_slots, friend_code, last_tick, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [username, hash, salt, BALANCE.startEssence, BALANCE.startSlots, genFriendCode(), now, now]);
 
   // Le joueur commence avec le starter choisi (adulte), place en prairie pour farmer.
   await insertCreature(userId, wildCreature(starter, { adult: true }));
@@ -309,6 +325,34 @@ app.get('/api/starters', (req, res) => {
   });
   res.json({ starters });
 });
+
+// ---------- Social : amis & code ami ----------
+app.get('/api/social', requireAuth, h(async (req, res) => {
+  const code = await ensureFriendCode(req.user);
+  const friends = await all(
+    'SELECT u.id, u.username FROM friends f JOIN users u ON u.id = f.friend_id WHERE f.user_id = ? ORDER BY u.username',
+    [req.user.id]);
+  res.json({ code, friends });
+}));
+
+app.post('/api/social/add', requireAuth, h(async (req, res) => {
+  const code = String((req.body || {}).code || '').trim().toUpperCase();
+  if (!code) return res.status(400).json({ error: 'Entre un code ami.' });
+  const friend = await get('SELECT id, username FROM users WHERE friend_code = ?', [code]);
+  if (!friend) return res.status(404).json({ error: 'Aucun joueur avec ce code.' });
+  if (friend.id === req.user.id) return res.status(400).json({ error: "C'est ton propre code !" });
+  const now = Date.now();
+  await run('INSERT OR IGNORE INTO friends (user_id, friend_id, created_at) VALUES (?, ?, ?)', [req.user.id, friend.id, now]);
+  await run('INSERT OR IGNORE INTO friends (user_id, friend_id, created_at) VALUES (?, ?, ?)', [friend.id, req.user.id, now]);
+  res.json({ ok: true, friend });
+}));
+
+app.post('/api/social/remove', requireAuth, h(async (req, res) => {
+  const fid = Number((req.body || {}).friendId);
+  await run('DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)',
+    [req.user.id, fid, fid, req.user.id]);
+  res.json({ ok: true });
+}));
 
 // ---------- Donnees statiques de jeu ----------
 app.get('/api/species', (req, res) => {

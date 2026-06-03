@@ -321,6 +321,15 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .shop-name { font-weight: 700; }
 .shop-sub { color: var(--muted); font-size: 12px; }
 
+/* Social / amis */
+.friend-code { display: flex; align-items: center; gap: 10px; }
+.friend-code span { font-family: monospace; font-size: 20px; font-weight: 700; letter-spacing: 3px; background: rgba(0,0,0,.3); padding: 9px 14px; border-radius: 10px; color: var(--gold); flex: 1; text-align: center; }
+.add-friend { display: flex; gap: 8px; }
+.add-friend input { flex: 1; text-transform: uppercase; letter-spacing: 2px; }
+.friend-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; }
+.friend-name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drawer .drawer-body { overflow-x: hidden; }
+
 /* Fiche detaillee (modale CENTREE) */
 #detail {
   top: 50%; left: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%);
