@@ -41,6 +41,7 @@ export async function initDb() {
       essence         REAL NOT NULL DEFAULT 0,
       incubator_slots INTEGER NOT NULL DEFAULT 2,
       prairie_slots   INTEGER NOT NULL DEFAULT 4,
+      breeding_cells  INTEGER NOT NULL DEFAULT 1,
       last_tick       INTEGER NOT NULL,
       created_at      INTEGER NOT NULL
     );
@@ -57,6 +58,7 @@ export async function initDb() {
       nature      TEXT NOT NULL DEFAULT 'Equilibre',
       nickname    TEXT,
       in_prairie  INTEGER NOT NULL DEFAULT 0,
+      from_breeding INTEGER NOT NULL DEFAULT 0,
       xp          INTEGER NOT NULL DEFAULT 0,
       hatch_at    INTEGER,
       mature_at   INTEGER,
@@ -84,6 +86,8 @@ export async function initDb() {
     'ALTER TABLE creatures ADD COLUMN in_prairie INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE creatures ADD COLUMN xp INTEGER NOT NULL DEFAULT 0',
     "ALTER TABLE creatures ADD COLUMN nature TEXT NOT NULL DEFAULT 'Equilibre'",
+    'ALTER TABLE users ADD COLUMN breeding_cells INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE creatures ADD COLUMN from_breeding INTEGER NOT NULL DEFAULT 0',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }

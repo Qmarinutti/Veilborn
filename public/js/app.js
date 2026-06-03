@@ -200,6 +200,7 @@ function tickLoop() {
 function renderAll() {
   $('#rate').textContent = '+' + STATE.essencePerSec.toFixed(2) + '/s';
   renderIncubators();
+  renderBreedingCells();
   renderBreedPickers();
   renderCollection();
   if (prairieActive) { buildMeadow(); renderPrairieSlots(); }
@@ -212,31 +213,46 @@ function avatar(c) {
 }
 
 function eggs() { return STATE.creatures.filter(c => c.stage === 'egg'); }
+function shopEggs() { return STATE.creatures.filter(c => c.stage === 'egg' && !c.fromBreeding); }
+function bredEggs() { return STATE.creatures.filter(c => c.stage === 'egg' && c.fromBreeding); }
+
+function eggCellHtml(egg, mystery) {
+  const ready = egg.remainingMs <= 0;
+  const label = mystery && !ready ? '???' : `${egg.speciesName} ${RARITY_DOTS(egg.rarity)}`;
+  return `<div class="incubator ${ready ? 'ready' : ''}" data-egg="${egg.id}">
+    <div class="egg">${ready ? '🐣' : '🥚'}</div>
+    <div class="sub">${label}</div>
+    <div class="countdown" data-ready="${egg.readyAt}">${ready ? 'Eclot !' : ''}</div>
+  </div>`;
+}
 
 function renderIncubators() {
   const slots = STATE.user.incubatorSlots;
-  const e = eggs();
+  const e = shopEggs();
   let html = '';
   for (let i = 0; i < slots; i++) {
-    const egg = e[i];
-    if (!egg) {
-      html += `<div class="incubator empty"><div class="egg">⬚</div><div>Libre</div></div>`;
-    } else {
-      const ready = egg.remainingMs <= 0;
-      html += `<div class="incubator ${ready ? 'ready' : ''}" data-egg="${egg.id}">
-        <div class="egg">${ready ? '🐣' : '🥚'}</div>
-        <div class="sub">${egg.speciesName} ${RARITY_DOTS(egg.rarity)}</div>
-        <div class="countdown" data-ready="${egg.readyAt}">${ready ? 'Eclot !' : ''}</div>
-        <div class="bar"><i data-egg-bar="${egg.id}"></i></div>
-      </div>`;
-    }
+    html += e[i] ? eggCellHtml(e[i], false)
+      : `<div class="incubator empty"><div class="egg">⬚</div><div>Libre</div></div>`;
   }
   $('#incubators').innerHTML = html;
-
-  // Bouton acheter incubateur
   const buyBtn = $('#buy-slot');
   if (slots >= 8) { buyBtn.disabled = true; buyBtn.textContent = 'Max'; }
   else { buyBtn.disabled = false; buyBtn.textContent = '+ Incubateur'; }
+}
+
+function renderBreedingCells() {
+  const slots = STATE.user.breedingCells;
+  const e = bredEggs();
+  $('#breeding-info').textContent = `${e.length}/${slots} cellule${slots > 1 ? 's' : ''}`;
+  let html = '';
+  for (let i = 0; i < slots; i++) {
+    html += e[i] ? eggCellHtml(e[i], true) // mystere : on decouvre le bebe a l'eclosion
+      : `<div class="incubator empty"><div class="egg">⬚</div><div>Libre</div></div>`;
+  }
+  $('#breeding-cells').innerHTML = html;
+  const buyBtn = $('#buy-cell');
+  if (slots >= 5) { buyBtn.disabled = true; buyBtn.textContent = 'Max (5)'; }
+  else { buyBtn.disabled = false; buyBtn.textContent = '+ Cellule'; }
 }
 
 function renderBreedPickers() {
@@ -337,8 +353,8 @@ $('#breed-btn').addEventListener('click', async () => {
   msg.className = 'msg';
   if (!parentA || !parentB) { msg.textContent = 'Choisis deux parents.'; msg.classList.add('err'); return; }
   try {
-    const r = await api('/breed', { method: 'POST', body: { parentA, parentB } });
-    msg.textContent = `Oeuf de ${r.egg.speciesName} pondu ! ${r.egg.variant ? '✨ SHINY !' : ''}`;
+    await api('/breed', { method: 'POST', body: { parentA, parentB } });
+    msg.textContent = 'Œuf en couvaison dans une cellule ! Tu découvriras le bébé à l\'éclosion 🥚';
     msg.classList.add('ok');
     await refresh();
   } catch (err) { msg.textContent = err.message; msg.classList.add('err'); }
@@ -346,6 +362,12 @@ $('#breed-btn').addEventListener('click', async () => {
 
 $('#buy-slot').addEventListener('click', async () => {
   try { await api('/incubator/buy', { method: 'POST' }); await refresh(); }
+  catch (err) { alert(err.message); }
+});
+
+$('#buy-cell').addEventListener('click', async () => {
+  if (!confirm('Acheter une cellule de reproduction ? (coûteux)')) return;
+  try { const r = await api('/breeding/buy-cell', { method: 'POST' }); flash(`Cellule achetée (-${r.cost} ✨)`); await refresh(); }
   catch (err) { alert(err.message); }
 });
 

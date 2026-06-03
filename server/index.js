@@ -12,6 +12,7 @@ import {
   BALANCE, STARTER_IDS, SPECIES, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
   levelFromXp, prairieSlotCost, EGG_SHOP, randomSpeciesInRarity,
+  breedingSeconds, breedingCellCost,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser } from './state.js';
 import { hasArt } from './art.js';
@@ -28,11 +29,12 @@ async function insertCreature(ownerId, c, extra = {}) {
   const now = Date.now();
   return insert(`
     INSERT INTO creatures
-      (owner_id, species, stage, gene_force, gene_vita, gene_speed, variant, nature, nickname, hatch_at, mature_at, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (owner_id, species, stage, gene_force, gene_vita, gene_speed, variant, nature, nickname, in_prairie, from_breeding, hatch_at, mature_at, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [ownerId, c.species, c.stage ?? 'adult',
      c.gene_force, c.gene_vita, c.gene_speed, c.variant ?? 0, c.nature ?? 'Equilibre',
-     extra.nickname ?? null, extra.hatch_at ?? null, extra.mature_at ?? null, now]);
+     extra.nickname ?? null, extra.in_prairie ?? 0, extra.from_breeding ?? 0,
+     extra.hatch_at ?? null, extra.mature_at ?? null, now]);
 }
 
 function setCookie(res, token) {
@@ -107,17 +109,32 @@ app.post('/api/breed', requireAuth, h(async (req, res) => {
     return res.status(400).json({ error: 'Seuls les adultes peuvent se reproduire.' });
   }
 
-  const eggRow = await get(
-    "SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg'", [req.user.id]);
-  if (eggRow.n >= req.user.incubator_slots) {
-    return res.status(400).json({ error: 'Tous tes incubateurs sont occupes.' });
+  // Verifie qu'une cellule de reproduction est libre.
+  const cellRow = await get(
+    "SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 1", [req.user.id]);
+  if (cellRow.n >= req.user.breeding_cells) {
+    return res.status(400).json({ error: 'Toutes tes cellules de reproduction sont occupees.' });
   }
 
-  const child = breed(a, b);
-  const hatchAt = Date.now() + incubationSeconds(child.species) * 1000;
-  const id = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt });
+  const child = breed(a, b); // toujours une forme de BASE (bebe), rarete d'acquisition tiree
+  const hatchAt = Date.now() + breedingSeconds(child.species) * 1000;
+  const id = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 1 });
   const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
   res.json({ ok: true, egg: publicCreature(row) });
+}));
+
+// ---------- Acheter une cellule de reproduction (tres cher) ----------
+app.post('/api/breeding/buy-cell', requireAuth, h(async (req, res) => {
+  const user = await reloadUser(req.user.id);
+  if (user.breeding_cells >= BALANCE.breedingMaxCells) {
+    return res.status(400).json({ error: 'Nombre maximum de cellules atteint.' });
+  }
+  const cost = breedingCellCost(user.breeding_cells);
+  if (user.essence < cost) {
+    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
+  }
+  await run('UPDATE users SET essence = essence - ?, breeding_cells = breeding_cells + 1 WHERE id = ?', [cost, user.id]);
+  res.json({ ok: true, cost });
 }));
 
 // ---------- Acheter un incubateur ----------
@@ -156,7 +173,7 @@ app.post('/api/shop/buy-egg', requireAuth, h(async (req, res) => {
   const item = EGG_SHOP.find(e => e.id === tier);
   if (!item) return res.status(400).json({ error: 'Oeuf inconnu.' });
 
-  const eggCount = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg'", [req.user.id])).n;
+  const eggCount = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 0", [req.user.id])).n;
   if (eggCount >= req.user.incubator_slots) {
     return res.status(400).json({ error: 'Tous tes incubateurs sont occupes.' });
   }

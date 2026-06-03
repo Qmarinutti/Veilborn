@@ -15,6 +15,12 @@ export const BALANCE = {
   slotCostBase: 250, // cout du prochain slot = base * (slots possedes ^ 1.6)
   // Duree d'incubation d'un oeuf (secondes), multipliee par la rarete.
   incubationBaseSec: 120,
+  // Reproduction : un oeuf issu de breeding met du temps (x rarete) et occupe une CELLULE.
+  breedingBaseSec: 300,
+  breedingStartCells: 1,
+  breedingMaxCells: 5,
+  // Cout pour debloquer la cellule 2, 3, 4, 5 (tres cher exprès).
+  breedingCellCosts: [25000, 50000, 250000, 1000000],
   // Duree de maturation bebe -> adulte (secondes), multipliee par la rarete.
   maturationBaseSec: 180,
   // Revenu idle d'essence par seconde et par adulte EN PRAIRIE = rarete * ce facteur.
@@ -135,18 +141,42 @@ export function creatureValue(creature) {
   return Math.round((genes + r * 25) * (creature.variant === 1 ? 2 : 1));
 }
 
-// --- Reproduction : deux adultes -> un oeuf ---
-// Espece de l'enfant : 50/50 entre les parents, avec une petite chance
-// de "surclassement" vers une espece plus rare aleatoire.
-export function breed(parentA, parentB) {
-  let species = pick([parentA.species, parentB.species]);
+// --- Rarete d'ACQUISITION (taux de drop) par lignee/famille ---
+// 1=Commun, 2=Rare, 3=Epique, 4=Legendaire. Attribue de façon deterministe
+// par hash de la lignee (ajustable plus tard). Tous les membres d'une famille
+// partagent la rarete d'acquisition de la famille.
+function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+export function lineOf(speciesId) { return SPECIES[speciesId]?.line || speciesId; }
+export function tierOf(speciesId) {
+  const r = hashStr(lineOf(speciesId)) % 100;
+  if (r < 3) return 4;    // Legendaire 3%
+  if (r < 15) return 3;   // Epique 12%
+  if (r < 40) return 2;   // Rare 25%
+  return 1;               // Commun 60%
+}
+export const TIER_NAMES = { 1: 'Commun', 2: 'Rare', 3: 'Epique', 4: 'Legendaire' };
 
-  // 8% de chance d'obtenir une espece d'une rarete superieure (mutation rare).
-  if (Math.random() < 0.08) {
-    const targetRarity = Math.min(5, rarityOf(species) + 1);
-    const candidates = SPECIES_IDS.filter(id => SPECIES[id].rarity === targetRarity);
-    if (candidates.length) species = pick(candidates);
-  }
+// Formes de BASE (stade 1) regroupees par rarete d'acquisition.
+const BASE_BY_TIER = { 1: [], 2: [], 3: [], 4: [] };
+for (const id of SPECIES_IDS) {
+  if ((SPECIES[id].stage || 1) === 1) BASE_BY_TIER[tierOf(id)].push(id);
+}
+// Tirage pondere d'une rarete a la reproduction.
+function rollTier() {
+  const r = Math.random() * 100;
+  if (r < 1 && BASE_BY_TIER[4].length) return 4;   // Legendaire 1%
+  if (r < 7 && BASE_BY_TIER[3].length) return 3;    // Epique 6%
+  if (r < 28 && BASE_BY_TIER[2].length) return 2;   // Rare 21%
+  return 1;                                         // Commun 72%
+}
+
+// --- Reproduction : deux adultes -> un oeuf qui donnera un BEBE (forme de base).
+// On ne donne JAMAIS une forme evoluee : juste un stade 1, dont la rarete
+// d'acquisition est tiree au sort (le joueur le fait evoluer ensuite).
+export function breed(parentA, parentB) {
+  const tier = rollTier();
+  const pool = BASE_BY_TIER[tier].length ? BASE_BY_TIER[tier] : BASE_BY_TIER[1];
+  const species = pick(pool);
 
   const inherit = (a, b) => {
     const avg = (a + b) / 2;
@@ -184,6 +214,14 @@ export function wildCreature(speciesId, { adult = false } = {}) {
 
 export function incubationSeconds(speciesId) {
   return Math.round(BALANCE.incubationBaseSec * rarityOf(speciesId));
+}
+// Temps d'un oeuf de reproduction : depend de la rarete d'ACQUISITION (famille).
+export function breedingSeconds(speciesId) {
+  return Math.round(BALANCE.breedingBaseSec * tierOf(speciesId));
+}
+// Cout de la prochaine cellule de reproduction (cellule 2,3,4,5).
+export function breedingCellCost(currentCells) {
+  return BALANCE.breedingCellCosts[currentCells - 1] ?? null;
 }
 export function maturationSeconds(speciesId) {
   return Math.round(BALANCE.maturationBaseSec * rarityOf(speciesId));

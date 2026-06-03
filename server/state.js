@@ -5,7 +5,11 @@ import { get, all, run } from './db.js';
 import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
   evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
+  tierOf, TIER_NAMES,
 } from './game.js';
+
+// Multiplicateur de gain d'essence selon le niveau (+5% par niveau).
+function levelIncomeMul(xp) { return 1 + 0.05 * (levelFromXp(xp) - 1); }
 import { hasArt } from './art.js';
 
 const HOUR_MS = 3600 * 1000;
@@ -20,10 +24,11 @@ async function tickEssence(user) {
   if (elapsed > cap) elapsed = cap;
 
   const adults = await all(
-    "SELECT species FROM creatures WHERE owner_id = ? AND stage = 'adult' AND in_prairie = 1", [user.id]);
+    "SELECT species, xp FROM creatures WHERE owner_id = ? AND stage = 'adult' AND in_prairie = 1", [user.id]);
 
+  // Gain = rarete (stade/evolution) * facteur * bonus de niveau.
   let ratePerSec = 0;
-  for (const c of adults) ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec;
+  for (const c of adults) ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec * levelIncomeMul(c.xp);
 
   const gained = ratePerSec * (elapsed / 1000);
 
@@ -91,9 +96,12 @@ export async function getPlayerState(user) {
 
   let ratePerSec = 0;
   for (const c of rows) {
-    if (c.stage === 'adult' && c.in_prairie === 1) ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec;
+    if (c.stage === 'adult' && c.in_prairie === 1) {
+      ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec * levelIncomeMul(c.xp);
+    }
   }
   const inPrairieCount = rows.filter(c => c.in_prairie === 1).length;
+  const breedingUsed = rows.filter(c => c.stage === 'egg' && c.from_breeding === 1).length;
 
   return {
     user: {
@@ -103,6 +111,8 @@ export async function getPlayerState(user) {
       incubatorSlots: fresh.incubator_slots,
       prairieSlots: fresh.prairie_slots,
       prairieUsed: inPrairieCount,
+      breedingCells: fresh.breeding_cells,
+      breedingUsed,
     },
     essencePerSec: Number(ratePerSec.toFixed(3)),
     creatures,
@@ -123,7 +133,10 @@ export function publicCreature(c, now = Date.now()) {
     color: sp?.color ?? '#888',
     shape: sp?.shape ?? 'blob',
     hasArt: hasArt(c.species),
-    rarity: rarityOf(c.species),
+    rarity: tierOf(c.species),          // rarete d'ACQUISITION (affichage etoiles/couleur)
+    tierName: TIER_NAMES[tierOf(c.species)],
+    powerRarity: rarityOf(c.species),   // rarete de puissance (stade/evolution)
+    fromBreeding: c.from_breeding === 1,
     stage: c.stage,
     variant: c.variant,
     nickname: c.nickname,
