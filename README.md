@@ -1,7 +1,7 @@
-# 🥚 Pokelike — jeu d'élevage idle multijoueur
+# 🥚 Veilborn — jeu d'élevage idle multijoueur
 
-Petit jeu web (non commercial pour l'instant) : tu élèves des **Bestioles**
-originales, tu fais éclore des œufs, tu reproduis pour obtenir de nouvelles
+Petit jeu web (non commercial pour l'instant) : tu élèves des **Glumps**
+originaux, tu fais éclore des œufs, tu reproduis pour obtenir de nouvelles
 espèces, et tu compares ta collection aux autres joueurs.
 
 ## Lancer en local
@@ -55,13 +55,13 @@ l'app, donc rien n'est perdu lors des redéploiements.
 - **Reproduction / génétique** : 2 adultes → 1 œuf (gènes hérités + mutation,
   chance de rareté supérieure et de *shiny*).
 - **Sprites** dessinés en SVG (silhouette + couleur par type, shiny dorés).
-- **Prairie** 🌳 : tes Bestioles se baladent dans un pré.
+- **Prairie** 🌳 : tes Glumps se baladent dans un pré.
 - **Incubateurs** achetables, **collection** (renommer / relâcher).
 - **Multijoueur (async)** : classement + visite de l'élevage des autres.
 
 ## Suite prévue
 
-- 🔄 Échange de Bestioles entre joueurs (marché / troc).
+- 🔄 Échange de Glumps entre joueurs (marché / troc).
 - ⚔️ Combats PvP (stats `force/vita/speed` et types déjà prêts).
 
 ## Structure

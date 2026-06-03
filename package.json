@@ -1,7 +1,7 @@
 {
-  "name": "pokelike",
-  "version": "0.1.0",
-  "description": "Jeu d'elevage idle multijoueur (pokemon-like, non commercial)",
+  "name": "veilborn",
+  "version": "0.2.0",
+  "description": "Veilborn — jeu d'elevage idle multijoueur de Glumps",
   "type": "module",
   "scripts": {
     "start": "node server/index.js",

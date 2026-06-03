@@ -135,7 +135,7 @@ app.post('/api/incubator/buy', requireAuth, h(async (req, res) => {
 app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   const { id } = req.body || {};
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
-  if (!c) return res.status(404).json({ error: 'Creature introuvable.' });
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage === 'egg') return res.status(400).json({ error: 'On ne relache pas un oeuf.' });
 
   const refund = Math.round(creatureValue(c) * 0.5);
@@ -149,7 +149,7 @@ app.post('/api/creature/rename', requireAuth, h(async (req, res) => {
   const { id, nickname } = req.body || {};
   const name = String(nickname || '').slice(0, 20);
   const c = await get('SELECT id FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
-  if (!c) return res.status(404).json({ error: 'Creature introuvable.' });
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   await run('UPDATE creatures SET nickname = ? WHERE id = ?', [name || null, id]);
   res.json({ ok: true });
 }));
@@ -197,7 +197,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 initDb().then(() => {
   app.listen(PORT, () => {
-    console.log(`\n  Pokelike en ligne -> http://localhost:${PORT}\n`);
+    console.log(`\n  Veilborn en ligne -> http://localhost:${PORT}\n`);
   });
 }).catch((err) => {
   console.error('Echec init base de donnees:', err);

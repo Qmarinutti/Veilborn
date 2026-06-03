@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pokelike — elevage idle</title>
+  <title>Veilborn — elevage de Glumps</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <!-- Ecran de connexion -->
   <div id="auth-screen" class="screen">
     <div class="auth-card">
-      <h1>🥚 Pokelike</h1>
-      <p class="tagline">Elevage idle de Bestioles</p>
+      <h1>🥚 Veilborn</h1>
+      <p class="tagline">Elevage idle de Glumps</p>
       <div class="tabs">
         <button class="tab active" data-auth="login">Connexion</button>
         <button class="tab" data-auth="register">Inscription</button>
@@ -28,7 +28,7 @@
   <!-- Ecran de jeu -->
   <div id="game-screen" class="screen hidden">
     <header class="topbar">
-      <div class="brand">🥚 Pokelike</div>
+      <div class="brand">🥚 Veilborn</div>
       <div class="resources">
         <span class="essence">✨ <b id="essence">0</b></span>
         <span class="rate" id="rate">+0/s</span>
@@ -75,7 +75,7 @@
       <section id="view-prairie" class="view hidden">
         <div class="panel">
           <h2>Ma prairie 🌳</h2>
-          <p class="hint">Tes Bestioles (adultes et bebes) se baladent ici. Clique sur l'une d'elles pour son nom.</p>
+          <p class="hint">Tes Glumps (adultes et bebes) se baladent ici. Clique sur l'un d'eux pour son nom.</p>
           <div id="meadow" class="meadow"></div>
         </div>
       </section>
@@ -85,7 +85,7 @@
         <div class="panel">
           <h2>Classement des eleveurs</h2>
           <table class="board">
-            <thead><tr><th>#</th><th>Eleveur</th><th>Valeur collection</th><th>Meilleure</th><th>Creatures</th><th></th></tr></thead>
+            <thead><tr><th>#</th><th>Eleveur</th><th>Valeur collection</th><th>Meilleure</th><th>Glumps</th><th></th></tr></thead>
             <tbody id="board-body"></tbody>
           </table>
         </div>

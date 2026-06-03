@@ -1,4 +1,4 @@
-// ---------- Client Pokelike ----------
+// ---------- Client Veilborn ----------
 import { creatureSVG } from './sprites.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -173,7 +173,7 @@ function renderCollection() {
   const owned = STATE.creatures.filter(c => c.stage !== 'egg');
   $('#coll-count').textContent = owned.length;
   $('#collection').innerHTML = owned.map(cardHtml).join('') ||
-    '<p class="hint">Aucune creature. Fais eclore un oeuf !</p>';
+    '<p class="hint">Aucun Glump. Fais eclore un oeuf !</p>';
 }
 
 function cardHtml(c) {
@@ -257,7 +257,7 @@ $('#collection').addEventListener('click', async (e) => {
   const rel = e.target.dataset.release;
   const ren = e.target.dataset.rename;
   if (rel) {
-    if (!confirm('Relacher cette creature contre de l\'essence ?')) return;
+    if (!confirm('Relacher ce Glump contre de l\'essence ?')) return;
     try { await api('/creature/release', { method: 'POST', body: { id: Number(rel) } }); await refresh(); }
     catch (err) { alert(err.message); }
   } else if (ren) {
@@ -299,9 +299,9 @@ async function visitFarm(userId, name) {
   $('#visit-hint').textContent = 'Chargement...';
   try {
     const data = await api('/farm/' + userId);
-    $('#visit-hint').textContent = `${data.creatures.length} creature(s)`;
+    $('#visit-hint').textContent = `${data.creatures.length} Glump(s)`;
     $('#visit-cards').innerHTML = data.creatures.map(cardHtmlReadonly).join('') ||
-      '<p class="hint">Cet eleveur n\'a aucune creature.</p>';
+      '<p class="hint">Cet eleveur n\'a aucun Glump.</p>';
   } catch (err) { $('#visit-hint').textContent = err.message; }
 }
 
