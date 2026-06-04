@@ -951,7 +951,8 @@ function buildMeadow() {
       setTimeout(() => el.classList.remove('show-label'), 1500);
     });
     m.appendChild(el);
-    return { el, x, y, tx: x, ty: y, size, speed: (baby ? 0.5 : 0.35) + Math.random() * 0.25, facing: 1, pause: 0 };
+    // On retournera UNIQUEMENT le sprite (1er enfant), pas le label (sinon le nom s'ecrit a l'envers).
+    return { el, spriteEl: el.firstElementChild, x, y, tx: x, ty: y, size, speed: (baby ? 0.5 : 0.35) + Math.random() * 0.25, facing: 1, pause: 0 };
   });
 }
 
@@ -978,7 +979,8 @@ function prairieLoop() {
     const bob = Math.sin((c.x + c.y) * 0.15) * 2;
     c.el.style.left = c.x + 'px';
     c.el.style.top = (c.y + bob) + 'px';
-    c.el.style.transform = `scaleX(${c.facing})`;
+    // on retourne SEULEMENT le sprite (le label garde son sens de lecture)
+    if (c.spriteEl) c.spriteEl.style.transform = `scaleX(${c.facing})`;
   }
   prairieRAF = requestAnimationFrame(prairieLoop);
 }
