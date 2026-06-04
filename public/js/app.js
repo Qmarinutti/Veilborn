@@ -582,12 +582,11 @@ function openDetail(id) {
       <div class="hpbar big"><i style="width:${hpPct}%"></i></div>
       <div class="detail-sub">${c.hp ?? c.maxHp}/${c.maxHp} PV${c.fainted ? ' — ranime-le avec un Rappel (boutique)' : c.hp < c.maxHp ? ' — soigne-le avec une Potion (boutique)' : ''}</div>
     </div>` : '';
-  // Production de farm (par minute) + biome actuel.
-  const curBiome = c.biome && (STATE.biomes || []).find(b => b.id === c.biome);
+  // Production de farm (par minute) dans le biome ACTIF.
   const farmBlock = c.stage === 'adult' ? `
-    <div class="detail-block"><div class="detail-lbl">Production</div>
+    <div class="detail-block"><div class="detail-lbl">Production — biome actif : ${c.farmBiomeName}</div>
       <div class="detail-sub"><b>+${c.farmPerMin} ${c.farmResEmoji}/min</b>${c.farmSynergy ? ' <span style="color:var(--gold)">⭐ synergie +25%</span>' : ''}
-        ${curBiome ? `<br>Farme dans : <b>${curBiome.emoji} ${curBiome.name}</b>` : '<br>Pas assigné — place-le dans un biome (onglet 🗺️) pour farmer.'}</div>
+        <br>${c.farming ? '✅ En train de farmer' : '💤 Pas au farm — ajoute-le dans l\'onglet 🗺️ Biomes'}</div>
     </div>` : '';
   $('#detail-name').textContent = (c.variant ? '✨ ' : '') + (c.nickname || c.speciesName);
   $('#detail-body').innerHTML = `
@@ -788,28 +787,30 @@ function startPrairie() {
   if (!prairieRAF) prairieRAF = requestAnimationFrame(prairieLoop);
 }
 
-// Onglets de biome (possedes = cliquables, verrouilles = vers la boutique).
+// Onglets de biome : le biome ACTIF (un seul) est en surbrillance. Cliquer un biome
+// possede le rend actif (tes farmeurs basculent dessus). Verrouille -> boutique.
 function renderBiomeTabs() {
   if (!STATE) return;
   const biomes = STATE.biomes || [];
-  if (!biomes.some(b => b.id === currentBiome && b.owned)) currentBiome = 'plaine';
+  currentBiome = STATE.user.activeBiome || 'plaine';
   $('#biome-tabs').innerHTML = biomes.map(b => `
-    <button class="biome-tab ${b.id === currentBiome ? 'sel' : ''} ${b.owned ? '' : 'locked'}" data-biome="${b.id}" data-owned="${b.owned ? 1 : 0}">
+    <button class="biome-tab ${b.active ? 'sel' : ''} ${b.owned ? '' : 'locked'}" data-biome="${b.id}" data-owned="${b.owned ? 1 : 0}">
       <span class="bt-emoji">${b.emoji}</span>
-      <span class="bt-name">${b.name}${b.owned ? '' : ' 🔒'}</span>
-      <span class="bt-res">${b.owned ? '+' + (b.ratePerSec * 60).toFixed(1) + ' ' + b.resEmoji + '/min' : '✨' + b.cost.toLocaleString('fr-FR')}</span>
+      <span class="bt-name">${b.name}${b.active ? ' ✓' : b.owned ? '' : ' 🔒'}</span>
+      <span class="bt-res">${b.owned ? (b.active ? 'ACTIF' : 'farmer ici') : '✨' + b.cost.toLocaleString('fr-FR')}</span>
     </button>`).join('');
 }
-$('#biome-tabs').addEventListener('click', (e) => {
+$('#biome-tabs').addEventListener('click', async (e) => {
   const t = e.target.closest('[data-biome]');
   if (!t) return;
-  if (t.dataset.owned === '1') {
-    currentBiome = t.dataset.biome;
-    prairieIds = ''; // force la reconstruction du pre
-    renderBiomeTabs(); buildMeadow(); renderPrairieSlots();
-  } else {
-    openShop(); switchShopTab('terrain');
-  }
+  if (t.dataset.owned !== '1') { openShop(); switchShopTab('terrain'); return; }
+  if (t.dataset.biome === STATE.user.activeBiome) return; // deja actif
+  try {
+    const b = (STATE.biomes || []).find(x => x.id === t.dataset.biome);
+    await api('/biome/active', { method: 'POST', body: { biome: t.dataset.biome } });
+    prairieIds = ''; await refresh();
+    flash(`Biome actif : ${b.emoji} ${b.name} — tes Glumps farment ${b.resName} ${b.resEmoji}`);
+  } catch (err) { flash(err.message, 'err'); }
 });
 function stopPrairie() {
   prairieActive = false;
@@ -819,20 +820,12 @@ function stopPrairie() {
 // Emplacements du biome courant (chips sous le pre) + infos + bouton acheter.
 function renderPrairieSlots() {
   if (!STATE) return;
-  const b = (STATE.biomes || []).find(x => x.id === currentBiome);
+  const b = (STATE.biomes || []).find(x => x.id === (STATE.user.activeBiome || 'plaine'));
   const max = STATE.user.prairieSlots;
   const buyBtn = $('#buy-prairie');
-
-  if (!b || !b.owned) {
-    $('#prairie-info').textContent = '';
-    buyBtn.style.display = 'none';
-    $('#prairie-slots').innerHTML = `<div class="biome-locked">🔒 <b>${b ? b.name : 'Terrain'}</b> non débloqué — achète-le dans la boutique pour <b>✨ ${b ? b.cost.toLocaleString('fr-FR') : ''}</b>.<br>
-      <button class="btn primary" id="goto-terrain" style="margin-top:10px;">🗺️ Débloquer dans la boutique</button></div>`;
-    return;
-  }
   buyBtn.style.display = '';
-  const inB = STATE.creatures.filter(c => c.biome === currentBiome);
-  $('#prairie-info').textContent = `${b.emoji} ${b.name} · ${inB.length}/${max} · +${(b.ratePerSec * 60).toFixed(1)} ${b.resEmoji}/min`;
+  const inB = STATE.creatures.filter(c => c.biome); // tous les farmeurs (biome actif)
+  $('#prairie-info').textContent = `${b.emoji} ${b.name} (actif) · ${inB.length}/${max} · +${(b.ratePerSec * 60).toFixed(1)} ${b.resEmoji}/min`;
   if (max >= 12) { buyBtn.disabled = true; buyBtn.textContent = 'Max'; }
   else { buyBtn.disabled = false; buyBtn.textContent = '+ Emplacement'; }
 
@@ -890,23 +883,23 @@ $('#prairie-slots').addEventListener('click', async (e) => {
     try { await api('/biome/remove', { method: 'POST', body: { id: Number(rm) } }); await refresh(); }
     catch (err) { flash(err.message, "err"); }
   } else if (add) {
-    const b = (STATE.biomes || []).find(x => x.id === currentBiome);
-    const avail = STATE.creatures.filter(c => c.stage === 'adult' && c.biome !== currentBiome);
-    if (!avail.length) { flash('Aucun Glump adulte disponible.', 'err'); return; }
-    openPicker(`Assigner au ${b?.name || 'biome'} ${b?.emoji || ''}`, avail, pickBiomeCardHtml, async (id) => {
-      try { await api('/biome/assign', { method: 'POST', body: { id, biome: currentBiome } }); closePicker(); await refresh(); flash(`Assigné au ${b?.name} ${b?.emoji || ''}`); }
+    const b = (STATE.biomes || []).find(x => x.id === (STATE.user.activeBiome || 'plaine'));
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.biome);
+    if (!avail.length) { flash('Aucun Glump adulte disponible à mettre au farm.', 'err'); return; }
+    openPicker(`Mettre au farm (${b?.emoji || ''} ${b?.name || ''})`, avail, pickBiomeCardHtml, async (id) => {
+      try { await api('/biome/assign', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`Au farm ! ${b?.emoji || ''}`); }
       catch (err) { flash(err.message, "err"); }
     });
   }
 });
-// Carte de selecteur qui indique la synergie avec le biome courant.
+// Carte de selecteur qui indique la synergie avec le biome actif.
 function pickBiomeCardHtml(c) {
-  const b = (STATE.biomes || []).find(x => x.id === currentBiome);
+  const b = (STATE.biomes || []).find(x => x.id === (STATE.user.activeBiome || 'plaine'));
   const syn = b && b.types.includes(c.type);
   return `<div class="card" data-pick="${c.id}" data-rarity="${c.rarity}">
     ${avatar(c)}
     <div class="name">${syn ? '⭐ ' : ''}${c.nickname || c.speciesName}</div>
-    <div class="sub">${c.type}${syn ? ' · +25% !' : ''}${c.biome ? ' · déjà placé' : ''}</div>
+    <div class="sub">${c.type}${syn ? ' · +25% !' : ''}</div>
   </div>`;
 }
 $('#picker-list').addEventListener('click', (e) => {
@@ -924,13 +917,14 @@ function meadowSize() {
 // (Re)construit la prairie seulement si la liste des creatures a change.
 function buildMeadow() {
   if (!STATE) return;
-  const list = STATE.creatures.filter(c => c.biome === currentBiome); // Glumps du biome courant
-  const sig = currentBiome + '|' + list.map(c => c.id + c.stage).join(',');
+  const active = STATE.user.activeBiome || 'plaine';
+  const list = STATE.creatures.filter(c => c.biome); // tous les farmeurs (biome actif)
+  const sig = active + '|' + list.map(c => c.id + c.stage).join(',');
   if (sig === prairieIds && critters.length) return; // rien de neuf
   prairieIds = sig;
 
   const m = $('#meadow');
-  m.className = 'meadow biome-' + currentBiome;
+  m.className = 'meadow biome-' + active;
   const { w, h } = meadowSize();
   // decor
   let decor = '<div class="sun"></div>';
@@ -1333,7 +1327,7 @@ const TUTO = [
   { icon: '📦', title: 'Collection', text: "Voici tous tes Glumps. Clique sur l'un d'eux pour sa fiche (IV, stats, nature, PV). Tu peux les renommer, les relacher, ou les faire evoluer une fois le niveau requis atteint.", view: 'box', color: '#34e1c4' },
   { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs a la fois.", view: 'eggs', color: '#ffb347' },
   { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare. Debloque des cellules pour reproduire en parallele.", view: 'breed', color: '#ff7bd5' },
-  { icon: '🗺️', title: 'Biomes', text: "Assigne tes Glumps à un biome pour farmer sa ressource : la Plaine donne de l'essence ✨, le Volcan du magma 🌋, l'Océan de l'écume 🌊… Un Glump du BON type dans son biome gagne +25% ! Les ressources servent à acheter les œufs typés. Achète les terrains dans la boutique.", view: 'prairie', color: '#51d88a' },
+  { icon: '🗺️', title: 'Biomes', text: "Tu as UN biome actif à la fois : choisis lequel (parmi ceux achetés) et tes Glumps au farm produisent sa ressource — Plaine→essence ✨, Volcan→magma 🌋, Océan→écume 🌊… Un Glump du BON type gagne +25% ! Les ressources servent à acheter les œufs typés. Terrains à acheter en boutique.", view: 'prairie', color: '#51d88a' },
   { icon: '📖', title: 'Glumpdex', text: "Les 300 Glumps numerotes, a la suite. Ceux que tu n'as pas encore eus sont en silhouette. Dex normal et dex chromatique ✨ separes. Objectif : tous les decouvrir !", view: 'dex', color: '#9a6cff' },
   { icon: '⚔️', title: 'Arene (PvP)', text: "Forme une equipe (3 Glumps) et combat au tour par tour : choisis tes attaques ! Frappe sure, deflagration risquee, ou inflige un statut (brulure, gel, poison, paralysie). Les types comptent. Un Glump KO le reste — Rappel + Potion en boutique.", view: 'arena', color: '#ff6b7d' },
   { icon: '👥', title: 'Rang & Social', text: "Compare la valeur de ta collection au classement (onglet Rang), ajoute des amis avec ton code ami (panneau Social 👥) et visite leurs elevages.", view: 'leaderboard', color: '#ffd34d' },

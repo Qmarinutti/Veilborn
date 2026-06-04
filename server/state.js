@@ -47,6 +47,10 @@ async function tickFarming(user) {
   if (elapsed > cap) elapsed = cap;
   const secs = elapsed / 1000;
 
+  // Un seul biome actif : tous les farmeurs produisent SA ressource.
+  const active = user.active_biome || 'plaine';
+  await run("UPDATE creatures SET biome = ? WHERE owner_id = ? AND biome IS NOT NULL AND biome != ?", [active, user.id, active]);
+
   const farmers = await all(
     "SELECT species, xp, biome FROM creatures WHERE owner_id = ? AND stage = 'adult' AND biome IS NOT NULL", [user.id]);
 
@@ -120,7 +124,8 @@ export async function getPlayerState(user) {
     'SELECT * FROM creatures WHERE owner_id = ? ORDER BY created_at ASC', [user.id]);
 
   const now = Date.now();
-  const creatures = rows.map(c => publicCreature(c, now));
+  const activeBiome = fresh.active_biome || 'plaine';
+  const creatures = rows.map(c => publicCreature(c, now, activeBiome));
 
   // Succes & quetes declenchees par l'etat courant.
   const newAchievements = [];
@@ -167,6 +172,7 @@ export async function getPlayerState(user) {
     id: b.id, name: b.name, emoji: b.emoji, types: b.types,
     resource: b.resource, resName: b.resName, resEmoji: b.resEmoji,
     owned: ownedBiomes.includes(b.id), cost: b.cost,
+    active: b.id === activeBiome,
     used: biomeUsed[b.id] || 0, slots: fresh.prairie_slots,
     ratePerSec: Number(ratePerRes[b.resource].toFixed(3)),
   }));
@@ -177,6 +183,7 @@ export async function getPlayerState(user) {
       username: fresh.username,
       essence: Math.floor(fresh.essence),
       resources, // { magma, ecume, spores, sable, orage, eclat }
+      activeBiome,
       incubatorSlots: fresh.incubator_slots,
       prairieSlots: fresh.prairie_slots,
       prairieUsed: farmingCount,
@@ -199,7 +206,7 @@ export async function getPlayerState(user) {
 }
 
 // Projection "publique" d'une creature (ce qu'on envoie au client).
-export function publicCreature(c, now = Date.now()) {
+export function publicCreature(c, now = Date.now(), activeBiome = null) {
   const sp = SPECIES[c.species];
   const out = {
     id: c.id,
@@ -249,13 +256,16 @@ export function publicCreature(c, now = Date.now()) {
   }
   if (out.readyAt) out.remainingMs = Math.max(0, out.readyAt - now);
 
-  // Production de farm PAR MINUTE (selon le biome ou il est ; sinon estimation Plaine/essence).
+  // Production de farm PAR MINUTE dans le biome ACTIF (le seul ou l'on farme).
   const baseSec = rarityOf(c.species) * BALANCE.essencePerRarityPerSec * levelIncomeMul(c.xp || 0);
-  const b = c.biome && BIOMES[c.biome];
-  const syn = !!(b && isSynergy(c.biome, sp?.type));
+  const targetBiome = activeBiome || c.biome || 'plaine';
+  const b = BIOMES[targetBiome] || BIOMES.plaine;
+  const syn = !!isSynergy(b.id, sp?.type);
+  out.farming = !!c.biome; // farme actuellement ?
   out.farmPerMin = Math.round(baseSec * (syn ? 1 + SYNERGY_BONUS : 1) * 60 * 100) / 100;
-  out.farmResource = b ? b.resource : 'essence';
-  out.farmResEmoji = b ? b.resEmoji : '✨';
+  out.farmResource = b.resource;
+  out.farmResEmoji = b.resEmoji;
+  out.farmBiomeName = b.name;
   out.farmSynergy = syn;
 
   // Evolution disponible ?

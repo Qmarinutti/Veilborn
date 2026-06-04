@@ -287,20 +287,31 @@ app.post('/api/egg/accelerate', requireAuth, h(async (req, res) => {
   res.json({ ok: true, cost });
 }));
 
-// ---------- Biomes : assigner / retirer / acheter un terrain ----------
-// Assigner un Glump a un biome (qu'on possede), dans la limite des slots du biome.
-app.post('/api/biome/assign', requireAuth, h(async (req, res) => {
-  const { id, biome } = req.body || {};
+// ---------- Biomes : 1 biome ACTIF, tes farmeurs y produisent sa ressource ----------
+// Choisir le biome actif (parmi ceux possedes) : tous les Glumps qui farment basculent dessus.
+app.post('/api/biome/active', requireAuth, h(async (req, res) => {
+  const { biome } = req.body || {};
   if (!BIOMES[biome]) return res.status(400).json({ error: 'Biome inconnu.' });
   const user = await reloadUser(req.user.id);
   if (!parseBiomes(user).includes(biome)) return res.status(400).json({ error: 'Tu ne possedes pas ce terrain (achete-le).' });
+  await run('UPDATE users SET active_biome = ? WHERE id = ?', [biome, req.user.id]);
+  // Tous les farmeurs basculent vers le biome actif.
+  await run("UPDATE creatures SET biome = ? WHERE owner_id = ? AND biome IS NOT NULL", [biome, req.user.id]);
+  res.json({ ok: true, biome });
+}));
+
+// Mettre un Glump a farmer (dans le biome ACTIF), dans la limite des emplacements.
+app.post('/api/biome/assign', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const user = await reloadUser(req.user.id);
+  const active = user.active_biome || 'plaine';
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent farmer.' });
-  if (c.biome === biome) return res.json({ ok: true });
-  const used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND biome = ?", [req.user.id, biome])).n;
-  if (used >= user.prairie_slots) return res.status(400).json({ error: `${BIOMES[biome].name} plein — achete un emplacement.` });
-  await run("UPDATE creatures SET biome = ?, in_prairie = 1 WHERE id = ?", [biome, id]);
+  if (c.biome) return res.json({ ok: true });
+  const used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND biome IS NOT NULL", [req.user.id])).n;
+  if (used >= user.prairie_slots) return res.status(400).json({ error: 'Plus d\'emplacement libre — achete-en un.' });
+  await run("UPDATE creatures SET biome = ?, in_prairie = 1 WHERE id = ?", [active, id]);
   res.json({ ok: true });
 }));
 

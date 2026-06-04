@@ -117,6 +117,7 @@ export async function initDb() {
     'ALTER TABLE users ADD COLUMN resources_json TEXT',
     'ALTER TABLE users ADD COLUMN biomes_json TEXT',
     'ALTER TABLE creatures ADD COLUMN biome TEXT',
+    "ALTER TABLE users ADD COLUMN active_biome TEXT NOT NULL DEFAULT 'plaine'", // biome actif unique
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }
