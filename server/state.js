@@ -9,7 +9,8 @@ import {
   incubationSeconds, breedingSeconds, maturationSeconds,
   BIOMES, BIOME_LIST, RESOURCES, SYNERGY_BONUS, isSynergy,
 } from './game.js';
-import { progressDaily, unlockAch, todayStr } from './progress.js';
+import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet } from './progress.js';
+const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
 
 // Multiplicateur de gain d'essence selon le niveau (+5% par niveau).
 function levelIncomeMul(xp) { return 1 + 0.05 * (levelFromXp(xp) - 1); }
@@ -127,33 +128,35 @@ export async function getPlayerState(user) {
   const activeBiome = fresh.active_biome || 'plaine';
   const creatures = rows.map(c => publicCreature(c, now, activeBiome));
 
-  // Succes & quetes declenchees par l'etat courant.
-  const newAchievements = [];
-  const pushAch = (a) => { if (a) newAchievements.push(a); };
-  if (hatched > 0) {
-    await progressDaily(user.id, 'hatch2', hatched);
-    pushAch(await unlockAch(user.id, 'first_hatch'));
-  }
-
-  // Decouvertes : on memorise chaque (espece, variant) deja possede (normal ET
-  // chromatique separement ; reste debloque meme apres relachement/evolution).
+  // Decouvertes : on lit d'abord ce qui est deja connu, et on n'ECRIT que les
+  // NOUVELLES paires (en regime stable -> 0 ecriture, au lieu d'1 par espece a chaque fois).
+  const discRows = await all('SELECT species, variant FROM discoveries WHERE user_id = ?', [user.id]);
+  const discSet = new Set(discRows.map(d => d.species + ':' + d.variant));
   const ownedPairs = [...new Set(rows.map(r => r.species + ':' + (r.variant || 0)))];
-  for (const pair of ownedPairs) {
+  const newPairs = ownedPairs.filter(p => !discSet.has(p));
+  for (const pair of newPairs) {
     const i = pair.lastIndexOf(':');
     await run('INSERT OR IGNORE INTO discoveries (user_id, species, variant) VALUES (?, ?, ?)',
       [user.id, pair.slice(0, i), Number(pair.slice(i + 1))]);
+    discSet.add(pair);
   }
-  const discRows = await all('SELECT species, variant FROM discoveries WHERE user_id = ?', [user.id]);
-  const discovered = discRows.filter(d => d.variant === 0).map(d => d.species);
-  const discoveredShiny = discRows.filter(d => d.variant === 1).map(d => d.species);
+  const discovered = [...discSet].filter(p => p.endsWith(':0')).map(p => p.slice(0, -2));
+  const discoveredShiny = [...discSet].filter(p => p.endsWith(':1')).map(p => p.slice(0, -2));
 
-  // Succes de collection / niveau / fortune.
-  if (discovered.length >= 50) pushAch(await unlockAch(user.id, 'collector50'));
-  if (discovered.length >= 150) pushAch(await unlockAch(user.id, 'collector150'));
-  if (discoveredShiny.length >= 1) pushAch(await unlockAch(user.id, 'shiny'));
+  // Succes : on lit l'ensemble UNE fois (depuis fresh) et on ecrit UNE fois si du nouveau.
+  const achSet = parseAchSet(fresh);
+  const achBefore = achSet.size;
+  const newAchievements = [];
+  const tryAch = (id, cond) => { if (cond && !achSet.has(id)) { achSet.add(id); if (ACH_BY_ID[id]) newAchievements.push(ACH_BY_ID[id]); } };
   const maxLevel = rows.filter(r => r.stage !== 'egg').reduce((m, r) => Math.max(m, levelFromXp(r.xp || 0)), 0);
-  if (maxLevel >= 50) pushAch(await unlockAch(user.id, 'level50'));
-  if (fresh.essence >= 50000) pushAch(await unlockAch(user.id, 'rich'));
+  tryAch('first_hatch', hatched > 0);
+  tryAch('collector50', discovered.length >= 50);
+  tryAch('collector150', discovered.length >= 150);
+  tryAch('shiny', discoveredShiny.length >= 1);
+  tryAch('level50', maxLevel >= 50);
+  tryAch('rich', fresh.essence >= 50000);
+  if (achSet.size !== achBefore) await run('UPDATE users SET ach_json = ? WHERE id = ?', [JSON.stringify([...achSet]), user.id]);
+  if (hatched > 0) await progressDaily(user.id, 'hatch2', hatched);
 
   // --- Biomes : production par ressource + occupation par biome ---
   const ownedBiomes = parseBiomes(fresh);
