@@ -768,3 +768,35 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 
 /* Sprite chromatique (shiny) : hue-rotate applique en inline (filter).
    Pas d'animation sur `filter` (ca ecraserait le hue-rotate). */
+
+/* ============================================================
+   Biomes : barre de ressources, onglets, terrains, themes
+   ============================================================ */
+.resbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.resbar .res { background: rgba(0,0,0,.25); padding: 5px 10px; border-radius: 10px; border: 1px solid var(--line); white-space: nowrap; }
+.resbar .res b { color: var(--text); }
+
+.biome-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.biome-tab { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 78px;
+  padding: 8px 10px; border-radius: 14px; cursor: pointer; border: 1px solid var(--line-strong);
+  background: var(--panel2); color: var(--text); transition: .12s; }
+.biome-tab:hover { transform: translateY(-2px); border-color: var(--primary); }
+.biome-tab.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; background: var(--panel); }
+.biome-tab.locked { opacity: .6; }
+.biome-tab .bt-emoji { font-size: 22px; }
+.biome-tab .bt-name { font-size: 12px; font-weight: 700; }
+.biome-tab .bt-res { font-size: 11px; color: var(--muted); }
+.biome-locked { text-align: center; padding: 30px 16px; color: var(--muted); font-size: 15px; }
+.slot.syn { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+
+/* Themes de biome pour le pre (fond) */
+.meadow.biome-volcan { background: linear-gradient(#2a0a0a 0%, #5a1a10 40%, #8a2a14 72%, #b8401a 100%); }
+.meadow.biome-ocean  { background: linear-gradient(#0a2a4a 0%, #0e4a7a 40%, #1a7ab0 72%, #2aa0d0 100%); }
+.meadow.biome-foret  { background: linear-gradient(#0a2a14 0%, #144a24 40%, #2a7a3a 72%, #4faa50 100%); }
+.meadow.biome-desert { background: linear-gradient(#7a5a2a 0%, #b08a3a 40%, #d8b85a 72%, #ecd88a 100%); }
+.meadow.biome-cieux  { background: linear-gradient(#1a1a3a 0%, #2a2a5a 40%, #4a4a8a 72%, #7a7ab0 100%); }
+.meadow.biome-sanctuaire { background: linear-gradient(#2a0a3a 0%, #4a1a5a 40%, #6a2a8a 72%, #9a4ab0 100%); }
+.meadow.biome-volcan .bush, .meadow.biome-desert .bush { background: #6a4a20; }
+.meadow.biome-ocean .bush { background: #1a6a90; }
+.shop-egg-tile.basic { width: 100%; flex-direction: row; justify-content: center; gap: 10px; margin-bottom: 10px; }
+.shop-egg-tile.dim { opacity: .5; cursor: not-allowed; }

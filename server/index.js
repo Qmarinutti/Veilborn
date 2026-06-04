@@ -14,8 +14,9 @@ import {
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
   levelFromXp, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
   breedingSeconds, breedingCellCost, evolveCost, shinyPityBonus, tierOf,
+  BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
 } from './game.js';
-import { getPlayerState, publicCreature, reloadUser } from './state.js';
+import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes } from './state.js';
 import { hasArt } from './art.js';
 import { simulateBattle, startSession, playTurn } from './battle.js';
 import { moveButtons } from './moves.js';
@@ -104,9 +105,9 @@ app.post('/api/register', h(async (req, res) => {
     'INSERT INTO users (username, pass_hash, pass_salt, essence, incubator_slots, friend_code, last_tick, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     [username, hash, salt, BALANCE.startEssence, BALANCE.startSlots, genFriendCode(), now, now]);
 
-  // Le joueur commence avec le starter choisi (adulte), place en prairie pour farmer.
+  // Le joueur commence avec le starter choisi (adulte), place dans la Plaine pour farmer.
   await insertCreature(userId, wildCreature(starter, { adult: true }));
-  await run('UPDATE creatures SET in_prairie = 1 WHERE owner_id = ?', [userId]);
+  await run("UPDATE creatures SET in_prairie = 1, biome = 'plaine' WHERE owner_id = ?", [userId]);
 
   const token = await createSession(userId);
   setCookie(res, token);
@@ -217,39 +218,60 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   res.json({ ok: true, refund });
 }));
 
-// ---------- Boutique : oeufs par element / objets / bonus ----------
+// ---------- Boutique : oeufs (basique=essence / type=ressource), objets, terrains ----------
 app.get('/api/shop', (req, res) => res.json({
   elements: ELEMENTS,
-  eggPrice: SHOP_EGG_PRICE,
+  eggPrice: SHOP_EGG_PRICE,          // oeuf basique (type aleatoire) en essence
+  typeEggCost: TYPE_EGG_COST,        // oeuf typé, en ressource du biome
+  biomeOfType: BIOME_OF_TYPE,        // element -> biome (donc -> ressource)
+  biomes: BIOME_LIST.map(b => ({ id: b.id, name: b.name, emoji: b.emoji, types: b.types, resource: b.resource, resName: b.resName, resEmoji: b.resEmoji, cost: b.cost })),
   candy: { cost: BALANCE.candyCost, xp: BALANCE.candyXp },
   potion: { cost: BALANCE.potionCost },
   revive: { cost: BALANCE.reviveCost },
 }));
 
+// Achat d'oeuf : type 'basic' -> essence (type aleatoire) ; type element -> ressource du biome.
 app.post('/api/shop/buy-egg', requireAuth, h(async (req, res) => {
   const type = String((req.body || {}).type || '');
-  if (!ELEMENTS.includes(type)) return res.status(400).json({ error: 'Element inconnu.' });
+  const isBasic = type === 'basic';
+  if (!isBasic && !ELEMENTS.includes(type)) return res.status(400).json({ error: 'Type d\'oeuf inconnu.' });
 
   const eggCount = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 0", [req.user.id])).n;
   if (eggCount >= req.user.incubator_slots) {
     return res.status(400).json({ error: 'Tous tes incubateurs sont occupes.' });
   }
-  const user = await reloadUser(req.user.id);
-  if (!(await spend(req.user.id, SHOP_EGG_PRICE))) {
-    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${SHOP_EGG_PRICE}).` });
-  }
 
-  const species = randomBaseOfType(type); // bebe aleatoire de cet element (luck)
-  const child = wildCreature(species, { adult: false, pityBonus: shinyPityBonus(user.shiny_pity) });
-  const hatchAt = Date.now() + incubationSeconds(species) * 1000;
-  const eggId = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 0 });
-  // Pity shiny : reset si chromatique, sinon +1.
-  await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
-  const newAch = [];
-  if (child.variant === 1) { const a = await unlockAch(req.user.id, 'shiny'); if (a) newAch.push(a); }
-  await progressDaily(req.user.id, 'buyegg2', 1);
-  const row = await get('SELECT * FROM creatures WHERE id = ?', [eggId]);
-  res.json({ ok: true, egg: publicCreature(row), cost: SHOP_EGG_PRICE, newAch });
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    let payInfo;
+    if (isBasic) {
+      if (!(await spend(req.user.id, SHOP_EGG_PRICE))) return { status: 400, error: `Pas assez d'essence (besoin de ${SHOP_EGG_PRICE}).` };
+      payInfo = { cost: SHOP_EGG_PRICE, resource: 'essence' };
+    } else {
+      const biomeId = BIOME_OF_TYPE[type];
+      const b = biomeId && BIOMES[biomeId];
+      if (!b) return { status: 400, error: 'Aucun biome pour ce type.' };
+      const res2 = parseResources(user);
+      if ((res2[b.resource] || 0) < TYPE_EGG_COST) {
+        return { status: 400, error: `Pas assez de ${b.resName} ${b.resEmoji} (besoin de ${TYPE_EGG_COST}). Farme dans le ${b.name} ${b.emoji}.` };
+      }
+      res2[b.resource] -= TYPE_EGG_COST;
+      await run('UPDATE users SET resources_json = ? WHERE id = ?', [JSON.stringify(res2), req.user.id]);
+      payInfo = { cost: TYPE_EGG_COST, resource: b.resource };
+    }
+    const species = isBasic ? randomBase() : randomBaseOfType(type);
+    const child = wildCreature(species, { adult: false, pityBonus: shinyPityBonus(user.shiny_pity) });
+    const hatchAt = Date.now() + incubationSeconds(species) * 1000;
+    const eggId = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 0 });
+    await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
+    const newAch = [];
+    if (child.variant === 1) { const a = await unlockAch(req.user.id, 'shiny'); if (a) newAch.push(a); }
+    await progressDaily(req.user.id, 'buyegg2', 1);
+    const row = await get('SELECT * FROM creatures WHERE id = ?', [eggId]);
+    return { ok: true, egg: publicCreature(row), ...payInfo, newAch };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
 }));
 
 // Accelerer (terminer instantanement) un oeuf en cours (incubateur OU cellule).
@@ -265,25 +287,67 @@ app.post('/api/egg/accelerate', requireAuth, h(async (req, res) => {
   res.json({ ok: true, cost });
 }));
 
-// ---------- Prairie : assigner / retirer / acheter un emplacement ----------
-app.post('/api/prairie/assign', requireAuth, h(async (req, res) => {
-  const { id } = req.body || {};
+// ---------- Biomes : assigner / retirer / acheter un terrain ----------
+// Assigner un Glump a un biome (qu'on possede), dans la limite des slots du biome.
+app.post('/api/biome/assign', requireAuth, h(async (req, res) => {
+  const { id, biome } = req.body || {};
+  if (!BIOMES[biome]) return res.status(400).json({ error: 'Biome inconnu.' });
+  const user = await reloadUser(req.user.id);
+  if (!parseBiomes(user).includes(biome)) return res.status(400).json({ error: 'Tu ne possedes pas ce terrain (achete-le).' });
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
-  if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent farmer en prairie.' });
-  if (c.in_prairie === 1) return res.json({ ok: true });
-  const used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND in_prairie = 1", [req.user.id])).n;
-  const user = await reloadUser(req.user.id);
-  if (used >= user.prairie_slots) return res.status(400).json({ error: 'Prairie pleine — achete un emplacement.' });
-  await run('UPDATE creatures SET in_prairie = 1 WHERE id = ?', [id]);
+  if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent farmer.' });
+  if (c.biome === biome) return res.json({ ok: true });
+  const used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND biome = ?", [req.user.id, biome])).n;
+  if (used >= user.prairie_slots) return res.status(400).json({ error: `${BIOMES[biome].name} plein — achete un emplacement.` });
+  await run("UPDATE creatures SET biome = ?, in_prairie = 1 WHERE id = ?", [biome, id]);
   res.json({ ok: true });
 }));
 
+app.post('/api/biome/remove', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT id FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  await run("UPDATE creatures SET biome = NULL, in_prairie = 0 WHERE id = ?", [id]);
+  res.json({ ok: true });
+}));
+
+// Acheter un terrain (biome) avec de l'essence.
+app.post('/api/biome/buy', requireAuth, h(async (req, res) => {
+  const { biome } = req.body || {};
+  const b = BIOMES[biome];
+  if (!b || b.id === 'plaine') return res.status(400).json({ error: 'Terrain non achetable.' });
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const owned = parseBiomes(user);
+    if (owned.includes(biome)) return { status: 400, error: 'Tu possedes deja ce terrain.' };
+    if (!(await spend(req.user.id, b.cost))) return { status: 400, error: `Pas assez d'essence (besoin de ${b.cost}).` };
+    owned.push(biome);
+    await run('UPDATE users SET biomes_json = ? WHERE id = ?', [JSON.stringify(owned), req.user.id]);
+    return { ok: true, cost: b.cost, biome: b.id };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// Compat : ancienne route prairie/assign -> assigne a la Plaine.
+app.post('/api/prairie/assign', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const user = await reloadUser(req.user.id);
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent farmer.' });
+  if (c.biome === 'plaine') return res.json({ ok: true });
+  const used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND biome = 'plaine'", [req.user.id])).n;
+  if (used >= user.prairie_slots) return res.status(400).json({ error: 'Plaine pleine — achete un emplacement.' });
+  await run("UPDATE creatures SET biome = 'plaine', in_prairie = 1 WHERE id = ?", [id]);
+  res.json({ ok: true });
+}));
 app.post('/api/prairie/remove', requireAuth, h(async (req, res) => {
   const { id } = req.body || {};
   const c = await get('SELECT id FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
-  await run('UPDATE creatures SET in_prairie = 0 WHERE id = ?', [id]);
+  await run("UPDATE creatures SET biome = NULL, in_prairie = 0 WHERE id = ?", [id]);
   res.json({ ok: true });
 }));
 

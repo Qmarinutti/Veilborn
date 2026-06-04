@@ -113,9 +113,16 @@ export async function initDb() {
     'ALTER TABLE users ADD COLUMN daily_json TEXT',
     'ALTER TABLE users ADD COLUMN ach_json TEXT',
     'ALTER TABLE creatures ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0',
+    // Biomes : ressources, biomes possedes, et le biome ou farme chaque Glump.
+    'ALTER TABLE users ADD COLUMN resources_json TEXT',
+    'ALTER TABLE users ADD COLUMN biomes_json TEXT',
+    'ALTER TABLE creatures ADD COLUMN biome TEXT',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }
+
+  // Migration prairie -> biomes : les Glumps deja "en prairie" passent dans la Plaine.
+  try { await db.execute("UPDATE creatures SET biome = 'plaine' WHERE in_prairie = 1 AND (biome IS NULL OR biome = '')"); } catch {}
 
   // Table des echanges entre amis (propositions en attente / historiques).
   await db.executeMultiple(`

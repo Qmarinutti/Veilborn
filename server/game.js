@@ -265,12 +265,45 @@ export function nextSlotCost(currentSlots) {
 // --- Boutique : oeufs par ELEMENT (pure chance, pas de rarete affichee) ---
 // On achete un oeuf d'un element -> bebe (forme de base) aleatoire de cet element.
 export const ELEMENTS = ['Feu', 'Eau', 'Plante', 'Foudre', 'Roche', 'Glace', 'Ombre', 'Lumiere', 'Mystique', 'Acier', 'Poison', 'Vent', 'Insecte', 'Dragon'];
-export const SHOP_EGG_PRICE = 250;
+export const SHOP_EGG_PRICE = 250; // oeuf BASIQUE (type aleatoire), paye en essence
 
 export function randomBaseOfType(type) {
   const pool = SPECIES_IDS.filter(id => (SPECIES[id].stage || 1) === 1 && SPECIES[id].type === type);
   return pool.length ? pool[Math.floor(Math.random() * pool.length)] : SPECIES_IDS[0];
 }
+// Bebe de base totalement aleatoire (oeuf basique).
+export function randomBase() {
+  const pool = SPECIES_IDS.filter(id => (SPECIES[id].stage || 1) === 1);
+  return pool[Math.floor(Math.random() * pool.length)] || SPECIES_IDS[0];
+}
+
+// =====================================================================
+//  BIOMES : zones de farm. Chaque biome produit UNE ressource ; on y
+//  assigne des Glumps. Un Glump dont le TYPE correspond au biome gagne
+//  un bonus de synergie. La Plaine (depart) produit l'essence (monnaie).
+// =====================================================================
+export const SYNERGY_BONUS = 0.25; // +25% si le type du Glump correspond au biome
+export const BIOMES = {
+  plaine:     { id: 'plaine',     name: 'Plaine',     emoji: '🌳', types: [],                            resource: 'essence', resName: 'Essence',  resEmoji: '✨', cost: 0 },
+  volcan:     { id: 'volcan',     name: 'Volcan',     emoji: '🌋', types: ['Feu', 'Acier'],              resource: 'magma',   resName: 'Magma',    resEmoji: '🌋', cost: 5000 },
+  ocean:      { id: 'ocean',      name: 'Océan',      emoji: '🌊', types: ['Eau', 'Glace'],              resource: 'ecume',   resName: 'Écume',    resEmoji: '🌊', cost: 5000 },
+  foret:      { id: 'foret',      name: 'Forêt',      emoji: '🌲', types: ['Plante', 'Insecte'],         resource: 'spores',  resName: 'Spores',   resEmoji: '🍃', cost: 5000 },
+  desert:     { id: 'desert',     name: 'Désert',     emoji: '🏜️', types: ['Roche', 'Poison'],           resource: 'sable',   resName: 'Sable',    resEmoji: '🏜️', cost: 5000 },
+  cieux:      { id: 'cieux',      name: 'Cieux',      emoji: '⛈️', types: ['Foudre', 'Vent', 'Dragon'],  resource: 'orage',   resName: 'Orage',    resEmoji: '⚡', cost: 8000 },
+  sanctuaire: { id: 'sanctuaire', name: 'Sanctuaire', emoji: '🔮', types: ['Ombre', 'Lumiere', 'Mystique'], resource: 'eclat', resName: 'Éclat',  resEmoji: '🔮', cost: 8000 },
+};
+export const BIOME_LIST = Object.values(BIOMES);
+export const BIOME_IDS = Object.keys(BIOMES);
+export const RESOURCES = [...new Set(BIOME_LIST.map(b => b.resource))]; // essence, magma, ecume...
+// Type -> biome correspondant (pour la synergie + le cout des oeufs typés).
+export const BIOME_OF_TYPE = {};
+for (const b of BIOME_LIST) for (const t of b.types) BIOME_OF_TYPE[t] = b.id;
+
+export const TYPE_EGG_COST = 200; // cout d'un oeuf typé, dans la ressource du biome
+export function biomeOf(id) { return BIOMES[id] || null; }
+export function biomeBuyCost(id) { return BIOMES[id] ? BIOMES[id].cost : null; }
+// Le Glump de type t gagne-t-il le bonus dans ce biome ?
+export function isSynergy(biomeId, type) { return !!BIOMES[biomeId]?.types.includes(type); }
 
 // Cout pour accelerer (terminer) un oeuf : ~1 essence par seconde restante.
 export function accelerateCost(remainingMs) {

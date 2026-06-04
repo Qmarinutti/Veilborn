@@ -278,9 +278,14 @@ function serverNow() { return Date.now() + SERVER_SKEW; }
 let tickRAF = 0;
 function tickLoop() {
   if (STATE) {
-    // estimation locale de l'essence entre deux refresh
-    const est = STATE.user.essence + STATE.essencePerSec * ((serverNow() - STATE.serverTime) / 1000);
-    $('#essence').textContent = Math.floor(est).toLocaleString('fr-FR');
+    // estimation locale de l'essence + ressources entre deux refresh
+    const dt = (serverNow() - STATE.serverTime) / 1000;
+    $('#essence').textContent = Math.floor(STATE.user.essence + STATE.essencePerSec * dt).toLocaleString('fr-FR');
+    const rate = STATE.resourcePerSec || {}, res = STATE.user.resources || {};
+    for (const k in rate) {
+      const el = document.getElementById('res-' + k);
+      if (el) el.textContent = Math.floor((res[k] || 0) + (rate[k] || 0) * dt).toLocaleString('fr-FR');
+    }
     updateCountdowns();
   }
   tickRAF = requestAnimationFrame(tickLoop);
@@ -289,13 +294,26 @@ function tickLoop() {
 // ============================================================
 //  Rendu
 // ============================================================
+const RES_EMOJI = { magma: '🌋', ecume: '🌊', spores: '🍃', sable: '🏜️', orage: '⚡', eclat: '🔮' };
+const RES_NAME = { magma: 'Magma', ecume: 'Écume', spores: 'Spores', sable: 'Sable', orage: 'Orage', eclat: 'Éclat' };
+
 function renderAll() {
   $('#rate').textContent = '+' + STATE.essencePerSec.toFixed(2) + '/s';
+  renderResbar();
   renderIncubators();
   renderBreedingCells();
   renderCollection();
   updateNavBadges();
-  if (prairieActive) { buildMeadow(); renderPrairieSlots(); }
+  if (prairieActive) { renderBiomeTabs(); buildMeadow(); renderPrairieSlots(); }
+}
+
+// Barre des ressources de biome (en plus de l'essence dans la topbar).
+function renderResbar() {
+  const res = STATE.user.resources || {};
+  const rate = STATE.resourcePerSec || {};
+  const keys = Object.keys(RES_EMOJI).filter(k => (res[k] > 0 || (rate[k] || 0) > 0));
+  $('#resbar').innerHTML = keys.map(k =>
+    `<span class="res" title="${RES_NAME[k]} (+${(rate[k] || 0).toFixed(2)}/s)">${RES_EMOJI[k]} <b id="res-${k}">${Math.floor(res[k] || 0)}</b></span>`).join('');
 }
 
 // Pastilles de notification sur les onglets (actions a faire).
@@ -752,36 +770,72 @@ let prairieActive = false;
 let prairieRAF = null;
 let critters = [];       // { el, x, y, tx, ty, speed, size, facing }
 let prairieIds = '';     // signature des creatures affichees
+let currentBiome = 'plaine'; // biome selectionne dans la vue
 
 function startPrairie() {
   prairieActive = true;
+  renderBiomeTabs();
   buildMeadow();
   renderPrairieSlots();
   if (!prairieRAF) prairieRAF = requestAnimationFrame(prairieLoop);
 }
+
+// Onglets de biome (possedes = cliquables, verrouilles = vers la boutique).
+function renderBiomeTabs() {
+  if (!STATE) return;
+  const biomes = STATE.biomes || [];
+  if (!biomes.some(b => b.id === currentBiome && b.owned)) currentBiome = 'plaine';
+  $('#biome-tabs').innerHTML = biomes.map(b => `
+    <button class="biome-tab ${b.id === currentBiome ? 'sel' : ''} ${b.owned ? '' : 'locked'}" data-biome="${b.id}" data-owned="${b.owned ? 1 : 0}">
+      <span class="bt-emoji">${b.emoji}</span>
+      <span class="bt-name">${b.name}${b.owned ? '' : ' 🔒'}</span>
+      <span class="bt-res">${b.owned ? '+' + b.ratePerSec.toFixed(2) + ' ' + b.resEmoji : '✨' + b.cost.toLocaleString('fr-FR')}</span>
+    </button>`).join('');
+}
+$('#biome-tabs').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-biome]');
+  if (!t) return;
+  if (t.dataset.owned === '1') {
+    currentBiome = t.dataset.biome;
+    prairieIds = ''; // force la reconstruction du pre
+    renderBiomeTabs(); buildMeadow(); renderPrairieSlots();
+  } else {
+    openShop(); switchShopTab('terrain');
+  }
+});
 function stopPrairie() {
   prairieActive = false;
   if (prairieRAF) { cancelAnimationFrame(prairieRAF); prairieRAF = null; }
 }
 
-// Emplacements de prairie (chips sous le pre) + infos + bouton acheter.
+// Emplacements du biome courant (chips sous le pre) + infos + bouton acheter.
 function renderPrairieSlots() {
   if (!STATE) return;
+  const b = (STATE.biomes || []).find(x => x.id === currentBiome);
   const max = STATE.user.prairieSlots;
-  const inP = STATE.creatures.filter(c => c.inPrairie);
-  $('#prairie-info').textContent = `${inP.length}/${max} · +${STATE.essencePerSec.toFixed(2)}/s ✨`;
-
   const buyBtn = $('#buy-prairie');
+
+  if (!b || !b.owned) {
+    $('#prairie-info').textContent = '';
+    buyBtn.style.display = 'none';
+    $('#prairie-slots').innerHTML = `<div class="biome-locked">🔒 <b>${b ? b.name : 'Terrain'}</b> non débloqué — achète-le dans la boutique pour <b>✨ ${b ? b.cost.toLocaleString('fr-FR') : ''}</b>.<br>
+      <button class="btn primary" id="goto-terrain" style="margin-top:10px;">🗺️ Débloquer dans la boutique</button></div>`;
+    return;
+  }
+  buyBtn.style.display = '';
+  const inB = STATE.creatures.filter(c => c.biome === currentBiome);
+  $('#prairie-info').textContent = `${b.emoji} ${b.name} · ${inB.length}/${max} · +${b.ratePerSec.toFixed(2)} ${b.resEmoji}/s`;
   if (max >= 12) { buyBtn.disabled = true; buyBtn.textContent = 'Max'; }
   else { buyBtn.disabled = false; buyBtn.textContent = '+ Emplacement'; }
 
   let html = '';
   for (let i = 0; i < max; i++) {
-    const c = inP[i];
+    const c = inB[i];
     if (c) {
-      html += `<div class="slot">
+      const syn = b.types.includes(c.type);
+      html += `<div class="slot ${syn ? 'syn' : ''}" title="${syn ? 'Synergie +25% !' : ''}">
         <div class="mini">${creatureVisual(c, 42)}</div>
-        <span class="slot-name">${c.nickname || c.speciesName}</span>
+        <span class="slot-name">${syn ? '⭐ ' : ''}${c.nickname || c.speciesName}</span>
         <button class="slot-rm" data-prairie-rm="${c.id}" title="Retirer">✕</button>
       </div>`;
     } else {
@@ -822,17 +876,31 @@ $('#buy-prairie').addEventListener('click', async () => {
 $('#prairie-slots').addEventListener('click', async (e) => {
   const rm = e.target.dataset.prairieRm;
   const add = e.target.closest('[data-prairie-add]');
+  const goto = e.target.closest('#goto-terrain');
+  if (goto) { openShop(); switchShopTab('terrain'); return; }
   if (rm) {
-    try { await api('/prairie/remove', { method: 'POST', body: { id: Number(rm) } }); await refresh(); }
+    try { await api('/biome/remove', { method: 'POST', body: { id: Number(rm) } }); await refresh(); }
     catch (err) { flash(err.message, "err"); }
   } else if (add) {
-    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.inPrairie);
-    openPicker('Mettre un Glump en prairie', avail, pickCardHtml, async (id) => {
-      try { await api('/prairie/assign', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash('Glump mis en prairie 🌳'); }
+    const b = (STATE.biomes || []).find(x => x.id === currentBiome);
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && c.biome !== currentBiome);
+    if (!avail.length) { flash('Aucun Glump adulte disponible.', 'err'); return; }
+    openPicker(`Assigner au ${b?.name || 'biome'} ${b?.emoji || ''}`, avail, pickBiomeCardHtml, async (id) => {
+      try { await api('/biome/assign', { method: 'POST', body: { id, biome: currentBiome } }); closePicker(); await refresh(); flash(`Assigné au ${b?.name} ${b?.emoji || ''}`); }
       catch (err) { flash(err.message, "err"); }
     });
   }
 });
+// Carte de selecteur qui indique la synergie avec le biome courant.
+function pickBiomeCardHtml(c) {
+  const b = (STATE.biomes || []).find(x => x.id === currentBiome);
+  const syn = b && b.types.includes(c.type);
+  return `<div class="card" data-pick="${c.id}" data-rarity="${c.rarity}">
+    ${avatar(c)}
+    <div class="name">${syn ? '⭐ ' : ''}${c.nickname || c.speciesName}</div>
+    <div class="sub">${c.type}${syn ? ' · +25% !' : ''}${c.biome ? ' · déjà placé' : ''}</div>
+  </div>`;
+}
 $('#picker-list').addEventListener('click', (e) => {
   const el = e.target.closest('[data-pick]');
   if (el && pickerOnPick) pickerOnPick(Number(el.dataset.pick));
@@ -848,12 +916,13 @@ function meadowSize() {
 // (Re)construit la prairie seulement si la liste des creatures a change.
 function buildMeadow() {
   if (!STATE) return;
-  const list = STATE.creatures.filter(c => c.inPrairie); // seuls les Glumps en prairie y gambadent
-  const sig = list.map(c => c.id + c.stage).join(',');
+  const list = STATE.creatures.filter(c => c.biome === currentBiome); // Glumps du biome courant
+  const sig = currentBiome + '|' + list.map(c => c.id + c.stage).join(',');
   if (sig === prairieIds && critters.length) return; // rien de neuf
   prairieIds = sig;
 
   const m = $('#meadow');
+  m.className = 'meadow biome-' + currentBiome;
   const { w, h } = meadowSize();
   // decor
   let decor = '<div class="sun"></div>';
@@ -1106,17 +1175,47 @@ async function switchShopTab(tab) {
   $('#shop-' + tab).classList.remove('hidden');
   if (!shopData) { try { shopData = await api('/shop'); } catch { shopData = { elements: [], eggPrice: 0, candy: {} }; } }
   if (tab === 'egg') renderShopEgg();
+  else if (tab === 'terrain') renderShopTerrain();
   else if (tab === 'item') renderShopItem();
   else if (tab === 'bonus') renderShopBonus();
 }
 function renderShopEgg() {
-  $('#shop-egg').innerHTML = `<p class="hint">Un œuf d'un élément → un bébé <b>aléatoire</b> de ce type (pure chance !). Il te faut un incubateur libre (onglet Œufs).</p>
-    <div class="shop-grid">` + shopData.elements.map(t => `
-    <button class="shop-egg-tile" data-buy-egg-type="${t}">
+  const res = STATE?.user?.resources || {};
+  const owned = new Set((STATE?.biomes || []).filter(b => b.owned).map(b => b.id));
+  const cost = shopData.typeEggCost || 200;
+  let html = `<p class="hint">🥚 <b>Basique</b> = bébé aléatoire (essence). Œuf <b>typé</b> = payé avec la ressource de son biome (farme dans le biome !). Il faut un incubateur libre.</p>
+    <button class="shop-egg-tile basic" data-buy-egg-type="basic">
+      <span class="shop-egg-emoji">🥚</span><span class="shop-egg-name">Basique</span>
+      <span class="shop-egg-price">✨ ${shopData.eggPrice}</span></button>
+    <div class="shop-grid">`;
+  html += shopData.elements.map(t => {
+    const biomeId = (shopData.biomeOfType || {})[t];
+    const b = (shopData.biomes || []).find(x => x.id === biomeId) || {};
+    const have = res[b.resource] || 0;
+    const isOwned = owned.has(biomeId);
+    const enough = have >= cost;
+    const ok = isOwned && enough;
+    return `<button class="shop-egg-tile ${ok ? '' : 'dim'}" data-buy-egg-type="${t}" ${ok ? '' : 'disabled'}
+        title="${!isOwned ? 'Débloque le ' + (b.name || 'biome') : !enough ? 'Pas assez de ' + (b.resName || '') : ''}">
       <span class="shop-egg-emoji">${TYPE_EMOJI[t] || '🥚'}</span>
       <span class="shop-egg-name">${t}</span>
-      <span class="shop-egg-price">✨ ${shopData.eggPrice}</span>
-    </button>`).join('') + `</div>`;
+      <span class="shop-egg-price">${b.resEmoji || ''} ${cost}${!isOwned ? ' 🔒' : ''}</span>
+    </button>`;
+  }).join('') + `</div>`;
+  $('#shop-egg').innerHTML = html;
+}
+function renderShopTerrain() {
+  const owned = new Set((STATE?.biomes || []).filter(b => b.owned).map(b => b.id));
+  $('#shop-terrain').innerHTML = `<p class="hint">Achète un biome pour y <b>farmer sa ressource</b> et acheter ses œufs typés. Un Glump du bon type y gagne <b>+25%</b> de production.</p>` +
+    (shopData.biomes || []).filter(b => b.id !== 'plaine').map(b => {
+      const own = owned.has(b.id);
+      return `<div class="shop-item">
+        <div class="shop-egg">${b.emoji}</div>
+        <div class="shop-info"><div class="shop-name">${b.name} ${b.resEmoji}</div>
+          <div class="shop-sub">Produit ${b.resName} · types : ${b.types.join(', ')}</div></div>
+        ${own ? '<span class="q-claimed">✓ Possédé</span>' : `<button class="btn small primary" data-buy-terrain="${b.id}">✨ ${b.cost.toLocaleString('fr-FR')}</button>`}
+      </div>`;
+    }).join('');
 }
 function renderShopItem() {
   const c = shopData.candy || {}, po = shopData.potion || {}, rv = shopData.revive || {};
@@ -1146,9 +1245,16 @@ function renderShopBonus() {
     </div>`;
 }
 $('#shop-modal').addEventListener('click', async (e) => {
+  const terr = e.target.closest('[data-buy-terrain]');
+  if (terr) {
+    try { const r = await api('/biome/buy', { method: 'POST', body: { biome: terr.dataset.buyTerrain } }); flash('Terrain débloqué ! 🗺️'); await refresh(); renderShopTerrain(); renderShopEgg(); }
+    catch (err) { flash(err.message, "err"); }
+    return;
+  }
   const eggTile = e.target.closest('[data-buy-egg-type]');
   if (eggTile) {
-    try { const r = await api('/shop/buy-egg', { method: 'POST', body: { type: eggTile.dataset.buyEggType } }); flash(`Œuf ${eggTile.dataset.buyEggType} acheté ! 🥚`); await refresh(); processNewAch(r); }
+    const t = eggTile.dataset.buyEggType;
+    try { const r = await api('/shop/buy-egg', { method: 'POST', body: { type: t } }); flash(`Œuf ${t === 'basic' ? 'basique' : t} acheté ! 🥚`); await refresh(); renderShopEgg(); processNewAch(r); }
     catch (err) { flash(err.message, "err"); }
     return;
   }
@@ -1214,7 +1320,7 @@ const TUTO = [
   { icon: '📦', title: 'Collection', text: "Voici tous tes Glumps. Clique sur l'un d'eux pour sa fiche (IV, stats, nature, PV). Tu peux les renommer, les relacher, ou les faire evoluer une fois le niveau requis atteint.", view: 'box', color: '#34e1c4' },
   { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs a la fois.", view: 'eggs', color: '#ffb347' },
   { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare. Debloque des cellules pour reproduire en parallele.", view: 'breed', color: '#ff7bd5' },
-  { icon: '🌳', title: 'Prairie', text: "Place tes Glumps ici : ce sont eux qui farment l'essence ✨ (la monnaie du jeu). Plus ils montent de niveau, plus ils rapportent. Choisis tes meilleurs farmeurs !", view: 'prairie', color: '#51d88a' },
+  { icon: '🗺️', title: 'Biomes', text: "Assigne tes Glumps à un biome pour farmer sa ressource : la Plaine donne de l'essence ✨, le Volcan du magma 🌋, l'Océan de l'écume 🌊… Un Glump du BON type dans son biome gagne +25% ! Les ressources servent à acheter les œufs typés. Achète les terrains dans la boutique.", view: 'prairie', color: '#51d88a' },
   { icon: '📖', title: 'Glumpdex', text: "Les 300 Glumps numerotes, a la suite. Ceux que tu n'as pas encore eus sont en silhouette. Dex normal et dex chromatique ✨ separes. Objectif : tous les decouvrir !", view: 'dex', color: '#9a6cff' },
   { icon: '⚔️', title: 'Arene (PvP)', text: "Forme une equipe (3 Glumps) et combat au tour par tour : choisis tes attaques ! Frappe sure, deflagration risquee, ou inflige un statut (brulure, gel, poison, paralysie). Les types comptent. Un Glump KO le reste — Rappel + Potion en boutique.", view: 'arena', color: '#ff6b7d' },
   { icon: '👥', title: 'Rang & Social', text: "Compare la valeur de ta collection au classement (onglet Rang), ajoute des amis avec ton code ami (panneau Social 👥) et visite leurs elevages.", view: 'leaderboard', color: '#ffd34d' },

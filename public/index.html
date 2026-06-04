@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=29" />
+  <link rel="stylesheet" href="css/style.css?v=30" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -47,6 +47,7 @@
         <span class="essence">✨ <b id="essence">0</b></span>
         <span class="rate" id="rate">+0/s</span>
       </div>
+      <div class="resbar" id="resbar"></div>
       <div class="account">
         <span id="who"></span>
       </div>
@@ -97,12 +98,13 @@
         </div>
       </section>
 
-      <!-- Vue prairie : les Glumps qui farment l'essence -->
+      <!-- Vue biomes : les Glumps qui farment des ressources -->
       <section id="view-prairie" class="view hidden">
         <div class="panel">
-          <h2>🌳 Prairie <span id="prairie-info" class="prairie-info"></span>
+          <h2>🗺️ Biomes <span id="prairie-info" class="prairie-info"></span>
             <button id="buy-prairie" class="btn small">+ Emplacement</button></h2>
-          <p class="hint">Les Glumps places ici <b>farment de l'essence</b> ✨. Clique sur un emplacement vide pour en ajouter.</p>
+          <p class="hint">Assigne tes Glumps à un biome pour <b>farmer sa ressource</b>. Un Glump du <b>bon type</b> dans son biome gagne <b>+25%</b> ! Achète les terrains dans la boutique 🛒.</p>
+          <div id="biome-tabs" class="biome-tabs"></div>
           <div id="meadow" class="meadow"></div>
           <div id="prairie-slots" class="prairie-slots"></div>
         </div>
@@ -198,11 +200,13 @@
       <div class="drawer-head"><h3>🛒 Boutique</h3><button id="shop-close" class="btn small">✕</button></div>
       <div class="shop-tabs">
         <button class="shop-tab active" data-shoptab="egg">🥚 Œuf</button>
+        <button class="shop-tab" data-shoptab="terrain">🗺️ Terrains</button>
         <button class="shop-tab" data-shoptab="item">🍬 Objet</button>
         <button class="shop-tab" data-shoptab="bonus">⚡ Bonus</button>
       </div>
       <div class="shop-body">
         <div id="shop-egg" class="shop-pane"></div>
+        <div id="shop-terrain" class="shop-pane hidden"></div>
         <div id="shop-item" class="shop-pane hidden"></div>
         <div id="shop-bonus" class="shop-pane hidden"></div>
       </div>
@@ -306,6 +310,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=35" type="module"></script>
+  <script src="js/app.js?v=36" type="module"></script>
 </body>
 </html>

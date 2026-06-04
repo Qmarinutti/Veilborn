@@ -7,6 +7,7 @@ import {
   evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
   tierOf, TIER_NAMES, breedingCellCost, maxHpOf, evolveCost,
   incubationSeconds, breedingSeconds, maturationSeconds,
+  BIOMES, BIOME_LIST, RESOURCES, SYNERGY_BONUS, isSynergy,
 } from './game.js';
 import { progressDaily, unlockAch, todayStr } from './progress.js';
 
@@ -16,33 +17,57 @@ import { hasArt } from './art.js';
 
 const HOUR_MS = 3600 * 1000;
 
-// Met a jour l'essence idle d'un joueur en fonction de ses adultes.
-async function tickEssence(user) {
+// Lit les ressources de biome stockees (JSON) avec 0 par defaut.
+export function parseResources(user) {
+  let r; try { r = JSON.parse(user.resources_json || '{}'); } catch { r = {}; }
+  const out = {};
+  for (const res of RESOURCES) if (res !== 'essence') out[res] = Number(r[res] || 0);
+  return out;
+}
+// Lit les biomes possedes (la Plaine est toujours debloquee).
+export function parseBiomes(user) {
+  let b; try { b = JSON.parse(user.biomes_json || '[]'); } catch { b = []; }
+  const set = new Set(b); set.add('plaine');
+  return [...set].filter(id => BIOMES[id]);
+}
+// Production par seconde d'un Glump dans un biome (rarete * facteur * niveau * synergie).
+function farmRate(species, xp, biomeId) {
+  const sp = SPECIES[species];
+  const syn = sp && isSynergy(biomeId, sp.type) ? (1 + SYNERGY_BONUS) : 1;
+  return rarityOf(species) * BALANCE.essencePerRarityPerSec * levelIncomeMul(xp) * syn;
+}
+
+// Met a jour les ressources idle : chaque Glump assigne a un biome produit
+// la ressource de ce biome (essence pour la Plaine), avec bonus de synergie.
+async function tickFarming(user) {
   const now = Date.now();
   let elapsed = now - user.last_tick;
   if (elapsed <= 0) return;
-
   const cap = BALANCE.offlineCapHours * HOUR_MS;
   if (elapsed > cap) elapsed = cap;
+  const secs = elapsed / 1000;
 
-  const adults = await all(
-    "SELECT species, xp FROM creatures WHERE owner_id = ? AND stage = 'adult' AND in_prairie = 1", [user.id]);
+  const farmers = await all(
+    "SELECT species, xp, biome FROM creatures WHERE owner_id = ? AND stage = 'adult' AND biome IS NOT NULL", [user.id]);
 
-  // Gain = rarete (stade/evolution) * facteur * bonus de niveau.
-  let ratePerSec = 0;
-  for (const c of adults) ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec * levelIncomeMul(c.xp);
+  const res = parseResources(user);
+  let essenceGain = 0;
+  for (const c of farmers) {
+    const b = BIOMES[c.biome]; if (!b) continue;
+    const amt = farmRate(c.species, c.xp, c.biome) * secs;
+    if (b.resource === 'essence') essenceGain += amt;
+    else res[b.resource] = (res[b.resource] || 0) + amt;
+  }
 
-  const gained = ratePerSec * (elapsed / 1000);
-
-  // Les Glumps en prairie gagnent aussi de l'XP (montee de niveau).
-  const xpGain = Math.round(BALANCE.xpPerSec * (elapsed / 1000));
+  // Les Glumps qui farment gagnent aussi de l'XP.
+  const xpGain = Math.round(BALANCE.xpPerSec * secs);
   if (xpGain > 0) {
-    await run("UPDATE creatures SET xp = xp + ? WHERE owner_id = ? AND in_prairie = 1 AND stage = 'adult'",
+    await run("UPDATE creatures SET xp = xp + ? WHERE owner_id = ? AND biome IS NOT NULL AND stage = 'adult'",
       [xpGain, user.id]);
   }
 
-  await run('UPDATE users SET essence = ?, last_tick = ? WHERE id = ?',
-    [user.essence + gained, now, user.id]);
+  await run('UPDATE users SET essence = ?, resources_json = ?, last_tick = ? WHERE id = ?',
+    [user.essence + essenceGain, JSON.stringify(res), now, user.id]);
 }
 
 // Fait avancer les oeufs (eclosion) et les bebes (maturation) dont le temps est passe.
@@ -76,7 +101,7 @@ export async function reloadUser(userId) {
 // Applique tout le idle puis renvoie l'etat complet pour le client.
 export async function getPlayerState(user) {
   const hatched = await tickCreatures(user.id);
-  await tickEssence(user);
+  await tickFarming(user);
   let fresh = await reloadUser(user.id);
 
   // Bonus de connexion quotidien + streak (une fois par jour).
@@ -125,30 +150,45 @@ export async function getPlayerState(user) {
   if (maxLevel >= 50) pushAch(await unlockAch(user.id, 'level50'));
   if (fresh.essence >= 50000) pushAch(await unlockAch(user.id, 'rich'));
 
-  let ratePerSec = 0;
+  // --- Biomes : production par ressource + occupation par biome ---
+  const ownedBiomes = parseBiomes(fresh);
+  const resources = parseResources(fresh);
+  const ratePerRes = {}; for (const r of RESOURCES) ratePerRes[r] = 0;
+  const biomeUsed = {}; for (const id of Object.keys(BIOMES)) biomeUsed[id] = 0;
   for (const c of rows) {
-    if (c.stage === 'adult' && c.in_prairie === 1) {
-      ratePerSec += rarityOf(c.species) * BALANCE.essencePerRarityPerSec * levelIncomeMul(c.xp);
+    if (c.stage === 'adult' && c.biome && BIOMES[c.biome]) {
+      biomeUsed[c.biome] = (biomeUsed[c.biome] || 0) + 1;
+      ratePerRes[BIOMES[c.biome].resource] += farmRate(c.species, c.xp, c.biome);
     }
   }
-  const inPrairieCount = rows.filter(c => c.in_prairie === 1).length;
+  const farmingCount = rows.filter(c => c.biome && BIOMES[c.biome]).length;
   const breedingUsed = rows.filter(c => c.stage === 'egg' && c.from_breeding === 1).length;
+  const biomes = BIOME_LIST.map(b => ({
+    id: b.id, name: b.name, emoji: b.emoji, types: b.types,
+    resource: b.resource, resName: b.resName, resEmoji: b.resEmoji,
+    owned: ownedBiomes.includes(b.id), cost: b.cost,
+    used: biomeUsed[b.id] || 0, slots: fresh.prairie_slots,
+    ratePerSec: Number(ratePerRes[b.resource].toFixed(3)),
+  }));
 
   return {
     user: {
       id: fresh.id,
       username: fresh.username,
       essence: Math.floor(fresh.essence),
+      resources, // { magma, ecume, spores, sable, orage, eclat }
       incubatorSlots: fresh.incubator_slots,
       prairieSlots: fresh.prairie_slots,
-      prairieUsed: inPrairieCount,
+      prairieUsed: farmingCount,
       breedingCells: fresh.breeding_cells,
       breedingUsed,
       nextCellCost: fresh.breeding_cells < BALANCE.breedingMaxCells ? breedingCellCost(fresh.breeding_cells) : null,
       pvpTrophies: fresh.pvp_trophies ?? 1000,
       loginStreak: fresh.login_streak || 0,
     },
-    essencePerSec: Number(ratePerSec.toFixed(3)),
+    essencePerSec: Number(ratePerRes.essence.toFixed(3)),
+    resourcePerSec: Object.fromEntries(RESOURCES.filter(r => r !== 'essence').map(r => [r, Number(ratePerRes[r].toFixed(3))])),
+    biomes,
     creatures,
     discovered,
     discoveredShiny,
@@ -180,7 +220,8 @@ export function publicCreature(c, now = Date.now()) {
     stage: c.stage,
     variant: c.variant,
     nickname: c.nickname,
-    inPrairie: c.in_prairie === 1,
+    biome: c.biome || null,
+    inPrairie: !!c.biome, // compat
     nature: c.nature || 'Equilibre',
     natureUp: natureByName(c.nature).up,
     natureDown: natureByName(c.nature).down,
