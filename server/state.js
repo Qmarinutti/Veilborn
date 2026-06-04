@@ -249,6 +249,15 @@ export function publicCreature(c, now = Date.now()) {
   }
   if (out.readyAt) out.remainingMs = Math.max(0, out.readyAt - now);
 
+  // Production de farm PAR MINUTE (selon le biome ou il est ; sinon estimation Plaine/essence).
+  const baseSec = rarityOf(c.species) * BALANCE.essencePerRarityPerSec * levelIncomeMul(c.xp || 0);
+  const b = c.biome && BIOMES[c.biome];
+  const syn = !!(b && isSynergy(c.biome, sp?.type));
+  out.farmPerMin = Math.round(baseSec * (syn ? 1 + SYNERGY_BONUS : 1) * 60 * 100) / 100;
+  out.farmResource = b ? b.resource : 'essence';
+  out.farmResEmoji = b ? b.resEmoji : '✨';
+  out.farmSynergy = syn;
+
   // Evolution disponible ?
   const evo = evolutionOf(c.species);
   if (evo) {

@@ -800,3 +800,7 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .meadow.biome-ocean .bush { background: #1a6a90; }
 .shop-egg-tile.basic { width: 100%; flex-direction: row; justify-content: center; gap: 10px; margin-bottom: 10px; }
 .shop-egg-tile.dim { opacity: .5; cursor: not-allowed; }
+
+/* Recompense de quete sous le texte (visibilite) */
+.quest .q-reward { font-size: 12px; color: var(--gold); margin: 2px 0 5px; }
+.quest .q-reward b { color: var(--gold); }

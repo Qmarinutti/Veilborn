@@ -298,7 +298,7 @@ const RES_EMOJI = { magma: '🌋', ecume: '🌊', spores: '🍃', sable: '🏜�
 const RES_NAME = { magma: 'Magma', ecume: 'Écume', spores: 'Spores', sable: 'Sable', orage: 'Orage', eclat: 'Éclat' };
 
 function renderAll() {
-  $('#rate').textContent = '+' + STATE.essencePerSec.toFixed(2) + '/s';
+  $('#rate').textContent = '+' + (STATE.essencePerSec * 60).toFixed(1) + '/min';
   renderResbar();
   renderIncubators();
   renderBreedingCells();
@@ -313,7 +313,7 @@ function renderResbar() {
   const rate = STATE.resourcePerSec || {};
   const keys = Object.keys(RES_EMOJI).filter(k => (res[k] > 0 || (rate[k] || 0) > 0));
   $('#resbar').innerHTML = keys.map(k =>
-    `<span class="res" title="${RES_NAME[k]} (+${(rate[k] || 0).toFixed(2)}/s)">${RES_EMOJI[k]} <b id="res-${k}">${Math.floor(res[k] || 0)}</b></span>`).join('');
+    `<span class="res" title="${RES_NAME[k]} (+${((rate[k] || 0) * 60).toFixed(1)}/min)">${RES_EMOJI[k]} <b id="res-${k}">${Math.floor(res[k] || 0)}</b></span>`).join('');
 }
 
 // Pastilles de notification sur les onglets (actions a faire).
@@ -582,6 +582,13 @@ function openDetail(id) {
       <div class="hpbar big"><i style="width:${hpPct}%"></i></div>
       <div class="detail-sub">${c.hp ?? c.maxHp}/${c.maxHp} PV${c.fainted ? ' — ranime-le avec un Rappel (boutique)' : c.hp < c.maxHp ? ' — soigne-le avec une Potion (boutique)' : ''}</div>
     </div>` : '';
+  // Production de farm (par minute) + biome actuel.
+  const curBiome = c.biome && (STATE.biomes || []).find(b => b.id === c.biome);
+  const farmBlock = c.stage === 'adult' ? `
+    <div class="detail-block"><div class="detail-lbl">Production</div>
+      <div class="detail-sub"><b>+${c.farmPerMin} ${c.farmResEmoji}/min</b>${c.farmSynergy ? ' <span style="color:var(--gold)">⭐ synergie +25%</span>' : ''}
+        ${curBiome ? `<br>Farme dans : <b>${curBiome.emoji} ${curBiome.name}</b>` : '<br>Pas assigné — place-le dans un biome (onglet 🗺️) pour farmer.'}</div>
+    </div>` : '';
   $('#detail-name').textContent = (c.variant ? '✨ ' : '') + (c.nickname || c.speciesName);
   $('#detail-body').innerHTML = `
     <div class="detail-top" data-rarity="${c.rarity}">
@@ -592,10 +599,11 @@ function openDetail(id) {
     </div>
     <div class="detail-block"><div class="detail-lbl">Niveau ${c.level}</div>
       <div class="xpbar"><i style="width:${xpPct}%"></i></div>
-      <div class="detail-sub">${c.xpInto}/${c.xpNext} XP — ${c.inPrairie ? "gagne de l'XP en prairie 🌳" : 'place-le en prairie pour progresser'}</div>
+      <div class="detail-sub">${c.xpInto}/${c.xpNext} XP — ${c.inPrairie ? "gagne de l'XP en farmant 🗺️" : 'place-le dans un biome pour progresser'}</div>
       <button class="btn small primary candy" data-candy="${c.id}" style="margin-top:10px;width:100%;">🍬 Super Bonbon ✨60 (+120 XP)</button>
     </div>
     ${hpBlock}
+    ${farmBlock}
     <div class="detail-block"><div class="detail-lbl">Nature</div><div>${natTxt}</div></div>
     <div class="detail-block"><div class="detail-lbl">Genes (IV) → Stats</div>
       ${ivRow('force')}${ivRow('vita')}${ivRow('speed')}
@@ -789,7 +797,7 @@ function renderBiomeTabs() {
     <button class="biome-tab ${b.id === currentBiome ? 'sel' : ''} ${b.owned ? '' : 'locked'}" data-biome="${b.id}" data-owned="${b.owned ? 1 : 0}">
       <span class="bt-emoji">${b.emoji}</span>
       <span class="bt-name">${b.name}${b.owned ? '' : ' 🔒'}</span>
-      <span class="bt-res">${b.owned ? '+' + b.ratePerSec.toFixed(2) + ' ' + b.resEmoji : '✨' + b.cost.toLocaleString('fr-FR')}</span>
+      <span class="bt-res">${b.owned ? '+' + (b.ratePerSec * 60).toFixed(1) + ' ' + b.resEmoji + '/min' : '✨' + b.cost.toLocaleString('fr-FR')}</span>
     </button>`).join('');
 }
 $('#biome-tabs').addEventListener('click', (e) => {
@@ -824,7 +832,7 @@ function renderPrairieSlots() {
   }
   buyBtn.style.display = '';
   const inB = STATE.creatures.filter(c => c.biome === currentBiome);
-  $('#prairie-info').textContent = `${b.emoji} ${b.name} · ${inB.length}/${max} · +${b.ratePerSec.toFixed(2)} ${b.resEmoji}/s`;
+  $('#prairie-info').textContent = `${b.emoji} ${b.name} · ${inB.length}/${max} · +${(b.ratePerSec * 60).toFixed(1)} ${b.resEmoji}/min`;
   if (max >= 12) { buyBtn.disabled = true; buyBtn.textContent = 'Max'; }
   else { buyBtn.disabled = false; buyBtn.textContent = '+ Emplacement'; }
 
@@ -1012,12 +1020,15 @@ async function loadProgress() {
     const action = q.claimed
       ? `<span class="q-claimed">✓ Reçu</span>`
       : q.done
-        ? `<button class="btn small primary" data-claim-daily="${q.id}">Récupérer ✨${q.reward}</button>`
+        ? `<button class="btn small primary" data-claim-daily="${q.id}">Récupérer</button>`
         : `<span class="q-prog">${q.progress}/${q.goal}</span>`;
     return `<div class="quest ${q.done ? 'done' : ''}">
       <div class="q-ic">${q.icon}</div>
-      <div class="q-main"><div class="q-text">${q.text}</div>
-        <div class="q-bar"><i style="width:${pct}%"></i></div></div>
+      <div class="q-main">
+        <div class="q-text">${q.text}</div>
+        <div class="q-reward">🎁 Récompense : <b>+${q.reward} ✨</b></div>
+        <div class="q-bar"><i style="width:${pct}%"></i></div>
+      </div>
       <div class="q-act">${action}</div>
     </div>`;
   }).join('');
