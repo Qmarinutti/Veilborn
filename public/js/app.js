@@ -344,7 +344,13 @@ function avatar(c) {
 
 function eggs() { return STATE.creatures.filter(c => c.stage === 'egg'); }
 function shopEggs() { return STATE.creatures.filter(c => c.stage === 'egg' && !c.fromBreeding); }
-function bredEggs() { return STATE.creatures.filter(c => c.stage === 'egg' && c.fromBreeding); }
+function bredEggs() { return STATE.creatures.filter(c => c.fromBreeding && (c.stage === 'egg' || c.stage === 'mating')); }
+// Glumps occupes par un accouplement en cours (ne peuvent ni farmer ni se reproduire a nouveau).
+function matingParentIds() {
+  const s = new Set();
+  for (const c of STATE.creatures) if (c.stage === 'mating') { s.add(c.parentA); s.add(c.parentB); }
+  return s;
+}
 
 function eggCellHtml(egg, mystery) {
   const ready = egg.remainingMs <= 0;
@@ -386,10 +392,13 @@ function renderBreedingCells() {
   for (let i = 0; i < max; i++) {
     const egg = eggsList[i];
     if (egg) {
-      // cellule occupee : parent gauche | oeuf | parent droite
-      html += `<div class="breed-cell">
+      // cellule occupee : 2 phases distinctes (accouplement puis eclosion)
+      const phase = egg.mating
+        ? `<div class="breed-phase mating">💞 Reproduction</div><div class="breed-egg">💞</div>`
+        : `<div class="breed-phase">🥚 Éclosion</div><div class="breed-egg">🥚</div>`;
+      html += `<div class="breed-cell ${egg.mating ? 'is-mating' : ''}">
         ${parentBox(find(egg.parentA))}
-        <div class="breed-mid"><div class="breed-egg">🥚</div><div class="countdown" data-ready="${egg.readyAt}"></div>
+        <div class="breed-mid">${phase}<div class="countdown" data-ready="${egg.readyAt}"></div>
           <div class="egg-prog"><i data-egg-bar="${egg.id}" data-total="${egg.totalMs || 0}"></i></div></div>
         ${parentBox(find(egg.parentB))}
       </div>`;
@@ -430,7 +439,9 @@ $('#breeding-cells').addEventListener('click', async (e) => {
   if (slot) {
     const side = slot.dataset.pickParent;
     const other = side === 'a' ? breedSelB : breedSelA;
-    const adults = STATE.creatures.filter(c => c.stage === 'adult' && c.id !== other);
+    const busy = matingParentIds();
+    const adults = STATE.creatures.filter(c => c.stage === 'adult' && c.id !== other && !busy.has(c.id));
+    if (!adults.length) { flash('Aucun Glump disponible (occupés/au farm ?).', 'err'); return; }
     openPicker('Choisir le parent', adults, pickCardHtml, (id) => {
       if (side === 'a') breedSelA = id; else breedSelB = id;
       closePicker(); renderBreedingCells();
@@ -884,8 +895,9 @@ $('#prairie-slots').addEventListener('click', async (e) => {
     catch (err) { flash(err.message, "err"); }
   } else if (add) {
     const b = (STATE.biomes || []).find(x => x.id === (STATE.user.activeBiome || 'plaine'));
-    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.biome);
-    if (!avail.length) { flash('Aucun Glump adulte disponible à mettre au farm.', 'err'); return; }
+    const busy = matingParentIds();
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.biome && !busy.has(c.id));
+    if (!avail.length) { flash('Aucun Glump adulte disponible (occupés en accouplement ?).', 'err'); return; }
     openPicker(`Mettre au farm (${b?.emoji || ''} ${b?.name || ''})`, avail, pickBiomeCardHtml, async (id) => {
       try { await api('/biome/assign', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`Au farm ! ${b?.emoji || ''}`); }
       catch (err) { flash(err.message, "err"); }

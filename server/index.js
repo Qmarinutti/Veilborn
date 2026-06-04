@@ -13,7 +13,7 @@ import {
   BALANCE, STARTER_IDS, SPECIES, SPECIES_COUNT, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
   levelFromXp, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
-  breedingSeconds, breedingCellCost, evolveCost, shinyPityBonus, tierOf,
+  breedingSeconds, reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes } from './state.js';
@@ -153,18 +153,26 @@ app.post('/api/breed', requireAuth, h(async (req, res) => {
   if (a.stage !== 'adult' || b.stage !== 'adult') {
     return res.status(400).json({ error: 'Seuls les adultes peuvent se reproduire.' });
   }
+  // Un parent deja en accouplement est occupe.
+  const busy = await get(
+    "SELECT 1 AS x FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating' AND (parent_a IN (?, ?) OR parent_b IN (?, ?)) LIMIT 1",
+    [req.user.id, a.id, b.id, a.id, b.id]);
+  if (busy) return res.status(400).json({ error: 'Un de ces Glumps est deja en accouplement.' });
 
-  // Verifie qu'une cellule de reproduction est libre.
+  // Cellule libre ? (accouplement OU oeuf en cours occupent une cellule)
   const cellRow = await get(
-    "SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 1", [req.user.id]);
+    "SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage IN ('mating', 'egg')", [req.user.id]);
   if (cellRow.n >= req.user.breeding_cells) {
     return res.status(400).json({ error: 'Toutes tes cellules de reproduction sont occupees.' });
   }
 
   const user = await reloadUser(req.user.id);
   const child = breed(a, b, { pityBonus: shinyPityBonus(user.shiny_pity) }); // forme de BASE
-  const hatchAt = Date.now() + breedingSeconds(child.species) * 1000;
-  const id = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 1, parent_a: a.id, parent_b: b.id });
+  // Phase 1 : accouplement. L'oeuf "en cours de reproduction" attend reproductionSeconds.
+  const readyAt = Date.now() + reproductionSeconds(child.species) * 1000;
+  const id = await insertCreature(req.user.id, { ...child, stage: 'mating' }, { hatch_at: readyAt, from_breeding: 1, parent_a: a.id, parent_b: b.id });
+  // Les 2 parents quittent le farm (ils sont occupes a s'accoupler).
+  await run("UPDATE creatures SET biome = NULL, in_prairie = 0 WHERE id IN (?, ?)", [a.id, b.id]);
   // Pity shiny + compteur de reproductions (succes "eleveur" a 10).
   await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
   await progressDaily(req.user.id, 'breed1', 1);
@@ -309,6 +317,9 @@ app.post('/api/biome/assign', requireAuth, h(async (req, res) => {
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent farmer.' });
   if (c.biome) return res.json({ ok: true });
+  // Occupe par un accouplement en cours ?
+  const mating = await get("SELECT 1 AS x FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating' AND (parent_a = ? OR parent_b = ?) LIMIT 1", [req.user.id, id, id]);
+  if (mating) return res.status(400).json({ error: 'Ce Glump est en accouplement (occupe).' });
   const used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND biome IS NOT NULL", [req.user.id])).n;
   if (used >= user.prairie_slots) return res.status(400).json({ error: 'Plus d\'emplacement libre — achete-en un.' });
   await run("UPDATE creatures SET biome = ?, in_prairie = 1 WHERE id = ?", [active, id]);

@@ -15,8 +15,12 @@ export const BALANCE = {
   slotCostBase: 250, // cout du prochain slot = base * (slots possedes ^ 1.6)
   // Duree d'incubation d'un oeuf (secondes), multipliee par la rarete.
   incubationBaseSec: 120,
-  // Reproduction : un oeuf issu de breeding met du temps (x rarete) et occupe une CELLULE.
-  breedingBaseSec: 300,
+  // Reproduction en 2 PHASES (chaque phase x rarete d'acquisition) :
+  //  1) accouplement : les 2 parents sont occupes (ne farment pas) -> pond un oeuf
+  //  2) eclosion : l'oeuf eclot en bebe.
+  breedingBaseSec: 300,        // (total indicatif, conserve pour compat)
+  reproductionBaseSec: 120,    // phase 1 : accouplement
+  breedHatchBaseSec: 180,      // phase 2 : eclosion de l'oeuf pondu
   breedingStartCells: 1,
   breedingMaxCells: 5,
   // Cout pour debloquer la cellule 2, 3, 4, 5 (tres cher exprès).
@@ -249,6 +253,13 @@ export function incubationSeconds(speciesId) {
 // Temps d'un oeuf de reproduction : depend de la rarete d'ACQUISITION (famille).
 export function breedingSeconds(speciesId) {
   return Math.round(BALANCE.breedingBaseSec * tierOf(speciesId));
+}
+// Phase 1 (accouplement) puis phase 2 (eclosion de l'oeuf pondu), chacune x tier.
+export function reproductionSeconds(speciesId) {
+  return Math.round(BALANCE.reproductionBaseSec * tierOf(speciesId));
+}
+export function breedHatchSeconds(speciesId) {
+  return Math.round(BALANCE.breedHatchBaseSec * tierOf(speciesId));
 }
 // Cout de la prochaine cellule de reproduction (cellule 2,3,4,5).
 export function breedingCellCost(currentCells) {

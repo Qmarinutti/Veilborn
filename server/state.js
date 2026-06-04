@@ -7,6 +7,7 @@ import {
   evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
   tierOf, TIER_NAMES, breedingCellCost, maxHpOf, evolveCost,
   incubationSeconds, breedingSeconds, maturationSeconds,
+  reproductionSeconds, breedHatchSeconds,
   BIOMES, BIOME_LIST, RESOURCES, SYNERGY_BONUS, isSynergy,
 } from './game.js';
 import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet } from './progress.js';
@@ -75,9 +76,16 @@ async function tickFarming(user) {
     [user.essence + essenceGain, JSON.stringify(res), now, user.id]);
 }
 
-// Fait avancer les oeufs (eclosion) et les bebes (maturation) dont le temps est passe.
+// Fait avancer la repro (accouplement -> oeuf), les eclosions, et les maturations.
 async function tickCreatures(userId) {
   const now = Date.now();
+  // Phase 1 -> 2 : accouplement termine -> l'oeuf est pondu et commence son eclosion.
+  const mated = await all(
+    "SELECT * FROM creatures WHERE owner_id = ? AND stage = 'mating' AND hatch_at <= ?", [userId, now]);
+  for (const egg of mated) {
+    await run("UPDATE creatures SET stage = 'egg', hatch_at = ? WHERE id = ?",
+      [now + breedHatchSeconds(egg.species) * 1000, egg.id]);
+  }
   // Eclosion : chaque oeuf pret devient bebe, avec un mature_at selon l'espece.
   const ready = await all(
     "SELECT * FROM creatures WHERE owner_id = ? AND stage = 'egg' AND hatch_at <= ?",
@@ -170,7 +178,7 @@ export async function getPlayerState(user) {
     }
   }
   const farmingCount = rows.filter(c => c.biome && BIOMES[c.biome]).length;
-  const breedingUsed = rows.filter(c => c.stage === 'egg' && c.from_breeding === 1).length;
+  const breedingUsed = rows.filter(c => c.from_breeding === 1 && (c.stage === 'egg' || c.stage === 'mating')).length;
   const biomes = BIOME_LIST.map(b => ({
     id: b.id, name: b.name, emoji: b.emoji, types: b.types,
     resource: b.resource, resName: b.resName, resEmoji: b.resEmoji,
@@ -249,9 +257,14 @@ export function publicCreature(c, now = Date.now(), activeBiome = null) {
   out.maxHp = maxHp;
   out.hp = c.hp == null ? maxHp : Math.max(0, Math.min(maxHp, c.hp));
   out.fainted = c.hp != null && c.hp <= 0;
+  if (c.stage === 'mating') { // phase 1 : accouplement en cours
+    out.readyAt = c.hatch_at;
+    out.totalMs = reproductionSeconds(c.species) * 1000;
+    out.mating = true;
+  }
   if (c.stage === 'egg') {
     out.readyAt = c.hatch_at;
-    out.totalMs = (c.from_breeding === 1 ? breedingSeconds(c.species) : incubationSeconds(c.species)) * 1000;
+    out.totalMs = (c.from_breeding === 1 ? breedHatchSeconds(c.species) : incubationSeconds(c.species)) * 1000;
   }
   if (c.stage === 'baby') {
     out.readyAt = c.mature_at;
