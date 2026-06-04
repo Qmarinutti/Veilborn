@@ -8,6 +8,10 @@
 
 let UID = 0;
 
+// Version des images : a incrementer quand des sprites sont regeneres,
+// pour forcer le navigateur a recharger (cache-busting).
+const SPRITE_VER = 4;
+
 // Especes disposant d'une VRAIE image (fichier public/sprites/<id>.png).
 // Des qu'une image est prete, on ajoute l'id ici -> elle remplace le sprite SVG.
 export const ART = new Set([
@@ -17,10 +21,24 @@ export const ART = new Set([
 // Renvoie l'image si elle existe pour cette espece, sinon le sprite SVG dessine.
 // hasArt est fourni par le serveur (scan auto de public/sprites/) ; ART est un
 // surcharge manuelle optionnelle cote client.
+// Teinte chromatique (shiny) : derivee de la LIGNEE pour rester coherente entre
+// les evolutions d'une meme lignee. 40..320deg (evite ~0 = pas de decalage visible).
+function shinyHueDeg(key) {
+  let h = 0;
+  const s = String(key || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return 40 + (h % 281);
+}
+
 export function creatureVisual(creature, size = 80) {
   const id = creature && creature.species;
   if (id && (creature.hasArt || ART.has(id))) {
-    return `<img class="sprite art" src="sprites/${id}.png" width="${size}" height="${size}" alt="${creature.speciesName || ''}" loading="lazy">`;
+    let extra = '';
+    if (creature.variant === 1) {
+      const deg = shinyHueDeg(creature.line || id);
+      extra = ` style="filter:hue-rotate(${deg}deg) saturate(1.45) brightness(1.06) drop-shadow(0 0 6px rgba(255,230,120,.65));"`;
+    }
+    return `<img class="sprite art${creature.variant === 1 ? ' shiny-art' : ''}" src="sprites/${id}.png?v=${SPRITE_VER}"${extra} width="${size}" height="${size}" alt="${creature.speciesName || ''}" loading="lazy">`;
   }
   return creatureSVG(creature, size);
 }

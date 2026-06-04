@@ -63,6 +63,7 @@ export async function initDb() {
       from_breeding INTEGER NOT NULL DEFAULT 0,
       parent_a    INTEGER,
       parent_b    INTEGER,
+      hp          INTEGER,
       xp          INTEGER NOT NULL DEFAULT 0,
       hatch_at    INTEGER,
       mature_at   INTEGER,
@@ -103,9 +104,36 @@ export async function initDb() {
     'ALTER TABLE creatures ADD COLUMN parent_a INTEGER',
     'ALTER TABLE creatures ADD COLUMN parent_b INTEGER',
     'ALTER TABLE users ADD COLUMN pvp_trophies INTEGER NOT NULL DEFAULT 1000',
+    'ALTER TABLE creatures ADD COLUMN hp INTEGER',
+    // Nouveautes : shiny hunting, favoris, paliers du dex, streak/daily, succes.
+    'ALTER TABLE users ADD COLUMN shiny_pity INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN dex_claimed INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN login_streak INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN last_login_day TEXT',
+    'ALTER TABLE users ADD COLUMN daily_json TEXT',
+    'ALTER TABLE users ADD COLUMN ach_json TEXT',
+    'ALTER TABLE creatures ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }
+
+  // Table des echanges entre amis (propositions en attente / historiques).
+  await db.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS trades (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      from_user   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      to_user     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      from_creature INTEGER NOT NULL,
+      status      TEXT NOT NULL DEFAULT 'pending',
+      created_at  INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_trades_to ON trades(to_user, status);
+  `);
+
+  // Nettoyage des sessions trop vieilles (>30 jours) pour eviter l'accumulation.
+  try {
+    await db.execute({ sql: 'DELETE FROM sessions WHERE created_at < ?', args: [Date.now() - 30 * 24 * 3600 * 1000] });
+  } catch {}
 
   // Migration discoveries -> ajoute la dimension "variant" (normal/chromatique).
   // discoveries est un cache reconstruit a chaque lecture, on peut le recreer sans risque.

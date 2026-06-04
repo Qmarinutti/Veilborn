@@ -10,14 +10,19 @@ import {
   userFromRequest, requireAuth, tokenFromRequest,
 } from './auth.js';
 import {
-  BALANCE, STARTER_IDS, SPECIES, wildCreature, breed,
+  BALANCE, STARTER_IDS, SPECIES, SPECIES_COUNT, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
   levelFromXp, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
-  breedingSeconds, breedingCellCost,
+  breedingSeconds, breedingCellCost, evolveCost, shinyPityBonus, tierOf,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser } from './state.js';
 import { hasArt } from './art.js';
-import { simulateBattle } from './battle.js';
+import { simulateBattle, startSession, playTurn } from './battle.js';
+import { moveButtons } from './moves.js';
+import {
+  ACHIEVEMENTS, DEX_MILESTONES, DAILY_POOL, parseAchSet, unlockAch,
+  getDaily, progressDaily, dailyView, todayStr,
+} from './progress.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -58,6 +63,27 @@ async function ensureFriendCode(user) {
   const code = genFriendCode();
   await run('UPDATE users SET friend_code = ? WHERE id = ?', [code, user.id]);
   return code;
+}
+
+// Verrou par utilisateur : serialise les operations sensibles (reclamations de
+// recompenses) pour eviter les doubles-credits via requetes simultanees.
+const userLocks = new Map();
+async function withLock(userId, fn) {
+  while (userLocks.get(userId)) { try { await userLocks.get(userId); } catch {} }
+  let release;
+  const p = new Promise(r => (release = r));
+  userLocks.set(userId, p);
+  try { return await fn(); }
+  finally { userLocks.delete(userId); release(); }
+}
+
+// Depense atomique d'essence : echoue (renvoie false) si solde insuffisant.
+// Empeche l'essence negative meme avec des requetes simultanees (anti race-condition).
+async function spend(userId, amount) {
+  const r = await run(
+    'UPDATE users SET essence = essence - ? WHERE id = ? AND essence >= ?',
+    [amount, userId, amount]);
+  return (r.rowsAffected ?? r.changes ?? 0) > 0;
 }
 
 // ---------- Auth ----------
@@ -134,11 +160,19 @@ app.post('/api/breed', requireAuth, h(async (req, res) => {
     return res.status(400).json({ error: 'Toutes tes cellules de reproduction sont occupees.' });
   }
 
-  const child = breed(a, b); // toujours une forme de BASE (bebe), rarete d'acquisition tiree
+  const user = await reloadUser(req.user.id);
+  const child = breed(a, b, { pityBonus: shinyPityBonus(user.shiny_pity) }); // forme de BASE
   const hatchAt = Date.now() + breedingSeconds(child.species) * 1000;
   const id = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 1, parent_a: a.id, parent_b: b.id });
+  // Pity shiny + compteur de reproductions (succes "eleveur" a 10).
+  await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
+  await progressDaily(req.user.id, 'breed1', 1);
+  const newAch = [];
+  if (child.variant === 1) { const a2 = await unlockAch(req.user.id, 'shiny'); if (a2) newAch.push(a2); }
+  const bred = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND from_breeding = 1", [req.user.id])).n;
+  if (bred >= 10) { const a3 = await unlockAch(req.user.id, 'breeder'); if (a3) newAch.push(a3); }
   const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
-  res.json({ ok: true, egg: publicCreature(row) });
+  res.json({ ok: true, egg: publicCreature(row), newAch });
 }));
 
 // ---------- Acheter une cellule de reproduction (tres cher) ----------
@@ -148,10 +182,10 @@ app.post('/api/breeding/buy-cell', requireAuth, h(async (req, res) => {
     return res.status(400).json({ error: 'Nombre maximum de cellules atteint.' });
   }
   const cost = breedingCellCost(user.breeding_cells);
-  if (user.essence < cost) {
+  if (!(await spend(user.id, cost))) {
     return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
   }
-  await run('UPDATE users SET essence = essence - ?, breeding_cells = breeding_cells + 1 WHERE id = ?', [cost, user.id]);
+  await run('UPDATE users SET breeding_cells = breeding_cells + 1 WHERE id = ?', [user.id]);
   res.json({ ok: true, cost });
 }));
 
@@ -162,11 +196,10 @@ app.post('/api/incubator/buy', requireAuth, h(async (req, res) => {
     return res.status(400).json({ error: 'Nombre maximum d\'incubateurs atteint.' });
   }
   const cost = nextSlotCost(user.incubator_slots);
-  if (user.essence < cost) {
+  if (!(await spend(user.id, cost))) {
     return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
   }
-  await run('UPDATE users SET essence = essence - ?, incubator_slots = incubator_slots + 1 WHERE id = ?',
-    [cost, user.id]);
+  await run('UPDATE users SET incubator_slots = incubator_slots + 1 WHERE id = ?', [user.id]);
   res.json({ ok: true, cost });
 }));
 
@@ -176,6 +209,7 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage === 'egg') return res.status(400).json({ error: 'On ne relache pas un oeuf.' });
+  if (c.favorite === 1) return res.status(400).json({ error: 'Ce Glump est en favori (verrouille). Retire le coeur d\'abord.' });
 
   const refund = Math.round(creatureValue(c) * 0.5);
   await run('DELETE FROM creatures WHERE id = ?', [id]);
@@ -188,6 +222,8 @@ app.get('/api/shop', (req, res) => res.json({
   elements: ELEMENTS,
   eggPrice: SHOP_EGG_PRICE,
   candy: { cost: BALANCE.candyCost, xp: BALANCE.candyXp },
+  potion: { cost: BALANCE.potionCost },
+  revive: { cost: BALANCE.reviveCost },
 }));
 
 app.post('/api/shop/buy-egg', requireAuth, h(async (req, res) => {
@@ -199,17 +235,21 @@ app.post('/api/shop/buy-egg', requireAuth, h(async (req, res) => {
     return res.status(400).json({ error: 'Tous tes incubateurs sont occupes.' });
   }
   const user = await reloadUser(req.user.id);
-  if (user.essence < SHOP_EGG_PRICE) {
+  if (!(await spend(req.user.id, SHOP_EGG_PRICE))) {
     return res.status(400).json({ error: `Pas assez d'essence (besoin de ${SHOP_EGG_PRICE}).` });
   }
 
   const species = randomBaseOfType(type); // bebe aleatoire de cet element (luck)
-  const child = wildCreature(species, { adult: false });
+  const child = wildCreature(species, { adult: false, pityBonus: shinyPityBonus(user.shiny_pity) });
   const hatchAt = Date.now() + incubationSeconds(species) * 1000;
-  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [SHOP_EGG_PRICE, req.user.id]);
   const eggId = await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 0 });
+  // Pity shiny : reset si chromatique, sinon +1.
+  await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
+  const newAch = [];
+  if (child.variant === 1) { const a = await unlockAch(req.user.id, 'shiny'); if (a) newAch.push(a); }
+  await progressDaily(req.user.id, 'buyegg2', 1);
   const row = await get('SELECT * FROM creatures WHERE id = ?', [eggId]);
-  res.json({ ok: true, egg: publicCreature(row), cost: SHOP_EGG_PRICE });
+  res.json({ ok: true, egg: publicCreature(row), cost: SHOP_EGG_PRICE, newAch });
 }));
 
 // Accelerer (terminer instantanement) un oeuf en cours (incubateur OU cellule).
@@ -220,9 +260,7 @@ app.post('/api/egg/accelerate', requireAuth, h(async (req, res) => {
   if (c.stage !== 'egg') return res.status(400).json({ error: "Ce n'est pas un oeuf en cours." });
   const remaining = Math.max(0, (c.hatch_at || 0) - Date.now());
   const cost = accelerateCost(remaining);
-  const user = await reloadUser(req.user.id);
-  if (user.essence < cost) return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
-  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [cost, req.user.id]);
+  if (!(await spend(req.user.id, cost))) return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
   await run('UPDATE creatures SET hatch_at = ? WHERE id = ?', [Date.now(), id]);
   res.json({ ok: true, cost });
 }));
@@ -255,10 +293,10 @@ app.post('/api/prairie/buy', requireAuth, h(async (req, res) => {
     return res.status(400).json({ error: 'Nombre maximum d\'emplacements atteint.' });
   }
   const cost = prairieSlotCost(user.prairie_slots);
-  if (user.essence < cost) {
+  if (!(await spend(user.id, cost))) {
     return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
   }
-  await run('UPDATE users SET essence = essence - ?, prairie_slots = prairie_slots + 1 WHERE id = ?', [cost, user.id]);
+  await run('UPDATE users SET prairie_slots = prairie_slots + 1 WHERE id = ?', [user.id]);
   res.json({ ok: true, cost });
 }));
 
@@ -268,14 +306,39 @@ app.post('/api/creature/candy', requireAuth, h(async (req, res) => {
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage === 'egg') return res.status(400).json({ error: 'Un oeuf ne peut pas gagner d\'XP.' });
-  const user = await reloadUser(req.user.id);
-  if (user.essence < BALANCE.candyCost) {
+  if (!(await spend(req.user.id, BALANCE.candyCost))) {
     return res.status(400).json({ error: `Pas assez d'essence (besoin de ${BALANCE.candyCost}).` });
   }
-  await run('UPDATE users SET essence = essence - ? WHERE id = ?', [BALANCE.candyCost, req.user.id]);
   await run('UPDATE creatures SET xp = xp + ? WHERE id = ?', [BALANCE.candyXp, id]);
+  await progressDaily(req.user.id, 'candy3', 1);
   const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
-  res.json({ ok: true, creature: publicCreature(row), cost: BALANCE.candyCost, xp: BALANCE.candyXp });
+  const newAch = [];
+  if (levelFromXp(row.xp) >= 50) { const a = await unlockAch(req.user.id, 'level50'); if (a) newAch.push(a); }
+  res.json({ ok: true, creature: publicCreature(row), cost: BALANCE.candyCost, xp: BALANCE.candyXp, newAch });
+}));
+
+// ---------- Soins : Potion (PV max) / Rappel (ranime un KO) ----------
+app.post('/api/heal/potion', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  const pc = publicCreature(c);
+  if (pc.fainted) return res.status(400).json({ error: 'Ce Glump est KO : utilise un Rappel d\'abord.' });
+  if (pc.hp >= pc.maxHp) return res.status(400).json({ error: 'Ce Glump a deja tous ses PV.' });
+  if (!(await spend(req.user.id, BALANCE.potionCost))) return res.status(400).json({ error: `Pas assez d'essence (besoin de ${BALANCE.potionCost}).` });
+  await run('UPDATE creatures SET hp = NULL WHERE id = ?', [id]); // pleine vie
+  res.json({ ok: true, cost: BALANCE.potionCost });
+}));
+
+app.post('/api/heal/revive', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  const pc = publicCreature(c);
+  if (!pc.fainted) return res.status(400).json({ error: "Ce Glump n'est pas KO." });
+  if (!(await spend(req.user.id, BALANCE.reviveCost))) return res.status(400).json({ error: `Pas assez d'essence (besoin de ${BALANCE.reviveCost}).` });
+  await run('UPDATE creatures SET hp = ? WHERE id = ?', [Math.round(pc.maxHp / 2), id]); // ranime a moitie
+  res.json({ ok: true, cost: BALANCE.reviveCost });
 }));
 
 // ---------- Faire evoluer ----------
@@ -293,10 +356,16 @@ app.post('/api/creature/evolve', requireAuth, h(async (req, res) => {
   if (level < reqLevel) {
     return res.status(400).json({ error: `Niveau ${reqLevel} requis pour evoluer (actuel : ${level}).` });
   }
+  const cost = evolveCost(target);
+  if (!(await spend(req.user.id, cost))) {
+    return res.status(400).json({ error: `Pas assez d'essence pour evoluer (besoin de ${cost}).` });
+  }
 
   await run('UPDATE creatures SET species = ? WHERE id = ?', [target, id]);
+  await progressDaily(req.user.id, 'evolve1', 1);
+  const newAch = []; { const a = await unlockAch(req.user.id, 'first_evolve'); if (a) newAch.push(a); }
   const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
-  res.json({ ok: true, creature: publicCreature(row), fromName: SPECIES[c.species].name });
+  res.json({ ok: true, creature: publicCreature(row), fromName: SPECIES[c.species].name, cost, newAch });
 }));
 
 // ---------- Renommer ----------
@@ -309,23 +378,28 @@ app.post('/api/creature/rename', requireAuth, h(async (req, res) => {
   res.json({ ok: true });
 }));
 
-// ---------- Classement (multijoueur) ----------
-app.get('/api/leaderboard', h(async (req, res) => {
-  const users = await all('SELECT id, username FROM users');
-  const board = [];
-  for (const u of users) {
-    const cs = await all('SELECT * FROM creatures WHERE owner_id = ?', [u.id]);
-    let value = 0, best = 0;
-    for (const c of cs) {
-      if (c.stage === 'egg') continue;
-      const v = creatureValue(c);
-      value += v;
-      if (v > best) best = v;
+// ---------- Classement (multijoueur) — calcule puis cache 30s ----------
+let lbCache = { at: 0, board: [] };
+async function computeLeaderboard() {
+  // 1 seule requete : on agrege en JS (la valeur depend de stats/genes/niveau).
+  const rows = await all(
+    "SELECT u.id AS uid, u.username AS username, c.* FROM users u " +
+    "LEFT JOIN creatures c ON c.owner_id = u.id AND c.stage != 'egg'");
+  const byUser = new Map();
+  for (const r of rows) {
+    let e = byUser.get(r.uid);
+    if (!e) { e = { id: r.uid, username: r.username, collection: 0, best: 0, count: 0 }; byUser.set(r.uid, e); }
+    if (r.species) { // a une creature
+      const v = creatureValue(r);
+      e.collection += v; e.count += 1; if (v > e.best) e.best = v;
     }
-    board.push({ id: u.id, username: u.username, collection: value, best, count: cs.length });
   }
-  board.sort((a, b) => b.collection - a.collection);
-  res.json({ board: board.slice(0, 50) });
+  return [...byUser.values()].sort((a, b) => b.collection - a.collection).slice(0, 50);
+}
+app.get('/api/leaderboard', h(async (req, res) => {
+  const now = Date.now();
+  if (now - lbCache.at > 30000) lbCache = { at: now, board: await computeLeaderboard() };
+  res.json({ board: lbCache.board });
 }));
 
 // ---------- Visiter l'elevage d'un autre joueur ----------
@@ -375,17 +449,21 @@ app.post('/api/social/remove', requireAuth, h(async (req, res) => {
 }));
 
 // ---------- PvP / Arene ----------
-function fighterFiche(row) {
+function fighterFiche(row, { full = false } = {}) {
   const pc = publicCreature(row);
   return {
     id: row.id, name: pc.nickname || pc.speciesName, species: pc.species, type: pc.type,
-    variant: pc.variant, color: pc.color, shape: pc.shape, hasArt: pc.hasArt,
+    variant: pc.variant, color: pc.color, shape: pc.shape, hasArt: pc.hasArt, line: pc.line,
     rarity: pc.rarity, level: pc.level, stats: pc.stats, power: pc.power,
+    hp: full ? pc.maxHp : pc.hp, maxHp: pc.maxHp, fainted: pc.fainted,
   };
 }
 async function topTeam(userId) {
+  // Adversaire : equipe a PV pleins (snapshot), exclut les KO.
   const rows = await all("SELECT * FROM creatures WHERE owner_id = ? AND stage = 'adult'", [userId]);
-  return rows.map(fighterFiche).sort((a, b) => b.power - a.power).slice(0, 3);
+  return rows.map(r => fighterFiche(r, { full: true }))
+    .filter(f => !f.fainted)
+    .sort((a, b) => b.power - a.power).slice(0, 3);
 }
 
 app.get('/api/pvp/opponent', requireAuth, h(async (req, res) => {
@@ -397,7 +475,31 @@ app.get('/api/pvp/opponent', requireAuth, h(async (req, res) => {
   res.json({ id: opp.id, username: opp.username, trophies: opp.pvp_trophies, team: await topTeam(opp.id) });
 }));
 
-app.post('/api/pvp/fight', requireAuth, h(async (req, res) => {
+// --- Combat tour-par-tour interactif (attaques au choix + statuts) ---
+const battles = new Map(); // battleId -> { userId, opponentId, oppName, state, mineIds, createdAt }
+function pubFighter(f) {
+  return { id: f.id, name: f.name, species: f.species, type: f.type, variant: f.variant,
+    color: f.color, shape: f.shape, hasArt: f.hasArt, line: f.line, rarity: f.rarity, level: f.level,
+    hp: f.hp, maxHp: f.maxHp, status: f.status };
+}
+function publicBattle(state, id, oppName) {
+  const aIdx = state.A.findIndex(f => f.hp > 0);
+  const bIdx = state.B.findIndex(f => f.hp > 0);
+  return {
+    battleId: id, oppName,
+    me: state.A.map(pubFighter), opp: state.B.map(pubFighter),
+    activeMe: aIdx, activeOpp: bIdx,
+    myMoves: aIdx >= 0 ? moveButtons(state.A[aIdx].type) : [],
+    over: state.over, winner: state.winner,
+  };
+}
+function purgeBattles() {
+  const cutoff = Date.now() - 15 * 60 * 1000;
+  for (const [id, b] of battles) if (b.createdAt < cutoff) battles.delete(id);
+}
+
+app.post('/api/pvp/start', requireAuth, h(async (req, res) => {
+  purgeBattles();
   const { opponentId, team } = req.body || {};
   if (!Array.isArray(team) || team.length < 1 || team.length > BALANCE.pvpTeamSize) {
     return res.status(400).json({ error: `Choisis 1 a ${BALANCE.pvpTeamSize} Glumps.` });
@@ -406,6 +508,7 @@ app.post('/api/pvp/fight', requireAuth, h(async (req, res) => {
   for (const id of team) {
     const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage = 'adult'", [id, req.user.id]);
     if (!c) return res.status(400).json({ error: 'Equipe invalide (adultes uniquement).' });
+    if (publicCreature(c).fainted) return res.status(400).json({ error: 'Un de tes Glumps est KO — ranime-le (Rappel) avant de combattre.' });
     mine.push(c);
   }
   const opp = await get('SELECT id, username FROM users WHERE id = ?', [opponentId]);
@@ -413,26 +516,43 @@ app.post('/api/pvp/fight', requireAuth, h(async (req, res) => {
   const oppFiches = await topTeam(opponentId);
   if (!oppFiches.length) return res.status(400).json({ error: "Cet adversaire n'a pas d'equipe." });
 
-  const result = simulateBattle(mine.map(fighterFiche), oppFiches);
-  const iWon = result.winner === 'a';
+  const state = startSession(mine.map(fighterFiche), oppFiches);
+  const id = randomBytes(8).toString('hex');
+  battles.set(id, { userId: req.user.id, opponentId, oppName: opp.username, state, mineIds: mine.map(c => c.id), createdAt: Date.now() });
+  res.json(publicBattle(state, id, opp.username));
+}));
 
-  const user = await reloadUser(req.user.id);
-  let trophies = user.pvp_trophies, essence = 0;
-  const xp = iWon ? 60 : 20;
-  if (iWon) { trophies += BALANCE.pvpWinTrophies; essence = BALANCE.pvpWinEssence; }
-  else { trophies = Math.max(0, trophies - BALANCE.pvpLoseTrophies); }
-  await run('UPDATE users SET pvp_trophies = ?, essence = essence + ? WHERE id = ?', [trophies, essence, req.user.id]);
-  for (const c of mine) await run('UPDATE creatures SET xp = xp + ? WHERE id = ?', [xp, c.id]);
+app.post('/api/pvp/move', requireAuth, h(async (req, res) => {
+  const { battleId, moveId } = req.body || {};
+  const b = battles.get(battleId);
+  if (!b || b.userId !== req.user.id) return res.status(404).json({ error: 'Combat introuvable (relance-le).' });
+  if (b.state.over) return res.status(400).json({ error: 'Combat deja termine.' });
 
-  res.json({
-    winner: iWon ? 'me' : 'opp',
-    log: result.log,
-    myTeam: result.teamA,
-    oppTeam: result.teamB,
-    oppName: opp.username,
-    rewards: { trophies: iWon ? BALANCE.pvpWinTrophies : -BALANCE.pvpLoseTrophies, essence, xp },
-    trophies,
-  });
+  const turn = playTurn(b.state, moveId);
+
+  let result = null;
+  if (b.state.over) {
+    const iWon = b.state.winner === 'a';
+    const user = await reloadUser(req.user.id);
+    let trophies = user.pvp_trophies, essence = 0;
+    const xp = iWon ? 60 : 20;
+    if (iWon) { trophies += BALANCE.pvpWinTrophies; essence = BALANCE.pvpWinEssence; }
+    else { trophies = Math.max(0, trophies - BALANCE.pvpLoseTrophies); }
+    await run('UPDATE users SET pvp_trophies = ?, essence = essence + ? WHERE id = ?', [trophies, essence, req.user.id]);
+    // Persistance des PV de mon equipe (PV finaux ; 0 = KO) + XP.
+    for (let i = 0; i < b.mineIds.length; i++) {
+      await run('UPDATE creatures SET xp = xp + ?, hp = ? WHERE id = ?', [xp, b.state.A[i].hp, b.mineIds[i]]);
+    }
+    const newAch = [];
+    if (iWon) {
+      await progressDaily(req.user.id, 'pvp3', 1);
+      const a = await unlockAch(req.user.id, 'first_pvp'); if (a) newAch.push(a);
+    }
+    result = { winner: iWon ? 'me' : 'opp', rewards: { trophies: iWon ? BALANCE.pvpWinTrophies : -BALANCE.pvpLoseTrophies, essence, xp }, trophies, newAch };
+    battles.delete(battleId);
+  }
+
+  res.json({ events: turn.events, state: publicBattle(b.state, battleId, b.oppName), result });
 }));
 
 app.get('/api/pvp/ranking', h(async (req, res) => {
@@ -440,15 +560,169 @@ app.get('/api/pvp/ranking', h(async (req, res) => {
   res.json({ ranking });
 }));
 
+// ---------- Favori (verrou anti-relache) ----------
+app.post('/api/creature/favorite', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT favorite FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  const next = c.favorite === 1 ? 0 : 1;
+  await run('UPDATE creatures SET favorite = ? WHERE id = ?', [next, id]);
+  res.json({ ok: true, favorite: next === 1 });
+}));
+
+// ---------- Relacher en masse (ignore oeufs + favoris) ----------
+app.post('/api/creature/release-many', requireAuth, h(async (req, res) => {
+  const ids = Array.isArray((req.body || {}).ids) ? req.body.ids.map(Number).filter(Boolean) : [];
+  if (!ids.length) return res.status(400).json({ error: 'Aucun Glump selectionne.' });
+  let refund = 0, released = 0;
+  for (const id of ids) {
+    const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+    if (!c || c.stage === 'egg' || c.favorite === 1) continue;
+    refund += Math.round(creatureValue(c) * 0.5);
+    await run('DELETE FROM creatures WHERE id = ?', [id]);
+    released++;
+  }
+  if (refund > 0) await run('UPDATE users SET essence = essence + ? WHERE id = ?', [refund, req.user.id]);
+  res.json({ ok: true, released, refund });
+}));
+
+// ---------- Progression : quetes du jour, succes, paliers dex, streak ----------
+app.get('/api/progress', requireAuth, h(async (req, res) => {
+  const user = await reloadUser(req.user.id);
+  const daily = dailyView(await getDaily(user));
+  const unlocked = parseAchSet(user);
+  const achievements = ACHIEVEMENTS.map(a => ({ ...a, unlocked: unlocked.has(a.id) }));
+  // Paliers du dex : combien decouverts + lesquels reclamables.
+  const discCount = (await get('SELECT COUNT(*) AS n FROM discoveries WHERE user_id = ? AND variant = 0', [req.user.id])).n;
+  const claimed = user.dex_claimed || 0;
+  const milestones = DEX_MILESTONES.map((m, i) => ({
+    count: m.count, essence: m.essence, prairie: !!m.prairie, cell: !!m.cell, title: m.title || null,
+    reached: discCount >= m.count, claimed: i < claimed, claimable: discCount >= m.count && i >= claimed,
+  }));
+  res.json({
+    daily, achievements,
+    dex: { discovered: discCount, total: SPECIES_COUNT, milestones },
+    streak: user.login_streak || 0,
+  });
+}));
+
+// Reclamer la recompense d'une quete quotidienne terminee (verrouille : anti double-credit).
+app.post('/api/daily/claim', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const data = await getDaily(user);
+    const q = data.quests.find(x => x.id === id);
+    if (!q) return { status: 404, error: 'Quete introuvable.' };
+    const def = DAILY_POOL.find(d => d.id === id);
+    if (!def || (q.progress || 0) < def.goal) return { status: 400, error: 'Quete non terminee.' };
+    if (q.claimed) return { status: 400, error: 'Recompense deja reclamee.' };
+    q.claimed = true;
+    await run('UPDATE users SET daily_json = ?, essence = essence + ? WHERE id = ?',
+      [JSON.stringify(data), def.reward, req.user.id]);
+    return { ok: true, reward: def.reward };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// Reclamer un palier du Glumpdex (dans l'ordre ; verrouille).
+app.post('/api/dex/claim', requireAuth, h(async (req, res) => {
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const discCount = (await get('SELECT COUNT(*) AS n FROM discoveries WHERE user_id = ? AND variant = 0', [req.user.id])).n;
+    const idx = user.dex_claimed || 0;
+    const m = DEX_MILESTONES[idx];
+    if (!m) return { status: 400, error: 'Tous les paliers sont deja reclames.' };
+    if (discCount < m.count) return { status: 400, error: `Palier non atteint (${discCount}/${m.count}).` };
+    let extra = '';
+    if (m.prairie) { await run('UPDATE users SET prairie_slots = prairie_slots + 1 WHERE id = ?', [req.user.id]); extra = '+1 emplacement de prairie'; }
+    if (m.cell) { await run('UPDATE users SET breeding_cells = breeding_cells + 1 WHERE id = ?', [req.user.id]); extra = '+1 cellule de reproduction'; }
+    await run('UPDATE users SET dex_claimed = dex_claimed + 1, essence = essence + ? WHERE id = ?', [m.essence, req.user.id]);
+    if (m.count >= SPECIES_COUNT) await unlockAch(req.user.id, 'dexmaster');
+    return { ok: true, essence: m.essence, extra, title: m.title || null };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// ---------- Echanges entre amis ----------
+async function areFriends(a, b) {
+  const r = await get('SELECT 1 AS ok FROM friends WHERE user_id = ? AND friend_id = ?', [a, b]);
+  return !!r;
+}
+// Proposer un de mes Glumps a un ami (il devra offrir un des siens en retour a l'acceptation).
+app.post('/api/trade/propose', requireAuth, h(async (req, res) => {
+  const { toUser, creatureId } = req.body || {};
+  const tid = Number(toUser);
+  if (tid === req.user.id) return res.status(400).json({ error: 'Tu ne peux pas echanger avec toi-meme.' });
+  if (!(await areFriends(req.user.id, tid))) return res.status(400).json({ error: 'Tu dois etre ami avec ce joueur.' });
+  const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [creatureId, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable (ou oeuf).' });
+  if (c.favorite === 1) return res.status(400).json({ error: 'Retire le favori avant d\'echanger ce Glump.' });
+  await run('INSERT INTO trades (from_user, to_user, from_creature, status, created_at) VALUES (?, ?, ?, ?, ?)',
+    [req.user.id, tid, creatureId, 'pending', Date.now()]);
+  res.json({ ok: true });
+}));
+// Lister mes echanges (recus en attente + envoyes).
+app.get('/api/trade/list', requireAuth, h(async (req, res) => {
+  const incoming = await all(
+    "SELECT t.id, t.from_creature, u.username AS fromName, t.from_user FROM trades t " +
+    "JOIN users u ON u.id = t.from_user WHERE t.to_user = ? AND t.status = 'pending' ORDER BY t.created_at DESC",
+    [req.user.id]);
+  const outgoing = await all(
+    "SELECT t.id, t.from_creature, u.username AS toName, t.to_user FROM trades t " +
+    "JOIN users u ON u.id = t.to_user WHERE t.from_user = ? AND t.status = 'pending' ORDER BY t.created_at DESC",
+    [req.user.id]);
+  const fiche = async (cid) => { const c = await get('SELECT * FROM creatures WHERE id = ?', [cid]); return c ? publicCreature(c) : null; };
+  for (const t of incoming) t.creature = await fiche(t.from_creature);
+  for (const t of outgoing) t.creature = await fiche(t.from_creature);
+  res.json({ incoming, outgoing });
+}));
+// Accepter : j'offre un de mes Glumps en retour ; on echange les proprietaires.
+app.post('/api/trade/accept', requireAuth, h(async (req, res) => {
+  const { id, creatureId } = req.body || {};
+  const t = await get("SELECT * FROM trades WHERE id = ? AND to_user = ? AND status = 'pending'", [id, req.user.id]);
+  if (!t) return res.status(404).json({ error: 'Echange introuvable.' });
+  const theirs = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [t.from_creature, t.from_user]);
+  const mine = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [creatureId, req.user.id]);
+  if (!theirs || !mine) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return res.status(400).json({ error: 'Un des Glumps n\'est plus disponible.' }); }
+  if (mine.favorite === 1) return res.status(400).json({ error: 'Retire le favori avant d\'echanger ce Glump.' });
+  if (theirs.favorite === 1) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return res.status(400).json({ error: 'L\'autre joueur a verrouille ce Glump (favori). Echange annule.' }); }
+  // Echange des proprietaires (retire de la prairie pour eviter les incoherences de slots).
+  await run('UPDATE creatures SET owner_id = ?, in_prairie = 0 WHERE id = ?', [req.user.id, theirs.id]);
+  await run('UPDATE creatures SET owner_id = ?, in_prairie = 0 WHERE id = ?', [t.from_user, mine.id]);
+  await run("UPDATE trades SET status = 'done' WHERE id = ?", [id]);
+  res.json({ ok: true, received: publicCreature(await get('SELECT * FROM creatures WHERE id = ?', [theirs.id])) });
+}));
+// Refuser (destinataire) ou annuler (emetteur) un echange en attente.
+app.post('/api/trade/cancel', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  await run("UPDATE trades SET status = 'cancelled' WHERE id = ? AND (to_user = ? OR from_user = ?) AND status = 'pending'",
+    [id, req.user.id, req.user.id]);
+  res.json({ ok: true });
+}));
+
+// Liste des succes (definitions) pour le client.
+app.get('/api/achievements', (req, res) => res.json({ achievements: ACHIEVEMENTS }));
+
 // ---------- Donnees statiques de jeu ----------
 app.get('/api/species', (req, res) => {
   const out = {};
-  for (const [id, sp] of Object.entries(SPECIES)) out[id] = { ...sp, hasArt: hasArt(id) };
+  for (const [id, sp] of Object.entries(SPECIES)) out[id] = { ...sp, hasArt: hasArt(id), tier: tierOf(id) };
   res.json({ species: out });
 });
 
 // ---------- Fichiers statiques ----------
-app.use(express.static(join(__dirname, '..', 'public')));
+// index.html ne doit jamais etre mis en cache (sinon le navigateur recharge
+// d'anciens app.js?v=.. / sprites). Les assets versionnes (?v=) restent caches.
+app.use(express.static(join(__dirname, '..', 'public'), {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  },
+}));
 
 // ---------- Gestion d'erreurs ----------
 app.use((err, req, res, next) => {

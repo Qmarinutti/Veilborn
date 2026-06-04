@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=24" />
+  <link rel="stylesheet" href="css/style.css?v=29" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -57,6 +57,24 @@
       <section id="view-box" class="view">
         <div class="panel">
           <h2>📦 Ma collection (<span id="coll-count">0</span>)</h2>
+          <div class="coll-toolbar">
+            <input id="coll-search" type="search" placeholder="🔍 Rechercher…" autocomplete="off" />
+            <select id="coll-type" aria-label="Filtrer par type"><option value="">Tous types</option></select>
+            <select id="coll-sort" aria-label="Trier">
+              <option value="recent">Récents</option>
+              <option value="value">Valeur ↓</option>
+              <option value="level">Niveau ↓</option>
+              <option value="rarity">Rareté ↓</option>
+              <option value="name">Nom A-Z</option>
+            </select>
+            <button id="coll-fav-only" class="btn small" aria-pressed="false" title="Favoris seulement">💚</button>
+            <button id="coll-select" class="btn small" title="Sélection multiple">☑ Sélection</button>
+          </div>
+          <div id="coll-bulkbar" class="coll-bulkbar hidden">
+            <span id="coll-selcount">0 sélectionné(s)</span>
+            <button id="coll-release-sel" class="btn small danger">Relâcher la sélection</button>
+            <button id="coll-cancel-sel" class="btn small">Annuler</button>
+          </div>
           <div id="collection" class="cards"></div>
         </div>
       </section>
@@ -136,7 +154,7 @@
 
     <!-- Rail lateral : reglages / evenements -->
     <div class="siderail">
-      <button class="railbtn" data-drawer="events" title="Evenements">🎉</button>
+      <button class="railbtn" data-drawer="progress" title="Progression (quêtes, succès, paliers)">🏅</button>
       <button class="railbtn" data-drawer="shop" title="Boutique">🛒</button>
       <button class="railbtn" data-drawer="settings" title="Reglages">⚙️</button>
       <button class="railbtn" data-drawer="social" title="Social / Amis">👥</button>
@@ -194,9 +212,18 @@
     <div id="battle-overlay" class="overlay hidden"></div>
     <div id="battle-modal" class="center-modal hidden">
       <div class="drawer-head"><h3 id="battle-title">⚔️ Combat</h3><button id="battle-close" class="btn small hidden">✕</button></div>
-      <div class="battle-side"><div class="battle-label">Adversaire</div><div id="battle-opp" class="battle-team"></div></div>
-      <div class="battle-vs">⚔️</div>
-      <div class="battle-side"><div class="battle-label">Toi</div><div id="battle-me" class="battle-team"></div></div>
+      <div class="battle-arena">
+        <div class="bside">
+          <div class="battle-label">Adversaire <span id="b-opp-bench" class="b-bench"></span></div>
+          <div id="b-opp-active" class="b-active"></div>
+        </div>
+        <div id="battle-log" class="battle-log">Choisis ton attaque !</div>
+        <div class="bside">
+          <div class="battle-label">Toi <span id="b-me-bench" class="b-bench"></span></div>
+          <div id="b-me-active" class="b-active"></div>
+        </div>
+      </div>
+      <div id="battle-moves" class="battle-moves"></div>
       <div id="battle-result" class="battle-result hidden"></div>
     </div>
 
@@ -218,8 +245,14 @@
         <button id="drawer-close" class="btn small">✕</button>
       </div>
       <div class="drawer-body">
-        <div id="drawer-events" class="drawer-section hidden">
-          <p class="hint">Aucun evenement en cours. Les evenements arriveront ici (bonus, especes rares limitees...).</p>
+        <div id="drawer-progress" class="drawer-section hidden">
+          <div class="prog-streak" id="prog-streak"></div>
+          <h4 class="prog-h">📋 Quêtes du jour</h4>
+          <div id="prog-daily" class="prog-daily"></div>
+          <h4 class="prog-h">📖 Paliers du Glumpdex</h4>
+          <div id="prog-dex" class="prog-dex"></div>
+          <h4 class="prog-h">🏅 Succès</h4>
+          <div id="prog-ach" class="prog-ach"></div>
         </div>
         <div id="drawer-shop" class="drawer-section hidden">
           <p class="hint">Achete des oeufs avec ton essence ✨. Il te faut un incubateur libre (onglet Oeufs).</p>
@@ -227,6 +260,14 @@
         </div>
         <div id="drawer-settings" class="drawer-section hidden">
           <p class="hint">Connecte en tant que <b id="settings-who">—</b></p>
+          <div class="set-row">
+            <span>🔊 Sons</span>
+            <button id="toggle-sfx" class="toggle" role="switch"><span class="knob"></span></button>
+          </div>
+          <div class="set-row">
+            <span>🎵 Musique</span>
+            <button id="toggle-music" class="toggle" role="switch"><span class="knob"></span></button>
+          </div>
           <button id="replay-tuto" class="btn">❓ Revoir le tutoriel</button>
           <button id="logout" class="btn">Se deconnecter</button>
         </div>
@@ -241,6 +282,8 @@
           <p id="social-msg" class="msg"></p>
           <h3 style="margin:16px 0 8px; font-size:15px;">Mes amis (<span id="friends-count">0</span>)</h3>
           <div id="friends-list"></div>
+          <h3 style="margin:18px 0 8px; font-size:15px;">🔄 Échanges</h3>
+          <div id="trades-list"></div>
         </div>
       </div>
     </aside>
@@ -248,18 +291,21 @@
     <!-- Tutoriel -->
     <div id="tuto-overlay" class="overlay hidden"></div>
     <div id="tutorial" class="tuto hidden">
-      <div class="tuto-icon" id="tuto-icon">🥚</div>
+      <div class="tuto-glow"></div>
+      <button id="tuto-skip" class="tuto-x" title="Passer">✕</button>
+      <div class="tuto-badge"><span id="tuto-icon">🥚</span></div>
+      <div class="tuto-step" id="tuto-step">Etape 1/8</div>
       <h3 id="tuto-title"></h3>
       <p id="tuto-text"></p>
+      <div class="tuto-progress"><i id="tuto-bar"></i></div>
       <div class="tuto-dots" id="tuto-dots"></div>
       <div class="tuto-actions">
-        <button id="tuto-skip" class="btn small">Passer</button>
         <button id="tuto-prev" class="btn small">← Precedent</button>
         <button id="tuto-next" class="btn primary">Suivant →</button>
       </div>
     </div>
   </div>
 
-  <script src="js/app.js?v=27" type="module"></script>
+  <script src="js/app.js?v=35" type="module"></script>
 </body>
 </html>

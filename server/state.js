@@ -5,8 +5,10 @@ import { get, all, run } from './db.js';
 import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
   evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
-  tierOf, TIER_NAMES, breedingCellCost,
+  tierOf, TIER_NAMES, breedingCellCost, maxHpOf, evolveCost,
+  incubationSeconds, breedingSeconds, maturationSeconds,
 } from './game.js';
+import { progressDaily, unlockAch, todayStr } from './progress.js';
 
 // Multiplicateur de gain d'essence selon le niveau (+5% par niveau).
 function levelIncomeMul(xp) { return 1 + 0.05 * (levelFromXp(xp) - 1); }
@@ -60,6 +62,7 @@ async function tickCreatures(userId) {
     "UPDATE creatures SET stage = 'adult', mature_at = NULL " +
     "WHERE owner_id = ? AND stage = 'baby' AND mature_at IS NOT NULL AND mature_at <= ?",
     [userId, now]);
+  return ready.length; // nb d'oeufs eclos ce tick (pour quetes/succes)
 }
 
 function maturationMsFor(speciesId) {
@@ -72,15 +75,35 @@ export async function reloadUser(userId) {
 
 // Applique tout le idle puis renvoie l'etat complet pour le client.
 export async function getPlayerState(user) {
-  await tickCreatures(user.id);
+  const hatched = await tickCreatures(user.id);
   await tickEssence(user);
-  const fresh = await reloadUser(user.id);
+  let fresh = await reloadUser(user.id);
+
+  // Bonus de connexion quotidien + streak (une fois par jour).
+  let loginBonus = 0;
+  const today = todayStr();
+  if (fresh.last_login_day !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const streak = fresh.last_login_day === yesterday ? (fresh.login_streak || 0) + 1 : 1;
+    loginBonus = Math.min(500, 50 * streak);
+    await run('UPDATE users SET login_streak = ?, last_login_day = ?, essence = essence + ? WHERE id = ?',
+      [streak, today, loginBonus, fresh.id]);
+    fresh = await reloadUser(user.id);
+  }
 
   const rows = await all(
     'SELECT * FROM creatures WHERE owner_id = ? ORDER BY created_at ASC', [user.id]);
 
   const now = Date.now();
   const creatures = rows.map(c => publicCreature(c, now));
+
+  // Succes & quetes declenchees par l'etat courant.
+  const newAchievements = [];
+  const pushAch = (a) => { if (a) newAchievements.push(a); };
+  if (hatched > 0) {
+    await progressDaily(user.id, 'hatch2', hatched);
+    pushAch(await unlockAch(user.id, 'first_hatch'));
+  }
 
   // Decouvertes : on memorise chaque (espece, variant) deja possede (normal ET
   // chromatique separement ; reste debloque meme apres relachement/evolution).
@@ -93,6 +116,14 @@ export async function getPlayerState(user) {
   const discRows = await all('SELECT species, variant FROM discoveries WHERE user_id = ?', [user.id]);
   const discovered = discRows.filter(d => d.variant === 0).map(d => d.species);
   const discoveredShiny = discRows.filter(d => d.variant === 1).map(d => d.species);
+
+  // Succes de collection / niveau / fortune.
+  if (discovered.length >= 50) pushAch(await unlockAch(user.id, 'collector50'));
+  if (discovered.length >= 150) pushAch(await unlockAch(user.id, 'collector150'));
+  if (discoveredShiny.length >= 1) pushAch(await unlockAch(user.id, 'shiny'));
+  const maxLevel = rows.filter(r => r.stage !== 'egg').reduce((m, r) => Math.max(m, levelFromXp(r.xp || 0)), 0);
+  if (maxLevel >= 50) pushAch(await unlockAch(user.id, 'level50'));
+  if (fresh.essence >= 50000) pushAch(await unlockAch(user.id, 'rich'));
 
   let ratePerSec = 0;
   for (const c of rows) {
@@ -115,11 +146,14 @@ export async function getPlayerState(user) {
       breedingUsed,
       nextCellCost: fresh.breeding_cells < BALANCE.breedingMaxCells ? breedingCellCost(fresh.breeding_cells) : null,
       pvpTrophies: fresh.pvp_trophies ?? 1000,
+      loginStreak: fresh.login_streak || 0,
     },
     essencePerSec: Number(ratePerSec.toFixed(3)),
     creatures,
     discovered,
     discoveredShiny,
+    loginBonus,
+    newAchievements,
     serverTime: now,
   };
 }
@@ -138,7 +172,9 @@ export function publicCreature(c, now = Date.now()) {
     rarity: tierOf(c.species),          // rarete d'ACQUISITION (affichage etoiles/couleur)
     tierName: TIER_NAMES[tierOf(c.species)],
     powerRarity: rarityOf(c.species),   // rarete de puissance (stade/evolution)
+    line: sp?.line ?? c.species, // lignee (pour une teinte chromatique coherente entre evolutions)
     fromBreeding: c.from_breeding === 1,
+    favorite: c.favorite === 1,
     parentA: c.parent_a ?? null,
     parentB: c.parent_b ?? null,
     stage: c.stage,
@@ -157,8 +193,19 @@ export function publicCreature(c, now = Date.now()) {
     power: power(c),
     value: creatureValue(c),
   };
-  if (c.stage === 'egg') out.readyAt = c.hatch_at;
-  if (c.stage === 'baby') out.readyAt = c.mature_at;
+  // PV : hp NULL = pleine vie. fainted = KO (hp <= 0).
+  const maxHp = maxHpOf(c);
+  out.maxHp = maxHp;
+  out.hp = c.hp == null ? maxHp : Math.max(0, Math.min(maxHp, c.hp));
+  out.fainted = c.hp != null && c.hp <= 0;
+  if (c.stage === 'egg') {
+    out.readyAt = c.hatch_at;
+    out.totalMs = (c.from_breeding === 1 ? breedingSeconds(c.species) : incubationSeconds(c.species)) * 1000;
+  }
+  if (c.stage === 'baby') {
+    out.readyAt = c.mature_at;
+    out.totalMs = maturationSeconds(c.species) * 1000;
+  }
   if (out.readyAt) out.remainingMs = Math.max(0, out.readyAt - now);
 
   // Evolution disponible ?
@@ -167,6 +214,7 @@ export function publicCreature(c, now = Date.now()) {
     out.evolvesTo = evo;
     out.evolvesToName = SPECIES[evo].name;
     out.evolveLevel = evolveLevelOf(c.species);
+    out.evolveCost = evolveCost(evo);
     out.canEvolve = out.level >= out.evolveLevel;
   }
   return out;

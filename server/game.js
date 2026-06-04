@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 // --- Reglages d'equilibrage (modifiables facilement) ---
 // Temps volontairement courts pour un prototype testable.
 export const BALANCE = {
-  startEssence: 100,
+  startEssence: 300, // de quoi acheter un 1er oeuf sans soft-lock au demarrage
   startSlots: 2,
   maxSlots: 8,
   slotCostBase: 250, // cout du prochain slot = base * (slots possedes ^ 1.6)
@@ -24,12 +24,15 @@ export const BALANCE = {
   // Duree de maturation bebe -> adulte (secondes), multipliee par la rarete.
   maturationBaseSec: 180,
   // Revenu idle d'essence par seconde et par adulte EN PRAIRIE = rarete * ce facteur.
-  essencePerRarityPerSec: 0.02,
+  essencePerRarityPerSec: 0.04, // double : early-game moins lent
   // XP gagnee par seconde par un Glump en prairie (sert a monter de niveau).
   xpPerSec: 1,
   // Super Bonbon (boutique) : donne de l'XP a un Glump contre de l'essence.
   candyCost: 60,
   candyXp: 120,
+  // Soins (boutique) : Potion = PV au max ; Rappel = ranime un Glump KO a la moitie.
+  potionCost: 80,
+  reviveCost: 150,
   // Prairie : emplacements de farm (Glumps qui produisent de l'essence).
   prairieStartSlots: 4,
   prairieMaxSlots: 12,
@@ -38,6 +41,10 @@ export const BALANCE = {
   offlineCapHours: 12,
   shinyChance: 0.002, // 0.2% (~1/500) : chromatique tres tres rare
   shinyChanceWithShinyParent: 0.02, // repro avec un parent shiny : 2%
+  // Shiny hunting : chaque eclosion non-shiny augmente un peu le taux (pitie),
+  // remis a zero quand un shiny apparait. Recompense la perseverance.
+  shinyPityStep: 0.0004, // +0.04% par eclosion non-shiny
+  shinyPityMax: 0.05,    // plafond du bonus de pitie (5%)
   // PvP / Arene
   pvpStartTrophies: 1000,
   pvpWinTrophies: 25,
@@ -78,6 +85,7 @@ for (const [id, sp] of Object.entries(RAW_SPECIES)) {
 }
 
 export const SPECIES_IDS = Object.keys(SPECIES);
+export const SPECIES_COUNT = SPECIES_IDS.length;
 
 // Especes de depart que recoit un nouveau joueur :
 //  1) celles marquees "starter": true dans species.json ;
@@ -92,6 +100,18 @@ export const STARTER_IDS = starters;
 function rand(n) { return Math.floor(Math.random() * n); }
 function pick(arr) { return arr[rand(arr.length)]; }
 export function randomGene() { return rand(BALANCE.maxGene + 1); }
+
+// Genes garantis d'un Glump CHROMATIQUE : 2 stats parfaites (31) + 1 stat >= 15.
+// -> donne des shiny puissants (ex : 31/31/19 ou 31/31/31).
+export function shinyGenes() {
+  const keys = ['gene_force', 'gene_vita', 'gene_speed'];
+  for (let i = keys.length - 1; i > 0; i--) { const j = rand(i + 1); [keys[i], keys[j]] = [keys[j], keys[i]]; }
+  const g = {};
+  g[keys[0]] = BALANCE.maxGene;
+  g[keys[1]] = BALANCE.maxGene;
+  g[keys[2]] = 15 + rand(BALANCE.maxGene - 15 + 1); // 15..31
+  return g;
+}
 
 export function rarityOf(speciesId) {
   return SPECIES[speciesId]?.rarity ?? 1;
@@ -119,6 +139,11 @@ export const NATURES = [
 ];
 export function randomNature() { return NATURES[Math.floor(Math.random() * NATURES.length)].name; }
 export function natureByName(name) { return NATURES.find(n => n.name === name) || NATURES[0]; }
+
+// PV max d'un Glump (doit matcher makeFighter dans battle.js).
+export function maxHpOf(creature) {
+  return effectiveStats(creature).vita * 4 + 30;
+}
 
 export function effectiveStats(creature) {
   const sp = SPECIES[creature.species];
@@ -179,7 +204,7 @@ function rollTier() {
 // --- Reproduction : deux adultes -> un oeuf qui donnera un BEBE (forme de base).
 // On ne donne JAMAIS une forme evoluee : juste un stade 1, dont la rarete
 // d'acquisition est tiree au sort (le joueur le fait evoluer ensuite).
-export function breed(parentA, parentB) {
+export function breed(parentA, parentB, { pityBonus = 0 } = {}) {
   const tier = rollTier();
   const pool = BASE_BY_TIER[tier].length ? BASE_BY_TIER[tier] : BASE_BY_TIER[1];
   const species = pick(pool);
@@ -191,27 +216,27 @@ export function breed(parentA, parentB) {
   };
 
   const parentShiny = parentA.variant === 1 || parentB.variant === 1;
-  const shinyChance = parentShiny ? BALANCE.shinyChanceWithShinyParent : BALANCE.shinyChance;
-  const variant = Math.random() < shinyChance ? 1 : 0;
+  const base = parentShiny ? BALANCE.shinyChanceWithShinyParent : BALANCE.shinyChance;
+  const variant = Math.random() < (base + pityBonus) ? 1 : 0;
 
-  return {
-    species,
+  // Chromatique = genes garantis (2x31 + 1>=15), sinon heritage des parents.
+  const genes = variant === 1 ? shinyGenes() : {
     gene_force: inherit(parentA.gene_force, parentB.gene_force),
     gene_vita:  inherit(parentA.gene_vita,  parentB.gene_vita),
     gene_speed: inherit(parentA.gene_speed, parentB.gene_speed),
-    variant,
-    nature: randomNature(),
   };
+  return { species, ...genes, variant, nature: randomNature() };
 }
 
 // Cree une creature "sauvage" aleatoire (starters, recompenses...).
-export function wildCreature(speciesId, { adult = false } = {}) {
-  const variant = Math.random() < BALANCE.shinyChance ? 1 : 0;
+export function wildCreature(speciesId, { adult = false, pityBonus = 0 } = {}) {
+  const variant = Math.random() < (BALANCE.shinyChance + pityBonus) ? 1 : 0;
+  const genes = variant === 1 ? shinyGenes() : {
+    gene_force: randomGene(), gene_vita: randomGene(), gene_speed: randomGene(),
+  };
   return {
     species: speciesId,
-    gene_force: randomGene(),
-    gene_vita: randomGene(),
-    gene_speed: randomGene(),
+    ...genes,
     variant,
     nature: randomNature(),
     stage: adult ? 'adult' : 'baby',
@@ -262,6 +287,11 @@ export function prairieSlotCost(currentSlots) {
 export function evolveCost(targetSpeciesId) {
   const r = rarityOf(targetSpeciesId);
   return Math.round(80 * Math.pow(r, 1.6));
+}
+
+// Bonus de pitie shiny accumule (plafonne) a partir du compteur d'eclosions non-shiny.
+export function shinyPityBonus(pity) {
+  return Math.min(BALANCE.shinyPityMax, (pity || 0) * BALANCE.shinyPityStep);
 }
 
 // Espece suivante dans la lignee (ou null si forme finale / inconnue).

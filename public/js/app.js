@@ -1,8 +1,18 @@
 // ---------- Client Veilborn ----------
-import { creatureSVG, creatureVisual } from './sprites.js?v=8';
+import { creatureSVG, creatureVisual } from './sprites.js?v=12';
+import { sfx, initAudioOnGesture, audioSettings } from './audio.js?v=1';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
+
+// Demarre l'audio (musique + sons) au 1er clic/touche.
+initAudioOnGesture();
+
+// Son de clic global sur les boutons (delegation).
+document.addEventListener('pointerdown', (e) => {
+  const b = e.target.closest('button, .navbtn, .railbtn, [data-pick], [data-id], .shop-tab, .tab');
+  if (b && !b.disabled) sfx.click();
+}, true);
 
 let STATE = null;        // dernier etat serveur
 let SERVER_SKEW = 0;     // serverTime - Date.now() local, pour des comptes a rebours justes
@@ -27,6 +37,7 @@ function flash(msg, type = 'ok') {
   t.textContent = msg;
   void t.offsetWidth; // relance l'animation
   t.classList.add('show');
+  (type === 'err' ? sfx.error : sfx.success)();
   clearTimeout(flash._t);
   flash._t = setTimeout(() => t.classList.remove('show'), type === 'err' ? 3200 : 2600);
 }
@@ -51,6 +62,55 @@ function confirmDialog(message) {
     yes.addEventListener('click', onYes);
     no.addEventListener('click', onNo);
     ov.addEventListener('click', onNo);
+  });
+}
+
+// Banniere de succes debloque (en haut de l'ecran, avec son).
+function achievementToast(a) {
+  if (!a) return;
+  const el = document.createElement('div');
+  el.className = 'ach-toast';
+  el.innerHTML = `<div class="ach-ic">${a.icon}</div><div><div class="ach-h">Succes debloque !</div><div class="ach-n">${a.name}</div></div>`;
+  document.body.appendChild(el);
+  sfx.success();
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 3600);
+}
+function processNewAch(r) { (r?.newAch || []).forEach(achievementToast); }
+
+// Jolie saisie de texte (remplace prompt()). Renvoie Promise<string|null>.
+function promptDialog(message, value = '', placeholder = '') {
+  return new Promise((resolve) => {
+    $('#confirm-text').textContent = message;
+    const wrap = document.createElement('div');
+    wrap.className = 'prompt-input-wrap';
+    wrap.innerHTML = `<input id="prompt-input" type="text" maxlength="20" placeholder="${placeholder}" />`;
+    $('#confirm-text').after(wrap);
+    const input = wrap.querySelector('#prompt-input');
+    input.value = value;
+    $('#confirm-yes').textContent = 'Valider';
+    $('#confirm-modal').classList.remove('hidden');
+    $('#confirm-overlay').classList.remove('hidden');
+    setTimeout(() => input.focus(), 30);
+    const yes = $('#confirm-yes'), no = $('#confirm-no'), ov = $('#confirm-overlay');
+    const done = (val) => {
+      $('#confirm-modal').classList.add('hidden');
+      $('#confirm-overlay').classList.add('hidden');
+      $('#confirm-yes').textContent = 'Confirmer';
+      wrap.remove();
+      yes.removeEventListener('click', onYes);
+      no.removeEventListener('click', onNo);
+      ov.removeEventListener('click', onNo);
+      input.removeEventListener('keydown', onKey);
+      resolve(val);
+    };
+    const onYes = () => done(input.value.trim());
+    const onNo = () => done(null);
+    const onKey = (e) => { if (e.key === 'Enter') onYes(); if (e.key === 'Escape') onNo(); };
+    yes.addEventListener('click', onYes);
+    no.addEventListener('click', onNo);
+    ov.addEventListener('click', onNo);
+    input.addEventListener('keydown', onKey);
   });
 }
 
@@ -119,6 +179,8 @@ $('#starter-back').addEventListener('click', () => {
 $('#logout').addEventListener('click', async () => {
   await api('/logout', { method: 'POST' });
   clearInterval(pollTimer);
+  cancelAnimationFrame(tickRAF); tickRAF = 0;
+  stopPrairie();
   STATE = null;
   $('#game-screen').classList.add('hidden');
   $('#auth-screen').classList.remove('hidden');
@@ -162,8 +224,8 @@ async function loadDex() {
   for (const [id, sp] of entries) {
     num++;
     const locked = !discovered.has(id);
-    const cr = { species: id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.rarity, shape: sp.shape, hasArt: sp.hasArt, variant: shiny ? 1 : 0 };
-    html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.rarity}">
+    const cr = { species: id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.tier ?? sp.rarity, shape: sp.shape, hasArt: sp.hasArt, line: sp.line, variant: shiny ? 1 : 0 };
+    html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.tier ?? sp.rarity}">
       <div class="dexnum">N°${String(num).padStart(3, '0')}</div>
       <div class="avatar">${creatureVisual(cr, 52)}</div>
       <div class="name">${locked ? '???' : sp.name}</div>
@@ -187,7 +249,8 @@ async function enterGame() {
   await refresh();
   clearInterval(pollTimer);
   pollTimer = setInterval(refresh, 4000); // resync serveur
-  requestAnimationFrame(tickLoop);        // animation des comptes a rebours + essence
+  cancelAnimationFrame(tickRAF);
+  tickRAF = requestAnimationFrame(tickLoop); // animation des comptes a rebours + essence
   if (!localStorage.getItem('veilborn_tuto')) showTuto(0); // tuto au 1er passage
 }
 
@@ -198,6 +261,9 @@ async function refresh() {
     $('#who').textContent = STATE.user.username;
     const sw = $('#settings-who'); if (sw) sw.textContent = STATE.user.username;
     renderAll();
+    // Bonus de connexion quotidien (une fois par jour) + succes nouvellement debloques.
+    if (STATE.loginBonus > 0) flash(`Bonus du jour : +${STATE.loginBonus} ✨ (serie ${STATE.user.loginStreak} 🔥)`);
+    for (const a of (STATE.newAchievements || [])) achievementToast(a);
   } catch (err) {
     // session expiree -> retour login
     clearInterval(pollTimer);
@@ -209,7 +275,7 @@ async function refresh() {
 function serverNow() { return Date.now() + SERVER_SKEW; }
 
 // Boucle locale fluide (essence qui monte, comptes a rebours).
-let lastEssenceShown = 0;
+let tickRAF = 0;
 function tickLoop() {
   if (STATE) {
     // estimation locale de l'essence entre deux refresh
@@ -217,7 +283,7 @@ function tickLoop() {
     $('#essence').textContent = Math.floor(est).toLocaleString('fr-FR');
     updateCountdowns();
   }
-  requestAnimationFrame(tickLoop);
+  tickRAF = requestAnimationFrame(tickLoop);
 }
 
 // ============================================================
@@ -228,7 +294,28 @@ function renderAll() {
   renderIncubators();
   renderBreedingCells();
   renderCollection();
+  updateNavBadges();
   if (prairieActive) { buildMeadow(); renderPrairieSlots(); }
+}
+
+// Pastilles de notification sur les onglets (actions a faire).
+function updateNavBadges() {
+  const now = serverNow();
+  const eggsReady = STATE.creatures.filter(c => c.stage === 'egg' && !c.fromBreeding && (c.readyAt - now) <= 0).length;
+  const bredReady = STATE.creatures.filter(c => c.stage === 'egg' && c.fromBreeding && (c.readyAt - now) <= 0).length;
+  const canEvolve = STATE.creatures.filter(c => c.stage === 'adult' && c.canEvolve).length;
+  const setBadge = (view, n) => {
+    const btn = document.querySelector(`.navbtn[data-view="${view}"]`);
+    if (!btn) return;
+    let b = btn.querySelector('.nav-badge');
+    if (n > 0) {
+      if (!b) { b = document.createElement('span'); b.className = 'nav-badge'; btn.appendChild(b); }
+      b.textContent = n > 9 ? '9+' : n;
+    } else if (b) b.remove();
+  };
+  setBadge('eggs', eggsReady);
+  setBadge('breed', bredReady);
+  setBadge('box', canEvolve);
 }
 
 const RARITY_DOTS = (r) => '★'.repeat(r) + '☆'.repeat(5 - r);
@@ -248,6 +335,7 @@ function eggCellHtml(egg, mystery) {
     <div class="egg">${ready ? '🐣' : '🥚'}</div>
     <div class="sub">${label}</div>
     <div class="countdown" data-ready="${egg.readyAt}">${ready ? 'Eclot !' : ''}</div>
+    <div class="egg-prog"><i data-egg-bar="${egg.id}" data-total="${egg.totalMs || 0}"></i></div>
   </div>`;
 }
 
@@ -283,7 +371,8 @@ function renderBreedingCells() {
       // cellule occupee : parent gauche | oeuf | parent droite
       html += `<div class="breed-cell">
         ${parentBox(find(egg.parentA))}
-        <div class="breed-mid"><div class="breed-egg">🥚</div><div class="countdown" data-ready="${egg.readyAt}"></div></div>
+        <div class="breed-mid"><div class="breed-egg">🥚</div><div class="countdown" data-ready="${egg.readyAt}"></div>
+          <div class="egg-prog"><i data-egg-bar="${egg.id}" data-total="${egg.totalMs || 0}"></i></div></div>
         ${parentBox(find(egg.parentB))}
       </div>`;
     } else if (!composerPlaced) {
@@ -331,35 +420,69 @@ $('#breeding-cells').addEventListener('click', async (e) => {
   } else if (doBreed) {
     const msg = $('#breed-msg'); msg.className = 'msg';
     try {
-      await api('/breed', { method: 'POST', body: { parentA: breedSelA, parentB: breedSelB } });
+      const r = await api('/breed', { method: 'POST', body: { parentA: breedSelA, parentB: breedSelB } });
       breedSelA = null; breedSelB = null;
       msg.textContent = 'Œuf en couvaison dans la cellule ! 🥚'; msg.classList.add('ok');
-      await refresh();
+      await refresh(); processNewAch(r);
     } catch (err) { msg.textContent = err.message; msg.classList.add('err'); }
   }
 });
 
+const collFilter = { search: '', type: '', sort: 'recent', favOnly: false };
+let collSelectMode = false;
+const collSelected = new Set();
+
 function renderCollection() {
-  const owned = STATE.creatures.filter(c => c.stage !== 'egg');
+  let owned = STATE.creatures.filter(c => c.stage !== 'egg');
   $('#coll-count').textContent = owned.length;
-  $('#collection').innerHTML = owned.map(cardHtml).join('') ||
-    '<p class="hint">Aucun Glump. Fais eclore un oeuf !</p>';
+
+  // Remplit la liste des types une seule fois (depuis les Glumps possedes + connus).
+  const typeSel = $('#coll-type');
+  if (typeSel && typeSel.options.length <= 1) {
+    const types = [...new Set(STATE.creatures.map(c => c.type))].filter(Boolean).sort();
+    typeSel.insertAdjacentHTML('beforeend', types.map(t => `<option value="${t}">${t}</option>`).join(''));
+  }
+
+  // Filtres
+  const q = collFilter.search.trim().toLowerCase();
+  if (q) owned = owned.filter(c => (c.nickname || '').toLowerCase().includes(q) || c.speciesName.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
+  if (collFilter.type) owned = owned.filter(c => c.type === collFilter.type);
+  if (collFilter.favOnly) owned = owned.filter(c => c.favorite);
+
+  // Tri
+  const cmp = {
+    recent: (a, b) => b.id - a.id,
+    value: (a, b) => b.value - a.value,
+    level: (a, b) => (b.level || 0) - (a.level || 0),
+    rarity: (a, b) => b.rarity - a.rarity || b.value - a.value,
+    name: (a, b) => (a.nickname || a.speciesName).localeCompare(b.nickname || b.speciesName),
+  }[collFilter.sort] || ((a, b) => b.id - a.id);
+  owned.sort(cmp);
+
+  $('#collection').innerHTML = owned.map(c => cardHtml(c, collSelectMode)).join('') ||
+    '<p class="hint">Aucun Glump ne correspond.</p>';
+  $('#collection').classList.toggle('selecting', collSelectMode);
 }
 
-function cardHtml(c) {
+function cardHtml(c, selecting = false) {
   const baby = c.stage === 'baby';
   const badges = [];
   if (c.variant) badges.push('<span class="badge shiny">SHINY</span>');
   if (baby) badges.push('<span class="badge baby">Bebe</span>');
+  if (c.fainted) badges.push('<span class="badge ko">KO</span>');
   const evo = (c.stage === 'adult' && c.evolvesTo)
     ? (c.canEvolve
-        ? `<button class="btn small evo" data-evolve="${c.id}">⬆ Evoluer → ${c.evolvesToName}</button>`
+        ? `<button class="btn small evo" data-evolve="${c.id}">⬆ Evoluer → ${c.evolvesToName} (✨${c.evolveCost})</button>`
         : `<button class="btn small evo" disabled>⬆ ${c.evolvesToName} · Niv ${c.evolveLevel}</button>`)
     : '';
   const xpPct = Math.min(100, Math.round(100 * (c.xpInto || 0) / (c.xpNext || 1)));
-  return `<div class="card" data-id="${c.id}" data-rarity="${c.rarity}">
+  const hpPct = Math.round(100 * (c.hp ?? c.maxHp) / (c.maxHp || 1));
+  const sel = selecting && collSelected.has(c.id);
+  return `<div class="card ${c.fainted ? 'fainted' : ''} ${c.favorite ? 'fav' : ''} ${sel ? 'sel' : ''}" data-id="${c.id}" data-rarity="${c.rarity}">
+    ${selecting ? `<span class="sel-check">${sel ? '✅' : '⬜'}</span>` : ''}
     ${badges.join('')}
     <span class="badge lvl">Niv ${c.level || 1}</span>
+    <button class="fav-btn ${c.favorite ? 'on' : ''}" data-fav="${c.id}" title="Favori (verrou)">${c.favorite ? '💚' : '🤍'}</button>
     ${avatar(c)}
     <div class="rarity-dots">${RARITY_DOTS(c.rarity)}</div>
     <div class="name">${c.nickname || c.speciesName}</div>
@@ -369,6 +492,7 @@ function cardHtml(c) {
       <span><b>${c.stats.vita}</b>VIT</span>
       <span><b>${c.stats.speed}</b>VIT.</span>
     </div>
+    ${c.stage === 'adult' ? `<div class="hpbar" title="${c.hp ?? c.maxHp}/${c.maxHp} PV"><i style="width:${hpPct}%"></i></div>` : ''}
     <div class="xpbar" title="${c.xpInto || 0}/${c.xpNext || 0} XP"><i style="width:${xpPct}%"></i></div>
     ${evo}
     <div class="card-actions">
@@ -387,19 +511,14 @@ function updateCountdowns() {
     if (rem <= 0) { el.textContent = 'Eclot !'; el.closest('.incubator')?.classList.add('ready'); }
     else el.textContent = fmt(rem);
   });
-  // barres de progression des oeufs
-  for (const egg of eggs()) {
-    const bar = document.querySelector(`[data-egg-bar="${egg.id}"]`);
-    if (!bar) continue;
-    const total = egg.readyAt - (egg.readyAt - durationGuess(egg));
-    const rem = Math.max(0, egg.readyAt - now);
-    const pct = Math.max(0, Math.min(100, 100 * (1 - rem / durationGuess(egg))));
-    bar.style.width = pct + '%';
-  }
-}
-// On ne connait pas la duree totale cote client; on l'estime via la rarete.
-function durationGuess(egg) {
-  return 120000 * egg.rarity; // doit matcher incubationBaseSec*1000
+  // barres de progression des oeufs (la duree totale vient du serveur : data-total)
+  $$('[data-egg-bar]').forEach(bar => {
+    const total = Number(bar.dataset.total) || 0;
+    const ready = Number(bar.closest('.incubator,.breed-mid')?.querySelector('[data-ready]')?.dataset.ready) || 0;
+    if (!total || !ready) { bar.style.width = '0%'; return; }
+    const rem = Math.max(0, ready - now);
+    bar.style.width = Math.max(0, Math.min(100, 100 * (1 - rem / total))) + '%';
+  });
 }
 
 function fmt(ms) {
@@ -439,6 +558,12 @@ function openDetail(id) {
       <span class="iv-val">${g}/31</span><span class="iv-stat">→ <b>${c.stats[key]}</b></span></div>`;
   };
   const xpPct = Math.round(100 * (c.xpInto || 0) / (c.xpNext || 1));
+  const hpPct = Math.round(100 * (c.hp ?? c.maxHp) / (c.maxHp || 1));
+  const hpBlock = c.stage === 'adult' ? `
+    <div class="detail-block"><div class="detail-lbl">Points de vie ${c.fainted ? '— <b style="color:var(--bad)">KO 💀</b>' : ''}</div>
+      <div class="hpbar big"><i style="width:${hpPct}%"></i></div>
+      <div class="detail-sub">${c.hp ?? c.maxHp}/${c.maxHp} PV${c.fainted ? ' — ranime-le avec un Rappel (boutique)' : c.hp < c.maxHp ? ' — soigne-le avec une Potion (boutique)' : ''}</div>
+    </div>` : '';
   $('#detail-name').textContent = (c.variant ? '✨ ' : '') + (c.nickname || c.speciesName);
   $('#detail-body').innerHTML = `
     <div class="detail-top" data-rarity="${c.rarity}">
@@ -452,6 +577,7 @@ function openDetail(id) {
       <div class="detail-sub">${c.xpInto}/${c.xpNext} XP — ${c.inPrairie ? "gagne de l'XP en prairie 🌳" : 'place-le en prairie pour progresser'}</div>
       <button class="btn small primary candy" data-candy="${c.id}" style="margin-top:10px;width:100%;">🍬 Super Bonbon ✨60 (+120 XP)</button>
     </div>
+    ${hpBlock}
     <div class="detail-block"><div class="detail-lbl">Nature</div><div>${natTxt}</div></div>
     <div class="detail-block"><div class="detail-lbl">Genes (IV) → Stats</div>
       ${ivRow('force')}${ivRow('vita')}${ivRow('speed')}
@@ -488,8 +614,47 @@ $('#detail-body').addEventListener('click', async (e) => {
   }
 });
 
+// Barre d'outils de la collection (recherche / filtre / tri / favoris / selection).
+$('#coll-search')?.addEventListener('input', (e) => { collFilter.search = e.target.value; renderCollection(); });
+$('#coll-type')?.addEventListener('change', (e) => { collFilter.type = e.target.value; renderCollection(); });
+$('#coll-sort')?.addEventListener('change', (e) => { collFilter.sort = e.target.value; renderCollection(); });
+$('#coll-fav-only')?.addEventListener('click', () => {
+  collFilter.favOnly = !collFilter.favOnly;
+  $('#coll-fav-only').classList.toggle('on', collFilter.favOnly);
+  $('#coll-fav-only').setAttribute('aria-pressed', String(collFilter.favOnly));
+  renderCollection();
+});
+function setSelectMode(on) {
+  collSelectMode = on; collSelected.clear();
+  $('#coll-bulkbar').classList.toggle('hidden', !on);
+  $('#coll-select').classList.toggle('on', on);
+  updateSelCount(); renderCollection();
+}
+function updateSelCount() { $('#coll-selcount').textContent = `${collSelected.size} sélectionné(s)`; }
+$('#coll-select')?.addEventListener('click', () => setSelectMode(!collSelectMode));
+$('#coll-cancel-sel')?.addEventListener('click', () => setSelectMode(false));
+$('#coll-release-sel')?.addEventListener('click', async () => {
+  if (!collSelected.size) { flash('Rien de sélectionné.', 'err'); return; }
+  if (!await confirmDialog(`Relâcher ${collSelected.size} Glump(s) ? (favoris ignorés)`)) return;
+  try {
+    const r = await api('/creature/release-many', { method: 'POST', body: { ids: [...collSelected] } });
+    flash(`${r.released} relâché(s) · +${r.refund} ✨`);
+    setSelectMode(false); await refresh();
+  } catch (err) { flash(err.message, 'err'); }
+});
+
 $('#collection').addEventListener('click', async (e) => {
   const btn = e.target.closest('button');
+  // Mode selection : clic sur une carte = (de)selectionne (sauf bouton favori)
+  if (collSelectMode && !(btn && btn.dataset.fav)) {
+    const card = e.target.closest('.card');
+    if (card) {
+      const id = Number(card.dataset.id);
+      if (collSelected.has(id)) collSelected.delete(id); else collSelected.add(id);
+      updateSelCount(); renderCollection();
+    }
+    return;
+  }
   if (!btn) { // clic sur la carte (hors bouton) -> fiche detaillee
     const card = e.target.closest('.card');
     if (card) openDetail(Number(card.dataset.id));
@@ -498,22 +663,29 @@ $('#collection').addEventListener('click', async (e) => {
   const rel = btn?.dataset.release;
   const ren = btn?.dataset.rename;
   const evo = btn?.dataset.evolve;
+  const fav = btn?.dataset.fav;
+  if (fav) {
+    try { const r = await api('/creature/favorite', { method: 'POST', body: { id: Number(fav) } }); await refresh(); flash(r.favorite ? 'Ajoute aux favoris 💚' : 'Retire des favoris'); }
+    catch (err) { flash(err.message, 'err'); }
+    return;
+  }
   if (evo) {
     const c = STATE.creatures.find(x => x.id === Number(evo));
     if (c && !await confirmDialog(`Faire evoluer ${c.nickname || c.speciesName} en ${c.evolvesToName} pour ${c.evolveCost} essence ?`)) return;
     try {
       const r = await api('/creature/evolve', { method: 'POST', body: { id: Number(evo) } });
       await refresh();
-      flash(`✨ ${r.fromName} a evolue en ${r.creature.speciesName} !`);
+      flash(`✨ ${r.fromName} a evolue en ${r.creature.speciesName} !`); processNewAch(r);
     } catch (err) { flash(err.message, "err"); }
   } else if (rel) {
     if (!await confirmDialog('Relacher ce Glump contre de l\'essence ?')) return;
     try { await api('/creature/release', { method: 'POST', body: { id: Number(rel) } }); await refresh(); }
     catch (err) { flash(err.message, "err"); }
   } else if (ren) {
-    const nickname = prompt('Nouveau surnom (vide pour retirer) :');
+    const cur = STATE.creatures.find(x => x.id === Number(ren));
+    const nickname = await promptDialog('Nouveau surnom (vide pour retirer) :', cur?.nickname || '', cur?.speciesName || '');
     if (nickname === null) return;
-    try { await api('/creature/rename', { method: 'POST', body: { id: Number(ren), nickname } }); await refresh(); }
+    try { await api('/creature/rename', { method: 'POST', body: { id: Number(ren), nickname } }); await refresh(); flash('Surnom mis a jour'); }
     catch (err) { flash(err.message, "err"); }
   }
 });
@@ -634,10 +806,12 @@ function closePicker() {
   pickerOnPick = null;
 }
 function pickCardHtml(c) {
-  return `<div class="card" data-pick="${c.id}" data-rarity="${c.rarity}">
+  const pct = Math.round(100 * (c.hp ?? c.maxHp) / (c.maxHp || 1));
+  return `<div class="card ${c.fainted ? 'fainted' : ''}" data-pick="${c.id}" data-rarity="${c.rarity}">
     ${avatar(c)}
     <div class="name">${c.nickname || c.speciesName}</div>
-    <div class="sub">${c.type} · P${c.power}</div>
+    <div class="sub">${c.fainted ? '💀 KO' : c.type + ' · P' + c.power}</div>
+    <div class="hpbar"><i style="width:${pct}%"></i></div>
   </div>`;
 }
 
@@ -743,16 +917,86 @@ function prairieLoop() {
 // ============================================================
 //  Drawer lateral : evenements / boutique / reglages
 // ============================================================
-const DRAWER_TITLES = { events: '🎉 Evenements', shop: '🛒 Boutique', settings: '⚙️ Reglages', social: '👥 Social' };
+const DRAWER_TITLES = { progress: '🏅 Progression', shop: '🛒 Boutique', settings: '⚙️ Reglages', social: '👥 Social' };
 function openDrawer(type) {
   $('#drawer-title').textContent = DRAWER_TITLES[type] || '';
   $$('.drawer-section').forEach(s => s.classList.add('hidden'));
   const sec = $('#drawer-' + type);
   if (sec) sec.classList.remove('hidden');
   if (type === 'social') loadSocial();
+  if (type === 'settings') syncAudioToggles();
+  if (type === 'progress') loadProgress();
   $('#drawer').classList.remove('hidden');
   $('#drawer-overlay').classList.remove('hidden');
 }
+
+// ---------- Progression : quetes du jour, paliers dex, succes ----------
+async function loadProgress() {
+  let p;
+  try { p = await api('/progress'); } catch { return; }
+  $('#prog-streak').innerHTML = `🔥 Série de connexion : <b>${p.streak} jour${p.streak > 1 ? 's' : ''}</b>`;
+  // Quetes du jour
+  $('#prog-daily').innerHTML = p.daily.quests.map(q => {
+    const pct = Math.min(100, Math.round(100 * q.progress / q.goal));
+    const action = q.claimed
+      ? `<span class="q-claimed">✓ Reçu</span>`
+      : q.done
+        ? `<button class="btn small primary" data-claim-daily="${q.id}">Récupérer ✨${q.reward}</button>`
+        : `<span class="q-prog">${q.progress}/${q.goal}</span>`;
+    return `<div class="quest ${q.done ? 'done' : ''}">
+      <div class="q-ic">${q.icon}</div>
+      <div class="q-main"><div class="q-text">${q.text}</div>
+        <div class="q-bar"><i style="width:${pct}%"></i></div></div>
+      <div class="q-act">${action}</div>
+    </div>`;
+  }).join('');
+  // Paliers dex
+  $('#prog-dex').innerHTML = `<div class="dex-prog-head">${p.dex.discovered}/${p.dex.total} espèces découvertes</div>` +
+    p.dex.milestones.map(m => {
+      const reward = `✨${m.essence.toLocaleString('fr-FR')}${m.prairie ? ' +🌳' : ''}${m.cell ? ' +💞' : ''}`;
+      const state = m.claimed ? `<span class="q-claimed">✓</span>`
+        : m.claimable ? `<button class="btn small primary" data-claim-dex="${m.count}">Récupérer</button>`
+        : `<span class="q-prog">${p.dex.discovered}/${m.count}</span>`;
+      return `<div class="quest ${m.reached ? 'done' : ''}">
+        <div class="q-ic">${m.count >= p.dex.total ? '👑' : '📖'}</div>
+        <div class="q-main"><div class="q-text">${m.count} espèces — ${reward}</div></div>
+        <div class="q-act">${state}</div>
+      </div>`;
+    }).join('');
+  // Succes
+  $('#prog-ach').innerHTML = p.achievements.map(a => `
+    <div class="ach ${a.unlocked ? 'on' : ''}" title="${a.desc}">
+      <div class="ach-icon">${a.unlocked ? a.icon : '🔒'}</div>
+      <div class="ach-name">${a.name}</div>
+    </div>`).join('');
+}
+$('#drawer-progress')?.addEventListener('click', async (e) => {
+  const cd = e.target.closest('[data-claim-daily]');
+  const cx = e.target.closest('[data-claim-dex]');
+  if (cd) {
+    try { const r = await api('/daily/claim', { method: 'POST', body: { id: cd.dataset.claimDaily } }); flash(`Quête terminée : +${r.reward} ✨`); await refresh(); loadProgress(); }
+    catch (err) { flash(err.message, 'err'); }
+  } else if (cx) {
+    try { const r = await api('/dex/claim', { method: 'POST', body: { count: Number(cx.dataset.claimDex) } }); flash(`Palier réclamé : +${r.essence} ✨ ${r.extra || ''}`); await refresh(); loadProgress(); }
+    catch (err) { flash(err.message, 'err'); }
+  }
+});
+
+// ---------- Reglages audio (sons + musique) ----------
+function syncAudioToggles() {
+  $('#toggle-sfx')?.classList.toggle('on', audioSettings.sfx);
+  $('#toggle-music')?.classList.toggle('on', audioSettings.music);
+}
+$('#toggle-sfx')?.addEventListener('click', () => {
+  const on = audioSettings.toggleSfx();
+  $('#toggle-sfx').classList.toggle('on', on);
+  flash(on ? 'Sons actives 🔊' : 'Sons coupes 🔇');
+});
+$('#toggle-music')?.addEventListener('click', () => {
+  const on = audioSettings.toggleMusic();
+  $('#toggle-music').classList.toggle('on', on);
+  flash(on ? 'Musique activee 🎵' : 'Musique coupee 🔇');
+});
 
 // ---------- Social : amis & code ami ----------
 async function loadSocial() {
@@ -763,10 +1007,35 @@ async function loadSocial() {
     $('#friends-list').innerHTML = friends.map(f => `
       <div class="friend-row">
         <span class="friend-name">${f.username}</span>
+        <button class="btn small" data-trade-friend="${f.id}" data-name="${f.username}">🔄</button>
         <button class="btn small" data-visit-friend="${f.id}" data-name="${f.username}">Visiter</button>
         <button class="btn small" data-remove-friend="${f.id}">✕</button>
       </div>`).join('') || '<p class="hint">Aucun ami pour l\'instant. Ajoute un code !</p>';
+    loadTrades();
   } catch (err) { $('#friends-list').innerHTML = `<p class="hint">${err.message}</p>`; }
+}
+
+async function loadTrades() {
+  try {
+    const { incoming, outgoing } = await api('/trade/list');
+    const row = (t, dir) => {
+      const c = t.creature;
+      const who = dir === 'in' ? t.fromName : t.toName;
+      const sprite = c ? creatureVisual(c, 40) : '❔';
+      const name = c ? (c.nickname || c.speciesName) : '???';
+      const act = dir === 'in'
+        ? `<button class="btn small primary" data-trade-accept="${t.id}">Accepter</button>
+           <button class="btn small" data-trade-cancel="${t.id}">Refuser</button>`
+        : `<button class="btn small" data-trade-cancel="${t.id}">Annuler</button>`;
+      return `<div class="trade-row">
+        <div class="trade-sprite">${sprite}</div>
+        <div class="trade-info"><b>${name}</b><span>${dir === 'in' ? 'de ' + who : 'à ' + who}</span></div>
+        <div class="trade-act">${act}</div>
+      </div>`;
+    };
+    const html = [...incoming.map(t => row(t, 'in')), ...outgoing.map(t => row(t, 'out'))].join('');
+    $('#trades-list').innerHTML = html || '<p class="hint">Aucun échange en cours. Clique sur 🔄 à côté d\'un ami pour proposer un Glump.</p>';
+  } catch { $('#trades-list').innerHTML = ''; }
 }
 $('#copy-code').addEventListener('click', () => {
   const code = $('#my-code').textContent;
@@ -786,13 +1055,37 @@ $('#add-friend-btn').addEventListener('click', async () => {
 $('#friends-list').addEventListener('click', async (e) => {
   const visit = e.target.closest('[data-visit-friend]');
   const rem = e.target.closest('[data-remove-friend]');
-  if (visit) {
+  const trade = e.target.closest('[data-trade-friend]');
+  if (trade) {
+    const toUser = Number(trade.dataset.tradeFriend);
+    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite);
+    if (!mine.length) { flash('Aucun Glump échangeable (les favoris sont verrouillés).', 'err'); return; }
+    openPicker(`Proposer un Glump à ${trade.dataset.name}`, mine, pickCardHtml, async (id) => {
+      try { await api('/trade/propose', { method: 'POST', body: { toUser, creatureId: id } }); closePicker(); flash('Proposition envoyée 🔄'); loadTrades(); }
+      catch (err) { flash(err.message, 'err'); }
+    });
+  } else if (visit) {
     closeDrawer();
     visitFarm(Number(visit.dataset.visitFriend), visit.dataset.name);
   } else if (rem) {
     if (!await confirmDialog('Retirer cet ami ?')) return;
     try { await api('/social/remove', { method: 'POST', body: { friendId: Number(rem.dataset.removeFriend) } }); loadSocial(); }
     catch (err) { flash(err.message, "err"); }
+  }
+});
+$('#trades-list').addEventListener('click', async (e) => {
+  const acc = e.target.closest('[data-trade-accept]');
+  const can = e.target.closest('[data-trade-cancel]');
+  if (acc) {
+    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite);
+    if (!mine.length) { flash('Aucun Glump à offrir en retour.', 'err'); return; }
+    openPicker('Offrir lequel en retour ?', mine, pickCardHtml, async (id) => {
+      try { const r = await api('/trade/accept', { method: 'POST', body: { id: Number(acc.dataset.tradeAccept), creatureId: id } }); closePicker(); flash(`Échange réussi ! Reçu : ${r.received.speciesName} 🎉`); await refresh(); loadSocial(); }
+      catch (err) { flash(err.message, 'err'); }
+    });
+  } else if (can) {
+    try { await api('/trade/cancel', { method: 'POST', body: { id: Number(can.dataset.tradeCancel) } }); loadTrades(); }
+    catch (err) { flash(err.message, 'err'); }
   }
 });
 
@@ -826,12 +1119,22 @@ function renderShopEgg() {
     </button>`).join('') + `</div>`;
 }
 function renderShopItem() {
-  const c = shopData.candy || {};
+  const c = shopData.candy || {}, po = shopData.potion || {}, rv = shopData.revive || {};
   $('#shop-item').innerHTML = `
     <div class="shop-item">
       <div class="shop-egg">🍬</div>
       <div class="shop-info"><div class="shop-name">Super Bonbon</div><div class="shop-sub">+${c.xp} XP à un Glump</div></div>
       <button class="btn small primary" id="buy-candy">✨ ${c.cost}</button>
+    </div>
+    <div class="shop-item">
+      <div class="shop-egg">❤️</div>
+      <div class="shop-info"><div class="shop-name">Potion</div><div class="shop-sub">Restaure tous les PV d'un Glump</div></div>
+      <button class="btn small primary" id="buy-potion">✨ ${po.cost}</button>
+    </div>
+    <div class="shop-item">
+      <div class="shop-egg">✨</div>
+      <div class="shop-info"><div class="shop-name">Rappel</div><div class="shop-sub">Ranime un Glump KO (50% PV)</div></div>
+      <button class="btn small primary" id="buy-revive">✨ ${rv.cost}</button>
     </div>`;
 }
 function renderShopBonus() {
@@ -845,14 +1148,32 @@ function renderShopBonus() {
 $('#shop-modal').addEventListener('click', async (e) => {
   const eggTile = e.target.closest('[data-buy-egg-type]');
   if (eggTile) {
-    try { await api('/shop/buy-egg', { method: 'POST', body: { type: eggTile.dataset.buyEggType } }); flash(`Œuf ${eggTile.dataset.buyEggType} acheté ! 🥚`); await refresh(); }
+    try { const r = await api('/shop/buy-egg', { method: 'POST', body: { type: eggTile.dataset.buyEggType } }); flash(`Œuf ${eggTile.dataset.buyEggType} acheté ! 🥚`); await refresh(); processNewAch(r); }
     catch (err) { flash(err.message, "err"); }
     return;
   }
   if (e.target.closest('#buy-candy')) {
     const glumps = STATE.creatures.filter(c => c.stage !== 'egg');
     openPicker('Donner un Super Bonbon à…', glumps, pickCardHtml, async (id) => {
-      try { const r = await api('/creature/candy', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`+${r.xp} XP 🍬`); }
+      try { const r = await api('/creature/candy', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`+${r.xp} XP 🍬`); processNewAch(r); }
+      catch (err) { flash(err.message, "err"); }
+    });
+    return;
+  }
+  if (e.target.closest('#buy-potion')) {
+    const blesses = STATE.creatures.filter(c => c.stage === 'adult' && !c.fainted && c.hp < c.maxHp);
+    if (!blesses.length) { flash('Aucun Glump blessé.', 'err'); return; }
+    openPicker('Soigner quel Glump ?', blesses, pickCardHtml, async (id) => {
+      try { await api('/heal/potion', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash('PV restaurés ❤️'); }
+      catch (err) { flash(err.message, "err"); }
+    });
+    return;
+  }
+  if (e.target.closest('#buy-revive')) {
+    const kos = STATE.creatures.filter(c => c.fainted);
+    if (!kos.length) { flash('Aucun Glump KO.', 'err'); return; }
+    openPicker('Ranimer quel Glump ?', kos, pickCardHtml, async (id) => {
+      try { await api('/heal/revive', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash('Glump ranimé ✨'); }
       catch (err) { flash(err.message, "err"); }
     });
     return;
@@ -889,14 +1210,15 @@ $('#drawer-overlay').addEventListener('click', closeDrawer);
 //  Tutoriel
 // ============================================================
 const TUTO = [
-  { icon: '🥚', title: 'Bienvenue dans Veilborn !', text: "Tu eleves des creatures appelees Glumps : fais-les eclore, grandir, evoluer, et complete ton Glumpdex de 300 Glumps. Tu demarres avec ton starter.", view: 'box' },
-  { icon: '📦', title: 'Collection', text: "Voici tous tes Glumps. Clique sur l'un d'eux pour sa fiche (IV, stats, nature). Tu peux les renommer, les relacher, ou les faire evoluer une fois le niveau requis atteint.", view: 'box' },
-  { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs.", view: 'eggs' },
-  { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare.", view: 'breed' },
-  { icon: '🌳', title: 'Prairie', text: "Place tes Glumps ici : ce sont eux qui farment l'essence ✨ (la monnaie du jeu). Max 4 emplacements au depart, achetables. Choisis tes meilleurs farmeurs !", view: 'prairie' },
-  { icon: '📖', title: 'Glumpdex', text: "Les 300 Glumps numerotes, a la suite. Ceux que tu n'as pas encore eus sont en silhouette. Objectif : tous les decouvrir !", view: 'dex' },
-  { icon: '🏆', title: 'Rang & Visite', text: "Compare la valeur de ta collection aux autres eleveurs (Rang), et visite leurs elevages (onglet Visite).", view: 'leaderboard' },
-  { icon: '🚀', title: "C'est parti !", text: "L'essence monte toute seule tant que tu as des Glumps en prairie. Reviens faire eclore, reproduire et evoluer. Tu peux revoir ce tuto dans Reglages ⚙️.", view: 'box' },
+  { icon: '🥚', title: 'Bienvenue dans Veilborn !', text: "Tu eleves des creatures appelees Glumps : fais-les eclore, grandir, evoluer, et complete ton Glumpdex de 300 Glumps. Tu demarres avec ton starter.", view: 'box', color: '#6c8cff' },
+  { icon: '📦', title: 'Collection', text: "Voici tous tes Glumps. Clique sur l'un d'eux pour sa fiche (IV, stats, nature, PV). Tu peux les renommer, les relacher, ou les faire evoluer une fois le niveau requis atteint.", view: 'box', color: '#34e1c4' },
+  { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs a la fois.", view: 'eggs', color: '#ffb347' },
+  { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare. Debloque des cellules pour reproduire en parallele.", view: 'breed', color: '#ff7bd5' },
+  { icon: '🌳', title: 'Prairie', text: "Place tes Glumps ici : ce sont eux qui farment l'essence ✨ (la monnaie du jeu). Plus ils montent de niveau, plus ils rapportent. Choisis tes meilleurs farmeurs !", view: 'prairie', color: '#51d88a' },
+  { icon: '📖', title: 'Glumpdex', text: "Les 300 Glumps numerotes, a la suite. Ceux que tu n'as pas encore eus sont en silhouette. Dex normal et dex chromatique ✨ separes. Objectif : tous les decouvrir !", view: 'dex', color: '#9a6cff' },
+  { icon: '⚔️', title: 'Arene (PvP)', text: "Forme une equipe (3 Glumps) et combat au tour par tour : choisis tes attaques ! Frappe sure, deflagration risquee, ou inflige un statut (brulure, gel, poison, paralysie). Les types comptent. Un Glump KO le reste — Rappel + Potion en boutique.", view: 'arena', color: '#ff6b7d' },
+  { icon: '👥', title: 'Rang & Social', text: "Compare la valeur de ta collection au classement (onglet Rang), ajoute des amis avec ton code ami (panneau Social 👥) et visite leurs elevages.", view: 'leaderboard', color: '#ffd34d' },
+  { icon: '🚀', title: "C'est parti !", text: "L'essence monte toute seule tant que tu as des Glumps en prairie. Reviens faire eclore, reproduire, evoluer et combattre. Tu peux revoir ce tuto, couper les sons ou la musique dans Reglages ⚙️.", view: 'box', color: '#6c8cff' },
 ];
 let tutoStep = 0;
 function showTuto(step = 0) { tutoStep = step; renderTuto(); $('#tutorial').classList.remove('hidden'); $('#tuto-overlay').classList.remove('hidden'); }
@@ -904,12 +1226,20 @@ function hideTuto() { $('#tutorial').classList.add('hidden'); $('#tuto-overlay')
 function renderTuto() {
   const s = TUTO[tutoStep];
   if (s.view) switchView(s.view); // on navigue en arriere-plan vers l'onglet decrit
+  const card = $('#tutorial');
+  const col = s.color || '#6c8cff';
+  card.style.setProperty('--tuto-col', col);
   $('#tuto-icon').textContent = s.icon;
+  $('#tuto-step').textContent = `Etape ${tutoStep + 1}/${TUTO.length}`;
   $('#tuto-title').textContent = s.title;
   $('#tuto-text').textContent = s.text;
+  $('#tuto-bar').style.width = Math.round(((tutoStep + 1) / TUTO.length) * 100) + '%';
   $('#tuto-dots').innerHTML = TUTO.map((_, i) => `<span class="dot ${i === tutoStep ? 'on' : ''}"></span>`).join('');
   $('#tuto-prev').style.visibility = tutoStep === 0 ? 'hidden' : 'visible';
   $('#tuto-next').textContent = tutoStep === TUTO.length - 1 ? 'Terminer ✓' : 'Suivant →';
+  // petite animation d'entree a chaque etape
+  card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
+  sfx.pop();
 }
 $('#tuto-next').addEventListener('click', () => { if (tutoStep < TUTO.length - 1) { tutoStep++; renderTuto(); } else hideTuto(); });
 $('#tuto-prev').addEventListener('click', () => { if (tutoStep > 0) { tutoStep--; renderTuto(); } });
@@ -922,10 +1252,14 @@ $('#replay-tuto').addEventListener('click', () => { closeDrawer(); showTuto(0); 
 // ============================================================
 let pvpTeam = [];        // ids de mon equipe (max 3)
 let pvpOpponent = null;
+function savePvpTeam() { try { localStorage.setItem('veilborn_pvp', JSON.stringify(pvpTeam)); } catch {} }
+function loadPvpTeam() { try { return JSON.parse(localStorage.getItem('veilborn_pvp') || '[]'); } catch { return []; } }
 
 async function loadArena() {
   $('#pvp-trophies').textContent = `🏆 ${STATE.user.pvpTrophies}`;
-  pvpTeam = pvpTeam.filter(id => STATE.creatures.some(c => c.id === id && c.stage === 'adult'));
+  if (!pvpTeam.length) pvpTeam = loadPvpTeam(); // restaure l'equipe sauvegardee
+  pvpTeam = pvpTeam.filter(id => STATE.creatures.some(c => c.id === id && c.stage === 'adult' && !c.fainted));
+  savePvpTeam();
   renderArenaTeam();
   $('#pvp-opponent').innerHTML = '';
   pvpOpponent = null;
@@ -944,12 +1278,13 @@ function renderArenaTeam() {
 $('#pvp-team').addEventListener('click', (e) => {
   const rm = e.target.closest('[data-team-rm]');
   const add = e.target.closest('[data-team-add]');
-  if (rm) { pvpTeam = pvpTeam.filter(id => id !== Number(rm.dataset.teamRm)); renderArenaTeam(); }
+  if (rm) { pvpTeam = pvpTeam.filter(id => id !== Number(rm.dataset.teamRm)); savePvpTeam(); renderArenaTeam(); }
   else if (add) {
-    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !pvpTeam.includes(c.id));
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !pvpTeam.includes(c.id) && !c.fainted);
+    if (!avail.length) { flash('Aucun Glump disponible (KO ?). Soigne-les en boutique.', 'err'); return; }
     openPicker('Ajouter à ton équipe', avail, pickCardHtml, (id) => {
       if (pvpTeam.length < 3 && !pvpTeam.includes(id)) pvpTeam.push(id);
-      closePicker(); renderArenaTeam();
+      savePvpTeam(); closePicker(); renderArenaTeam();
     });
   }
 });
@@ -976,9 +1311,8 @@ $('#pvp-opponent').addEventListener('click', async (e) => {
   if (!pvpTeam.length) { flash("Compose ton équipe d'abord !", 'err'); return; }
   if (!pvpOpponent) return;
   try {
-    const res = await api('/pvp/fight', { method: 'POST', body: { opponentId: pvpOpponent.id, team: pvpTeam } });
-    await playBattle(res);
-    await refresh(); loadArena();
+    const init = await api('/pvp/start', { method: 'POST', body: { opponentId: pvpOpponent.id, team: pvpTeam } });
+    openBattle(init);
   } catch (err) { flash(err.message, 'err'); }
 });
 async function loadPvpRanking() {
@@ -990,57 +1324,130 @@ async function loadPvpRanking() {
   } catch { $('#pvp-ranking').innerHTML = ''; }
 }
 
-// --- Animation du combat ---
-function battleCardHtml(f, side, i) {
-  return `<div class="bf" id="bf-${side}-${i}">
-    <div class="bf-sprite">${creatureVisual(f, 52)}</div>
-    <div class="bf-hpbar"><i id="hp-${side}-${i}" style="width:100%"></i></div>
+// --- Combat tour-par-tour interactif ---
+const STATUS_ICON = { burn: '🔥', poison: '🟣', para: '⚡', freeze: '❄️', weaken: '💀' };
+let bState = null, bBusy = false;
+
+function benchHtml(team, activeIdx) {
+  return team.map((f, i) => i === activeIdx ? '' :
+    `<span class="bench-dot ${f.hp <= 0 ? 'ko' : ''}" title="${f.name} ${f.hp}/${f.maxHp}">${f.hp <= 0 ? '✖' : '●'}</span>`).join('');
+}
+function bActiveHtml(f, id) {
+  if (!f) return `<div class="b-fighter empty" id="${id}"></div>`;
+  const pct = Math.round(100 * f.hp / (f.maxHp || 1));
+  const st = f.status ? `<span class="bf-status">${STATUS_ICON[f.status] || ''}</span>` : '';
+  return `<div class="b-fighter ${f.hp <= 0 ? 'ko' : ''}" id="${id}" data-rarity="${f.rarity}">
+    <div class="bf-head"><span class="bf-name">${f.name}</span><span class="bf-lvl">Niv ${f.level}</span>${st}</div>
+    <div class="bf-sprite">${creatureVisual(f, 96)}</div>
+    <div class="bf-hpwrap"><div class="bf-hpbar"><i id="${id}-hp" style="width:${pct}%"></i></div>
+      <span class="bf-hpval" id="${id}-val">${f.hp}/${f.maxHp}</span></div>
   </div>`;
 }
-function playBattle(res) {
+function moveBtnsHtml(moves) {
+  return moves.map(m => {
+    const meta = m.kind === 'attack' ? `⚔ ${Math.round(m.power * 100)}%`
+      : m.kind === 'status' ? `${STATUS_ICON[m.status] || ''} statut`
+      : m.kind === 'heal' ? '💚 soin' : '🛡️ garde';
+    return `<button class="mv-btn k-${m.kind}" data-move="${m.id}">
+      <span class="mv-name">${m.name}</span>
+      <span class="mv-meta">${meta} · ${Math.round(m.acc * 100)}%</span></button>`;
+  }).join('');
+}
+function openBattle(init) {
+  bState = init; bBusy = false;
+  $('#battle-modal').classList.remove('hidden');
+  $('#battle-overlay').classList.remove('hidden');
+  $('#battle-result').classList.add('hidden');
+  $('#battle-close').classList.add('hidden');
+  $('#battle-title').textContent = `⚔️ vs ${init.oppName}`;
+  renderBattle();
+}
+function renderBattle() {
+  const s = bState;
+  $('#b-opp-active').innerHTML = bActiveHtml(s.opp[s.activeOpp], 'b-opp');
+  $('#b-me-active').innerHTML = bActiveHtml(s.me[s.activeMe], 'b-me');
+  $('#b-opp-bench').innerHTML = benchHtml(s.opp, s.activeOpp);
+  $('#b-me-bench').innerHTML = benchHtml(s.me, s.activeMe);
+  $('#battle-moves').innerHTML = s.over ? '' : moveBtnsHtml(s.myMoves);
+}
+// Anime un PV : tween de la barre + popup chiffre.
+function animateHp(side, hp, maxHp, popup, cls) {
+  const bar = document.getElementById(`${side}-hp`);
+  const val = document.getElementById(`${side}-val`);
+  const card = document.getElementById(side);
+  if (bar) bar.style.width = Math.max(0, Math.round(100 * hp / (maxHp || 1))) + '%';
+  if (val) val.textContent = `${hp}/${maxHp}`;
+  if (card && popup != null) {
+    card.classList.add('hit'); setTimeout(() => card.classList.remove('hit'), 200);
+    const d = document.createElement('div');
+    d.className = 'dmg-pop ' + (cls || '');
+    d.textContent = popup;
+    card.appendChild(d); setTimeout(() => d.remove(), 700);
+  }
+}
+function logBattle(msg) { $('#battle-log').textContent = msg; }
+
+// Joue les events d'un tour sequentiellement, puis re-rend l'etat.
+function animateEvents(events) {
   return new Promise((resolve) => {
-    $('#battle-modal').classList.remove('hidden');
-    $('#battle-overlay').classList.remove('hidden');
-    $('#battle-result').classList.add('hidden');
-    $('#battle-close').classList.add('hidden');
-    $('#battle-title').textContent = `⚔️ vs ${res.oppName}`;
-    $('#battle-opp').innerHTML = res.oppTeam.map((f, i) => battleCardHtml(f, 'b', i)).join('');
-    $('#battle-me').innerHTML = res.myTeam.map((f, i) => battleCardHtml(f, 'a', i)).join('');
-    const maxHp = { a: res.myTeam.map(f => f.maxHp), b: res.oppTeam.map(f => f.maxHp) };
-    let k = 0;
-    const finish = () => {
-      const win = res.winner === 'me';
-      const rb = $('#battle-result');
-      rb.className = 'battle-result ' + (win ? 'win' : 'lose');
-      rb.innerHTML = `<div class="br-title">${win ? '🏆 Victoire !' : '💀 Défaite'}</div>
-        <div class="br-rewards">${win ? `+${res.rewards.trophies} 🏆 · +${res.rewards.essence} ✨ · +${res.rewards.xp} XP` : `${res.rewards.trophies} 🏆 · +${res.rewards.xp} XP`}</div>`;
-      rb.classList.remove('hidden');
-      $('#battle-close').classList.remove('hidden');
-      resolve();
+    const s = bState;
+    const maxOf = (side) => side === 'a' ? (s.me[s.activeMe]?.maxHp || 1) : (s.opp[s.activeOpp]?.maxHp || 1);
+    const domOf = (side) => side === 'a' ? 'b-me' : 'b-opp';
+    let i = 0;
+    const next = () => {
+      if (i >= events.length) return resolve();
+      const ev = events[i++];
+      let delay = 520;
+      if (ev.t === 'hit') {
+        const tgtSide = ev.side === 'a' ? 'b' : 'a';
+        animateHp(domOf(tgtSide), ev.hp, maxOf(tgtSide), '-' + ev.dmg + (ev.crit ? ' CRIT' : ''), ev.crit ? 'crit' : ev.mult > 1 ? 'super' : ev.mult < 1 ? 'weak' : '');
+        logBattle(`${ev.name} utilise ${ev.move}${ev.mult > 1 ? ' — efficace !' : ev.mult < 1 ? ' — peu efficace…' : ''}`);
+        if (document.getElementById(domOf(ev.side))) { document.getElementById(domOf(ev.side)).classList.add('atk'); setTimeout(() => document.getElementById(domOf(ev.side))?.classList.remove('atk'), 180); }
+      } else if (ev.t === 'miss') { logBattle(`${ev.name} rate ${ev.move} !`); delay = 420; }
+      else if (ev.t === 'dot') { animateHp(domOf(ev.side), ev.hp, maxOf(ev.side), '-' + ev.dmg, 'dot'); logBattle(`${ev.name} souffre (${STATUS_ICON[ev.status] || ''}).`); }
+      else if (ev.t === 'heal') { animateHp(domOf(ev.side), ev.hp, maxOf(ev.side), '+' + ev.amount, 'heal'); logBattle(`${ev.name} récupère des PV 💚.`); }
+      else if (ev.t === 'status') { logBattle(`${ev.name} est affecté ${STATUS_ICON[ev.status] || ''} !`); delay = 460; }
+      else if (ev.t === 'guard') { logBattle(`${ev.name} se met en garde 🛡️.`); delay = 380; }
+      else if (ev.t === 'para') { logBattle(`${ev.name} est paralysé ⚡, il ne peut pas agir !`); }
+      else if (ev.t === 'frozen') { logBattle(`${ev.name} est gelé ❄️ !`); }
+      else if (ev.t === 'thaw') { logBattle(`${ev.name} dégèle !`); delay = 380; }
+      else if (ev.t === 'cured') { logBattle(`${ev.name} récupère.`); delay = 360; }
+      setTimeout(next, delay);
     };
-    const step = () => {
-      if (k >= res.log.length) return finish();
-      const ev = res.log[k++];
-      const tSide = ev.side === 'a' ? 'b' : 'a';
-      const bar = document.getElementById(`hp-${tSide}-${ev.ti}`);
-      const card = document.getElementById(`bf-${tSide}-${ev.ti}`);
-      const att = document.getElementById(`bf-${ev.side}-${ev.ai}`);
-      if (bar) bar.style.width = Math.round(100 * ev.hp / (maxHp[tSide][ev.ti] || 1)) + '%';
-      if (att) { att.classList.add('atk'); setTimeout(() => att.classList.remove('atk'), 180); }
-      if (card) {
-        card.classList.add('hit'); setTimeout(() => card.classList.remove('hit'), 180);
-        const d = document.createElement('div');
-        d.className = 'dmg-pop' + (ev.mult > 1 ? ' super' : ev.mult < 1 ? ' weak' : '');
-        d.textContent = '-' + ev.dmg + (ev.mult > 1 ? '!' : '');
-        card.appendChild(d); setTimeout(() => d.remove(), 650);
-        if (ev.ko) card.classList.add('ko');
-      }
-      setTimeout(step, 240);
-    };
-    setTimeout(step, 450);
+    next();
   });
 }
-function closeBattle() { $('#battle-modal').classList.add('hidden'); $('#battle-overlay').classList.add('hidden'); }
+async function playMove(moveId) {
+  if (bBusy || !bState || bState.over) return;
+  bBusy = true;
+  $('#battle-moves').innerHTML = '<div class="mv-wait">…</div>';
+  try {
+    const r = await api('/pvp/move', { method: 'POST', body: { battleId: bState.battleId, moveId } });
+    await animateEvents(r.events);
+    bState = r.state;
+    renderBattle();
+    if (r.result) finishBattle(r.result);
+  } catch (err) { flash(err.message, 'err'); $('#battle-close').classList.remove('hidden'); }
+  bBusy = false;
+}
+function finishBattle(result) {
+  const win = result.winner === 'me';
+  const rb = $('#battle-result');
+  rb.className = 'battle-result ' + (win ? 'win' : 'lose');
+  rb.innerHTML = `<div class="br-title">${win ? '🏆 Victoire !' : '💀 Défaite'}</div>
+    <div class="br-rewards">${win ? `+${result.rewards.trophies} 🏆 · +${result.rewards.essence} ✨ · +${result.rewards.xp} XP` : `${result.rewards.trophies} 🏆 · +${result.rewards.xp} XP`}</div>`;
+  rb.classList.remove('hidden');
+  $('#battle-moves').innerHTML = '';
+  $('#battle-close').classList.remove('hidden');
+  logBattle(win ? 'Tu remportes le combat !' : 'Tu as perdu ce combat.');
+  refresh().then(() => { loadArena(); });
+  processNewAch(result);
+}
+$('#battle-moves').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-move]');
+  if (b) playMove(b.dataset.move);
+});
+function closeBattle() { $('#battle-modal').classList.add('hidden'); $('#battle-overlay').classList.add('hidden'); bState = null; }
 $('#battle-close').addEventListener('click', closeBattle);
 $('#battle-overlay').addEventListener('click', () => { if (!$('#battle-close').classList.contains('hidden')) closeBattle(); });
 
