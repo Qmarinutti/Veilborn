@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=36" />
+  <link rel="stylesheet" href="css/style.css?v=37" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -201,6 +201,10 @@
         <select id="picker-type" aria-label="Filtrer par élément"><option value="">Tous éléments</option></select>
       </div>
       <div id="picker-list" class="cards picker-list"></div>
+      <div id="picker-foot" class="picker-foot hidden">
+        <span id="picker-count">0/0 sélectionné</span>
+        <button id="picker-confirm" class="btn primary">Confirmer</button>
+      </div>
     </div>
 
     <!-- Fiche detaillee d'un Glump -->
@@ -329,6 +333,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=44" type="module"></script>
+  <script src="js/app.js?v=45" type="module"></script>
 </body>
 </html>

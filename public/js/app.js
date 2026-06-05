@@ -349,52 +349,77 @@ const ITEM_NAME = { candy: 'Super Bonbon', potion: 'Potion', revive: 'Rappel' };
 function fmtDur(s) { if (s >= 3600) return (s % 3600 === 0 ? s / 3600 : (s / 3600).toFixed(1)) + 'h'; if (s >= 60) return Math.round(s / 60) + 'min'; return s + 's'; }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
+let currentExploreZone = null;
 function renderExplore() {
   if (!STATE || $('#view-explore').classList.contains('hidden')) return;
   const zones = STATE.exploreZones || [];
   const exps = STATE.expeditions || [];
-  $('#explore-zones').innerHTML = zones.map(z => {
-    const exp = exps.find(e => e.biome === z.id);
-    let body;
-    if (exp) {
-      body = `<div class="explore-running">
-        <div class="er-info">🧭 Expédition <b>${cap(exp.tier)}</b> · ${exp.team.length} Glumps partis</div>
-        ${exp.ready
-          ? `<button class="btn primary" data-explore-collect="${exp.id}">🎁 Récolter les récompenses</button>`
-          : `<div class="countdown er-time" data-ready="${exp.readyAt}">…</div>`}
+  if (!zones.length) { $('#explore-zones').innerHTML = '<p class="hint">Aucune zone.</p>'; return; }
+  if (!currentExploreZone || !zones.some(z => z.id === currentExploreZone)) currentExploreZone = zones[0].id;
+  const z = zones.find(x => x.id === currentExploreZone);
+
+  // Bandeau de selection des zones (pastilles), avec indicateur d'expedition.
+  const pills = zones.map(zz => {
+    const run = exps.find(e => e.biome === zz.id);
+    const badge = run ? (run.ready ? '<span class="ezp-badge ready">🎁</span>' : '<span class="ezp-badge">⏳</span>') : '';
+    return `<button class="ezone-pill ${zz.id === currentExploreZone ? 'sel' : ''}" data-ezone="${zz.id}">
+      <span class="ezp-emoji">${zz.emoji}</span><span class="ezp-name">${zz.name}</span>${badge}</button>`;
+  }).join('');
+
+  const exp = exps.find(e => e.biome === z.id);
+  let body;
+  if (exp) {
+    body = `<div class="explore-running">
+      <div class="er-info">🧭 Expédition <b>${cap(exp.tier)}</b> en cours · ${exp.team.length} Glumps partis</div>
+      ${exp.ready
+        ? `<button class="btn primary" data-explore-collect="${exp.id}">🎁 Récolter les récompenses</button>`
+        : `<div class="countdown er-time" data-ready="${exp.readyAt}">…</div>`}
+    </div>`;
+  } else {
+    body = z.tiers.map(t => {
+      const rw = t.reward || {};
+      const action = t.canStart
+        ? `<button class="btn small primary" data-explore-start="${z.id}" data-tier="${t.id}">Lancer</button>`
+        : t.unlocked ? `<span class="ex-need">${t.owned}/${t.need} dispo</span>`
+          : `<span class="ex-lock">🔒 ${t.owned}/${t.need}</span>`;
+      // Recompenses POSSIBLES (aleatoires) : ressource fixe + œuf(s) du type + objets aleatoires
+      const reward = `<b>+${rw.res} ${z.resEmoji}</b> · ${rw.eggs}× œuf ${z.type} 🥚 · ${rw.items}× objet (🍬/❤️/✨)`;
+      return `<div class="ex-tier ${t.unlocked ? '' : 'locked'}" style="--tc:${TIER_COLOR[t.id]}">
+        <div class="ex-main">
+          <div class="ex-top"><span class="ex-tname">${t.name}</span>
+            <span class="ex-req">${t.need}× ${z.type} niv ${t.level}+ · ⏱ ${fmtDur(t.durationSec)}</span></div>
+          <div class="ex-reward">🎁 ${reward}</div>
+        </div>
+        <span class="ex-act">${action}</span>
       </div>`;
-    } else {
-      body = `<div class="explore-tiers">` + z.tiers.map(t => {
-        const action = t.canStart
-          ? `<button class="btn small primary" data-explore-start="${z.id}" data-tier="${t.id}">Lancer</button>`
-          : t.unlocked ? `<span class="ex-need">${t.owned}/${t.need} dispo</span>`
-            : `<span class="ex-lock">🔒 verrouillé</span>`;
-        const rw = t.reward || {};
-        const rewardTxt = `${rw.res} ${z.resEmoji} · ${rw.eggs}🥚 · ${rw.items}🎒`;
-        return `<div class="ex-tier ${t.unlocked ? '' : 'locked'}" style="--tc:${TIER_COLOR[t.id]}">
-          <div class="ex-main">
-            <span class="ex-tname">${t.name}</span>
-            <span class="ex-req">${t.need}× ${z.type} niv ${t.level}+ · ⏱ ${fmtDur(t.durationSec)}</span>
-            <span class="ex-reward">🎁 ${rewardTxt}</span>
-          </div>
-          <span class="ex-act">${action}</span>
-        </div>`;
-      }).join('') + `</div>`;
-    }
-    return `<div class="explore-zone">
+    }).join('');
+  }
+  $('#explore-zones').innerHTML = `
+    <div class="ezone-pills">${pills}</div>
+    <div class="ezone-panel">
       <div class="ez-head"><span class="ez-emoji">${z.emoji}</span>
         <div><div class="ez-name">${z.name}</div><div class="ez-sub">Type ${z.type} · récolte ${z.resName} ${z.resEmoji}</div></div></div>
-      ${body}
+      <div class="explore-tiers">${body}</div>
     </div>`;
-  }).join('') || '<p class="hint">Aucune zone.</p>';
+}
+function startExplore(zoneId, tierId) {
+  const z = STATE.exploreZones.find(x => x.id === zoneId);
+  const t = z.tiers.find(x => x.id === tierId);
+  const busy = matingParentIds();
+  const pool = STATE.creatures.filter(c => c.stage === 'adult' && c.type === z.type && c.level >= t.level && !c.exploring && !busy.has(c.id));
+  if (pool.length < t.count) { flash(`Il te faut ${t.count} Glumps ${z.type} niv ${t.level}+ disponibles (tu en as ${pool.length}).`, 'err'); return; }
+  openTeamPicker(`Envoyer ${t.count} Glumps · ${z.emoji} ${z.name} ${cap(tierId)}`, pool, pickCardHtml, t.count, async (ids) => {
+    try { await api('/explore/start', { method: 'POST', body: { biome: zoneId, tier: tierId, team: ids } }); closePicker(); flash('Expédition lancée ! 🧭'); await refresh(); }
+    catch (err) { flash(err.message, 'err'); }
+  });
 }
 $('#explore-zones').addEventListener('click', async (e) => {
+  const pill = e.target.closest('[data-ezone]');
   const start = e.target.closest('[data-explore-start]');
   const collect = e.target.closest('[data-explore-collect]');
-  if (start) {
-    try { await api('/explore/start', { method: 'POST', body: { biome: start.dataset.exploreStart, tier: start.dataset.tier } }); flash('Expédition lancée ! 🧭'); await refresh(); }
-    catch (err) { flash(err.message, 'err'); }
-  } else if (collect) {
+  if (pill) { currentExploreZone = pill.dataset.ezone; renderExplore(); return; }
+  if (start) { startExplore(start.dataset.exploreStart, start.dataset.tier); return; }
+  if (collect) {
     try {
       const r = await api('/explore/collect', { method: 'POST', body: { id: collect.dataset.exploreCollect } });
       const rw = r.rewards;
@@ -932,19 +957,35 @@ function renderPrairieSlots() {
   $('#prairie-slots').innerHTML = html;
 }
 
-// Selecteur generique CENTRE avec tri/filtre : openPicker(titre, items, renderFn, onPick(id)).
-let pickerState = { items: [], render: null, onPick: null, sort: 'level', type: '' };
+// Selecteur generique CENTRE avec tri/filtre.
+// Simple : openPicker(titre, items, renderFn, onPick(id)).
+// Multi  : openTeamPicker(titre, items, renderFn, count, onConfirm(ids)).
+let pickerState = { items: [], render: null, onPick: null, sort: 'level', type: '', multi: false, count: 0, selected: new Set(), onConfirm: null };
 function openPicker(title, items, render, onPick) {
-  pickerState = { items: items.slice(), render, onPick, sort: 'level', type: '' };
+  pickerState = { items: items.slice(), render, onPick, sort: 'level', type: '', multi: false, count: 0, selected: new Set(), onConfirm: null };
+  setupPicker(title, items);
+}
+function openTeamPicker(title, items, render, count, onConfirm) {
+  pickerState = { items: items.slice(), render, onPick: null, sort: 'level', type: '', multi: true, count, selected: new Set(), onConfirm };
+  setupPicker(title, items);
+}
+function setupPicker(title, items) {
   $('#picker-title').textContent = title;
-  // Remplit le filtre par element depuis les items.
   const types = [...new Set(items.map(c => c.type).filter(Boolean))].sort();
   $('#picker-type').innerHTML = '<option value="">Tous éléments</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
   $('#picker-type').value = '';
   $$('.psort').forEach(b => b.classList.toggle('active', b.dataset.psort === 'level'));
+  $('#picker-foot').classList.toggle('hidden', !pickerState.multi);
+  updatePickerCount();
   renderPickerList();
   $('#picker').classList.remove('hidden');
   $('#picker-overlay').classList.remove('hidden');
+}
+function updatePickerCount() {
+  if (!pickerState.multi) return;
+  const n = pickerState.selected.size;
+  $('#picker-count').textContent = `${n}/${pickerState.count} sélectionné(s)`;
+  $('#picker-confirm').disabled = n !== pickerState.count;
 }
 function renderPickerList() {
   let items = pickerState.items.slice();
@@ -956,7 +997,13 @@ function renderPickerList() {
   }[pickerState.sort] || (() => 0);
   items.sort(cmp);
   $('#picker-list').innerHTML = items.length ? items.map(pickerState.render).join('') : '<p class="hint">Rien de disponible.</p>';
+  if (pickerState.multi) for (const id of pickerState.selected) $(`#picker-list [data-pick="${id}"]`)?.classList.add('sel');
 }
+$('#picker-confirm')?.addEventListener('click', () => {
+  if (pickerState.multi && pickerState.selected.size === pickerState.count && pickerState.onConfirm) {
+    pickerState.onConfirm([...pickerState.selected]);
+  }
+});
 $('#picker-sort').addEventListener('click', (e) => {
   const b = e.target.closest('[data-psort]');
   if (!b) return;
@@ -1015,7 +1062,13 @@ function pickBiomeCardHtml(c) {
 }
 $('#picker-list').addEventListener('click', (e) => {
   const el = e.target.closest('[data-pick]');
-  if (el && pickerState.onPick) pickerState.onPick(Number(el.dataset.pick));
+  if (!el) return;
+  const id = Number(el.dataset.pick);
+  if (pickerState.multi) {
+    if (pickerState.selected.has(id)) { pickerState.selected.delete(id); el.classList.remove('sel'); }
+    else { if (pickerState.selected.size >= pickerState.count) { flash(`Maximum ${pickerState.count} Glumps.`, 'err'); return; } pickerState.selected.add(id); el.classList.add('sel'); }
+    updatePickerCount();
+  } else if (pickerState.onPick) pickerState.onPick(id);
 });
 $('#picker-close').addEventListener('click', closePicker);
 $('#picker-overlay').addEventListener('click', closePicker);

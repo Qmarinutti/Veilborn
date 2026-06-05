@@ -797,26 +797,29 @@ app.post('/api/trade/cancel', requireAuth, h(async (req, res) => {
 
 // ---------- Exploration : envoyer des Glumps explorer une zone ----------
 app.post('/api/explore/start', requireAuth, h(async (req, res) => {
-  const { biome, tier } = req.body || {};
+  const { biome, tier, team: chosen } = req.body || {};
   const zone = EXPLORE_ZONE_BY_ID[biome];
   const t = EXPLORE_TIER_BY_ID[tier];
   if (!zone || !t) return res.status(400).json({ error: 'Zone ou difficulte inconnue.' });
+  if (!Array.isArray(chosen) || chosen.length !== t.count) {
+    return res.status(400).json({ error: `Choisis exactement ${t.count} Glumps a envoyer.` });
+  }
   const out = await withLock(req.user.id, async () => {
     const user = await reloadUser(req.user.id);
     const exps = parseExpeditions(user);
     if (exps.some(e => e.biome === biome)) return { status: 400, error: 'Une exploration est deja en cours dans cette zone.' };
     const exploring = exploringIds(user);
-    // Monstres qualifiants : adultes du type de la zone, niveau requis, non occupes.
-    const rows = await all("SELECT id, species, xp, stage FROM creatures WHERE owner_id = ? AND stage = 'adult'", [req.user.id]);
     const mating = new Set((await all("SELECT parent_a, parent_b FROM creatures WHERE owner_id = ? AND stage = 'mating'", [req.user.id])).flatMap(m => [m.parent_a, m.parent_b]));
-    const qualif = rows
-      .map(c => ({ id: c.id, lvl: levelFromXp(c.xp || 0), type: SPECIES[c.species]?.type }))
-      .filter(c => c.type === zone.type && c.lvl >= t.level && !exploring.has(c.id) && !mating.has(c.id))
-      .sort((a, b) => b.lvl - a.lvl);
-    if (qualif.length < t.count) {
-      return { status: 400, error: `Il faut ${t.count} Glumps ${zone.type} niveau ${t.level}+ disponibles (tu en as ${qualif.length}).` };
+    // Valide chaque Glump CHOISI : a moi, adulte, bon type, niveau requis, dispo.
+    const team = [];
+    for (const id of chosen.map(Number)) {
+      const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage = 'adult'", [id, req.user.id]);
+      if (!c) return { status: 400, error: 'Glump invalide.' };
+      if (SPECIES[c.species]?.type !== zone.type) return { status: 400, error: `Il faut des Glumps de type ${zone.type}.` };
+      if (levelFromXp(c.xp || 0) < t.level) return { status: 400, error: `Niveau ${t.level}+ requis.` };
+      if (exploring.has(id) || mating.has(id) || team.includes(id)) return { status: 400, error: 'Glump indisponible ou en double.' };
+      team.push(id);
     }
-    const team = qualif.slice(0, t.count).map(c => c.id);
     const exped = { id: randomBytes(6).toString('hex'), biome, tier, team, startedAt: Date.now(), readyAt: Date.now() + t.durationSec * 1000 };
     exps.push(exped);
     await run('UPDATE users SET expeditions_json = ? WHERE id = ?', [JSON.stringify(exps), req.user.id]);
