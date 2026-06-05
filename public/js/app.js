@@ -363,58 +363,50 @@ const ITEM_NAME = { candy: 'Super Bonbon', potion: 'Potion', revive: 'Rappel' };
 function fmtDur(s) { if (s >= 3600) return (s % 3600 === 0 ? s / 3600 : (s / 3600).toFixed(1)) + 'h'; if (s >= 60) return Math.round(s / 60) + 'min'; return s + 's'; }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-let currentExploreZone = null;
 function renderExplore() {
   if (!STATE || $('#view-explore').classList.contains('hidden')) return;
   const zones = STATE.exploreZones || [];
   const exps = STATE.expeditions || [];
   if (!zones.length) { $('#explore-zones').innerHTML = '<p class="hint">Aucune zone.</p>'; return; }
-  if (!currentExploreZone || !zones.some(z => z.id === currentExploreZone)) currentExploreZone = zones[0].id;
-  const z = zones.find(x => x.id === currentExploreZone);
 
-  // Bandeau de selection des zones (pastilles), avec indicateur d'expedition.
-  const pills = zones.map(zz => {
-    const run = exps.find(e => e.biome === zz.id);
-    const badge = run ? (run.ready ? '<span class="ezp-badge ready">🎁</span>' : '<span class="ezp-badge">⏳</span>') : '';
-    return `<button class="ezone-pill ${zz.id === currentExploreZone ? 'sel' : ''}" data-ezone="${zz.id}">
-      <span class="ezp-emoji">${zz.emoji}</span><span class="ezp-name">${zz.name}</span>${badge}</button>`;
-  }).join('');
-
-  const exp = exps.find(e => e.biome === z.id);
-  let body;
-  if (exp) {
-    body = `<div class="explore-running">
-      <div class="er-info">🧭 Expédition <b>${cap(exp.tier)}</b> en cours · ${exp.team.length} Glumps partis</div>
-      ${exp.ready
-        ? `<button class="btn primary" data-explore-collect="${exp.id}">🎁 Récolter les récompenses</button>`
-        : `<div class="countdown er-time" data-ready="${exp.readyAt}">…</div>`}
-    </div>`;
-  } else {
-    body = z.tiers.map(t => {
-      const rw = t.reward || {};
-      const action = t.canStart
-        ? `<button class="btn small primary" data-explore-start="${z.id}" data-tier="${t.id}">Lancer</button>`
-        : t.unlocked ? `<span class="ex-need">${t.owned}/${t.need} dispo</span>`
-          : `<span class="ex-lock">🔒 ${t.owned}/${t.need}</span>`;
-      // Recompenses POSSIBLES (aleatoires) : ressource fixe + œuf(s) du type + objets aleatoires
-      const reward = `<b>+${rw.res} ${z.resEmoji}</b> · ${rw.eggs}× œuf ${z.type} 🥚 · ${rw.items}× objet (🍬/❤️/✨)`;
-      return `<div class="ex-tier ${t.unlocked ? '' : 'locked'}" style="--tc:${TIER_COLOR[t.id]}">
-        <div class="ex-main">
-          <div class="ex-top"><span class="ex-tname">${t.name}</span>
-            <span class="ex-req">${t.need}× ${z.type} niv ${t.level}+ · ⏱ ${fmtDur(t.durationSec)}</span></div>
-          <div class="ex-reward">🎁 ${reward}</div>
-        </div>
-        <span class="ex-act">${action}</span>
+  // Toutes les zones affichees en lignes (pas d'onglets) : chacune montre ses difficultes.
+  $('#explore-zones').innerHTML = zones.map(z => {
+    const exp = exps.find(e => e.biome === z.id);
+    const badge = exp ? (exp.ready ? '<span class="ez-badge ready">🎁 prêt</span>' : '<span class="ez-badge">⏳ en cours</span>') : '';
+    let body;
+    if (exp) {
+      body = `<div class="explore-running">
+        <div class="er-info">🧭 Expédition <b>${cap(exp.tier)}</b> · ${exp.team.length} Glumps partis</div>
+        ${exp.ready
+          ? `<button class="btn primary" data-explore-collect="${exp.id}">🎁 Récolter les récompenses</button>`
+          : `<div class="countdown er-time" data-ready="${exp.readyAt}">…</div>`}
       </div>`;
-    }).join('');
-  }
-  $('#explore-zones').innerHTML = `
-    <div class="ezone-pills">${pills}</div>
-    <div class="ezone-panel">
+    } else {
+      body = z.tiers.map(t => {
+        const rw = t.reward || {};
+        const action = t.canStart
+          ? `<button class="btn small primary" data-explore-start="${z.id}" data-tier="${t.id}">Lancer</button>`
+          : t.unlocked ? `<span class="ex-need">${t.owned}/${t.need} dispo</span>`
+            : `<span class="ex-lock">🔒 ${t.owned}/${t.need}</span>`;
+        // Recompenses POSSIBLES (aleatoires) : ressource fixe + œuf(s) du type + objets aleatoires
+        const reward = `<b>+${rw.res} ${z.resEmoji}</b> · ${rw.eggs}× œuf ${z.type} 🥚 · ${rw.items}× objet (🍬/❤️/✨)`;
+        return `<div class="ex-tier ${t.unlocked ? '' : 'locked'}" style="--tc:${TIER_COLOR[t.id]}">
+          <div class="ex-main">
+            <div class="ex-top"><span class="ex-tname">${t.name}</span>
+              <span class="ex-req">${t.need}× ${z.type} niv ${t.level}+ · ⏱ ${fmtDur(t.durationSec)}</span></div>
+            <div class="ex-reward">🎁 ${reward}</div>
+          </div>
+          <span class="ex-act">${action}</span>
+        </div>`;
+      }).join('');
+    }
+    return `<div class="explore-zone">
       <div class="ez-head"><span class="ez-emoji">${z.emoji}</span>
-        <div><div class="ez-name">${z.name}</div><div class="ez-sub">Type ${z.type} · récolte ${z.resName} ${z.resEmoji}</div></div></div>
+        <div class="ez-id"><div class="ez-name">${z.name}</div><div class="ez-sub">Type ${z.type} · récolte ${z.resName} ${z.resEmoji}</div></div>
+        ${badge}</div>
       <div class="explore-tiers">${body}</div>
     </div>`;
+  }).join('');
 }
 function startExplore(zoneId, tierId) {
   const z = STATE.exploreZones.find(x => x.id === zoneId);
@@ -428,10 +420,8 @@ function startExplore(zoneId, tierId) {
   });
 }
 $('#explore-zones').addEventListener('click', async (e) => {
-  const pill = e.target.closest('[data-ezone]');
   const start = e.target.closest('[data-explore-start]');
   const collect = e.target.closest('[data-explore-collect]');
-  if (pill) { currentExploreZone = pill.dataset.ezone; renderExplore(); return; }
   if (start) { startExplore(start.dataset.exploreStart, start.dataset.tier); return; }
   if (collect) {
     try {
