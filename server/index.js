@@ -239,7 +239,7 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   const { id } = req.body || {};
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
-  if (c.stage === 'egg') return res.status(400).json({ error: 'On ne relache pas un oeuf.' });
+  if (c.stage === 'egg' || c.stage === 'mating') return res.status(400).json({ error: 'On ne relache pas un oeuf / accouplement en cours.' });
   if (c.favorite === 1) return res.status(400).json({ error: 'Ce Glump est en favori (verrouille). Retire le coeur d\'abord.' });
   if (c.listed === 1) return res.status(400).json({ error: 'Ce Glump est en vente (annule la vente d\'abord).' });
   if (exploringIds(await reloadUser(req.user.id)).has(Number(id))) return res.status(400).json({ error: 'Ce Glump est en exploration (occupe).' });
@@ -521,7 +521,7 @@ async function computeLeaderboard() {
   // 1 seule requete : on agrege en JS (la valeur depend de stats/genes/niveau).
   const rows = await all(
     "SELECT u.id AS uid, u.username AS username, c.* FROM users u " +
-    "LEFT JOIN creatures c ON c.owner_id = u.id AND c.stage != 'egg'");
+    "LEFT JOIN creatures c ON c.owner_id = u.id AND c.stage NOT IN ('egg', 'mating')");
   const byUser = new Map();
   for (const r of rows) {
     let e = byUser.get(r.uid);
@@ -544,7 +544,7 @@ app.get('/api/farm/:userId', h(async (req, res) => {
   const u = await get('SELECT id, username FROM users WHERE id = ?', [Number(req.params.userId)]);
   if (!u) return res.status(404).json({ error: 'Joueur introuvable.' });
   const rows = await all(
-    "SELECT * FROM creatures WHERE owner_id = ? AND stage != 'egg' ORDER BY created_at ASC", [u.id]);
+    "SELECT * FROM creatures WHERE owner_id = ? AND stage NOT IN ('egg', 'mating') ORDER BY created_at ASC", [u.id]);
   res.json({ username: u.username, creatures: rows.map(c => publicCreature(c)) });
 }));
 
@@ -726,7 +726,7 @@ app.post('/api/creature/release-many', requireAuth, h(async (req, res) => {
     const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
     if (!c || c.stage === 'egg' || c.favorite === 1 || c.listed === 1 || exploringRM.has(Number(id))) continue;
     // DELETE conditionnel = verrou atomique : pas de remboursement si la ligne a deja ete supprimee ailleurs.
-    const del = await run("DELETE FROM creatures WHERE id = ? AND owner_id = ? AND favorite = 0 AND stage != 'egg'", [id, req.user.id]);
+    const del = await run("DELETE FROM creatures WHERE id = ? AND owner_id = ? AND favorite = 0 AND stage NOT IN ('egg', 'mating')", [id, req.user.id]);
     if ((del.rowsAffected ?? del.changes ?? 0) === 0) continue;
     refund += Math.round(creatureValue(c) * 0.5);
     released++;
@@ -809,7 +809,7 @@ app.post('/api/trade/propose', requireAuth, h(async (req, res) => {
   if (!Number.isInteger(tid)) return res.status(400).json({ error: 'Destinataire invalide.' });
   if (tid === req.user.id) return res.status(400).json({ error: 'Tu ne peux pas echanger avec toi-meme.' });
   if (!(await areFriends(req.user.id, tid))) return res.status(400).json({ error: 'Tu dois etre ami avec ce joueur.' });
-  const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [creatureId, req.user.id]);
+  const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage NOT IN ('egg', 'mating')", [creatureId, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable (ou oeuf).' });
   if (c.favorite === 1) return res.status(400).json({ error: 'Retire le favori avant d\'echanger ce Glump.' });
   if (c.listed === 1) return res.status(400).json({ error: 'Ce Glump est en vente (Hotel des Ventes).' });
@@ -839,8 +839,8 @@ app.post('/api/trade/accept', requireAuth, h(async (req, res) => {
   const out = await withLock(req.user.id, async () => {
     const t = await get("SELECT * FROM trades WHERE id = ? AND to_user = ? AND status = 'pending'", [id, req.user.id]);
     if (!t) return { status: 404, error: 'Echange introuvable.' };
-    const theirs = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [t.from_creature, t.from_user]);
-    const mine = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [creatureId, req.user.id]);
+    const theirs = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage NOT IN ('egg', 'mating')", [t.from_creature, t.from_user]);
+    const mine = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage NOT IN ('egg', 'mating')", [creatureId, req.user.id]);
     if (!theirs || !mine) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return { status: 400, error: 'Un des Glumps n\'est plus disponible.' }; }
     if (mine.favorite === 1) return { status: 400, error: 'Retire le favori avant d\'echanger ce Glump.' };
     if (theirs.favorite === 1) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return { status: 400, error: 'L\'autre joueur a verrouille ce Glump (favori). Echange annule.' }; }
@@ -879,7 +879,7 @@ app.post('/api/market/list', requireAuth, h(async (req, res) => {
   const out = await withLock(req.user.id, async () => {
     const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [creatureId, req.user.id]);
     if (!c) return { status: 404, error: 'Glump introuvable.' };
-    if (c.stage === 'egg') return { status: 400, error: 'On ne vend pas un oeuf.' };
+    if (c.stage === 'egg' || c.stage === 'mating') return { status: 400, error: 'Pas vendable (oeuf ou accouplement en cours).' };
     if (c.favorite === 1) return { status: 400, error: 'Retire le favori avant de vendre.' };
     if (c.listed === 1) return { status: 400, error: 'Ce Glump est deja en vente.' };
     if (exploringIds(await reloadUser(req.user.id)).has(Number(creatureId))) return { status: 400, error: 'Ce Glump est en exploration.' };

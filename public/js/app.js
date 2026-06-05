@@ -586,7 +586,7 @@ let collSelectMode = false;
 const collSelected = new Set();
 
 function renderCollection() {
-  let owned = STATE.creatures.filter(c => c.stage !== 'egg');
+  let owned = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating');
   $('#coll-count').textContent = owned.length;
 
   // Remplit la liste des types une seule fois (depuis les Glumps possedes + connus).
@@ -1369,7 +1369,7 @@ $('#friends-list').addEventListener('click', async (e) => {
   const trade = e.target.closest('[data-trade-friend]');
   if (trade) {
     const toUser = Number(trade.dataset.tradeFriend);
-    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite && !c.listed);
+    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating' && !c.favorite && !c.listed);
     if (!mine.length) { flash('Aucun Glump échangeable (les favoris sont verrouillés).', 'err'); return; }
     openPicker(`Proposer un Glump à ${trade.dataset.name}`, mine, pickCardHtml, async (id) => {
       try { await api('/trade/propose', { method: 'POST', body: { toUser, creatureId: id } }); closePicker(); flash('Proposition envoyée 🔄'); loadTrades(); }
@@ -1388,7 +1388,7 @@ $('#trades-list').addEventListener('click', async (e) => {
   const acc = e.target.closest('[data-trade-accept]');
   const can = e.target.closest('[data-trade-cancel]');
   if (acc) {
-    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite && !c.listed);
+    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating' && !c.favorite && !c.listed);
     if (!mine.length) { flash('Aucun Glump à offrir en retour.', 'err'); return; }
     openPicker('Offrir lequel en retour ?', mine, pickCardHtml, async (id) => {
       try { const r = await api('/trade/accept', { method: 'POST', body: { id: Number(acc.dataset.tradeAccept), creatureId: id } }); closePicker(); flash(`Échange réussi ! Reçu : ${r.received.speciesName} 🎉`); await refresh(); loadSocial(); }
@@ -1505,7 +1505,7 @@ $('#shop-modal').addEventListener('click', async (e) => {
   if (useItem) {
     const k = useItem.dataset.useItem;
     let pool, title;
-    if (k === 'candy') { pool = STATE.creatures.filter(c => c.stage !== 'egg'); title = 'Super Bonbon à…'; }
+    if (k === 'candy') { pool = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating'); title = 'Super Bonbon à…'; }
     else if (k === 'potion') { pool = STATE.creatures.filter(c => c.stage === 'adult' && !c.fainted && c.hp < c.maxHp); title = 'Soigner quel Glump ?'; }
     else { pool = STATE.creatures.filter(c => c.fainted); title = 'Ranimer quel Glump ?'; }
     if (!pool.length) { flash('Aucun Glump concerné.', 'err'); return; }
@@ -1516,7 +1516,7 @@ $('#shop-modal').addEventListener('click', async (e) => {
     return;
   }
   if (e.target.closest('#buy-candy')) {
-    const glumps = STATE.creatures.filter(c => c.stage !== 'egg');
+    const glumps = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating');
     openPicker('Donner un Super Bonbon à…', glumps, pickCardHtml, async (id) => {
       try { const r = await api('/creature/candy', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`+${r.xp} XP 🍬`); processNewAch(r); }
       catch (err) { flash(err.message, "err"); }
@@ -1904,7 +1904,7 @@ function renderMarket() {
 }
 $('#market-sell')?.addEventListener('click', () => {
   const busy = matingParentIds();
-  const sellable = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite && !c.listed && !c.exploring && !busy.has(c.id));
+  const sellable = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating' && !c.favorite && !c.listed && !c.exploring && !busy.has(c.id));
   if (!sellable.length) { flash('Aucun Glump vendable (ni œuf, ni favori, ni occupé).', 'err'); return; }
   openPicker('Vendre quel Glump ?', sellable, pickCardHtml, async (id) => {
     closePicker();
