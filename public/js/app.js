@@ -804,12 +804,17 @@ function renderBiomeTabs() {
   if (!STATE) return;
   const biomes = STATE.biomes || [];
   currentBiome = STATE.user.activeBiome || 'plaine';
-  $('#biome-tabs').innerHTML = biomes.map(b => `
-    <button class="biome-tab ${b.active ? 'sel' : ''} ${b.owned ? '' : 'locked'}" data-biome="${b.id}" data-owned="${b.owned ? 1 : 0}">
-      <span class="bt-emoji">${b.emoji}</span>
-      <span class="bt-name">${b.name}${b.active ? ' ✓' : b.owned ? '' : ' 🔒'}</span>
-      <span class="bt-res">${b.owned ? (b.active ? 'ACTIF' : 'farmer ici') : '✨' + b.cost.toLocaleString('fr-FR')}</span>
-    </button>`).join('');
+  $('#biome-tabs').innerHTML = biomes.map(b => {
+    const status = b.active ? `<span class="bc-status on">● ACTIF</span>`
+      : b.owned ? `<span class="bc-status own">Activer</span>`
+        : `<span class="bc-status lock">🔒 ✨${b.cost.toLocaleString('fr-FR')}</span>`;
+    return `<button class="biome-card ${b.active ? 'active' : ''} ${b.owned ? '' : 'locked'}" data-biome="${b.id}" data-owned="${b.owned ? 1 : 0}" title="${b.types.length ? 'Types : ' + b.types.join(', ') : 'Neutre'}">
+      <span class="bc-emoji">${b.emoji}</span>
+      <span class="bc-name">${b.name}</span>
+      <span class="bc-res">${b.resEmoji} ${b.resName}</span>
+      ${status}
+    </button>`;
+  }).join('');
 }
 $('#biome-tabs').addEventListener('click', async (e) => {
   const t = e.target.closest('[data-biome]');
@@ -836,7 +841,7 @@ function renderPrairieSlots() {
   const buyBtn = $('#buy-prairie');
   buyBtn.style.display = '';
   const inB = STATE.creatures.filter(c => c.biome); // tous les farmeurs (biome actif)
-  $('#prairie-info').textContent = `${b.emoji} ${b.name} (actif) · ${inB.length}/${max} · +${(b.ratePerSec * 60).toFixed(1)} ${b.resEmoji}/min`;
+  $('#prairie-info').innerHTML = `<b>${b.emoji} ${b.name}</b> actif — produit <b>${b.resName} ${b.resEmoji}</b> · <b>+${(b.ratePerSec * 60).toFixed(1)}/min</b> · ${inB.length}/${max} Glumps`;
   if (max >= 12) { buyBtn.disabled = true; buyBtn.textContent = 'Max'; }
   else { buyBtn.disabled = false; buyBtn.textContent = '+ Emplacement'; }
 
@@ -845,13 +850,13 @@ function renderPrairieSlots() {
     const c = inB[i];
     if (c) {
       const syn = b.types.includes(c.type);
-      html += `<div class="slot ${syn ? 'syn' : ''}" title="${syn ? 'Synergie +25% !' : ''}">
-        <div class="mini">${creatureVisual(c, 42)}</div>
+      html += `<div class="slot ${syn ? 'syn' : ''}" title="${syn ? 'Synergie +25% !' : c.type}">
+        <div class="mini">${creatureVisual(c, 46)}</div>
         <span class="slot-name">${syn ? '⭐ ' : ''}${c.nickname || c.speciesName}</span>
-        <button class="slot-rm" data-prairie-rm="${c.id}" title="Retirer">✕</button>
+        <button class="slot-rm" data-prairie-rm="${c.id}" title="Retirer du farm">✕</button>
       </div>`;
     } else {
-      html += `<div class="slot empty" data-prairie-add="1">+ Ajouter</div>`;
+      html += `<div class="slot empty" data-prairie-add="1"><span class="slot-plus">＋</span><span>Ajouter</span></div>`;
     }
   }
   $('#prairie-slots').innerHTML = html;

@@ -776,18 +776,40 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .resbar .res { background: rgba(0,0,0,.25); padding: 5px 10px; border-radius: 10px; border: 1px solid var(--line); white-space: nowrap; }
 .resbar .res b { color: var(--text); }
 
-.biome-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-.biome-tab { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 78px;
-  padding: 8px 10px; border-radius: 14px; cursor: pointer; border: 1px solid var(--line-strong);
-  background: var(--panel2); color: var(--text); transition: .12s; }
-.biome-tab:hover { transform: translateY(-2px); border-color: var(--primary); }
-.biome-tab.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; background: var(--panel); }
-.biome-tab.locked { opacity: .6; }
-.biome-tab .bt-emoji { font-size: 22px; }
-.biome-tab .bt-name { font-size: 12px; font-weight: 700; }
-.biome-tab .bt-res { font-size: 11px; color: var(--muted); }
+/* Selecteur de biomes : grille de cartes propres */
+.biome-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.biome-card {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 12px 8px 10px;
+  border-radius: 16px; cursor: pointer; border: 1.5px solid var(--line-strong);
+  background: var(--panel2); color: var(--text); transition: transform .12s, border-color .12s, box-shadow .12s; text-align: center;
+}
+.biome-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+.biome-card .bc-emoji { font-size: 30px; line-height: 1; }
+.biome-card .bc-name { font-size: 14px; font-weight: 700; font-family: 'Fredoka', sans-serif; }
+.biome-card .bc-res { font-size: 11px; color: var(--muted); }
+.biome-card .bc-status { font-size: 11px; font-weight: 700; margin-top: 3px; padding: 2px 9px; border-radius: 999px; }
+.bc-status.on { background: linear-gradient(135deg, var(--good), #8fe04f); color: #06321a; }
+.bc-status.own { background: rgba(108,140,255,.18); color: var(--primary); }
+.bc-status.lock { background: rgba(0,0,0,.25); color: var(--gold); }
+.biome-card.active { border-color: var(--good); box-shadow: 0 0 0 2px var(--good) inset, 0 8px 24px rgba(81,216,138,.22);
+  background: radial-gradient(120% 100% at 50% 0%, rgba(81,216,138,.14), transparent 70%), var(--panel); }
+.biome-card.locked { opacity: .72; }
+.biome-card.locked:hover { opacity: 1; border-color: var(--gold); }
+
+/* Barre d'info du biome actif */
+.biome-active-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; margin-bottom: 12px; border-radius: 12px;
+  background: var(--panel2); border: 1px solid var(--line-strong); }
+.biome-active-bar .prairie-info { font-size: 14px; color: var(--text); font-weight: 500; }
+.biome-active-bar .prairie-info b { color: var(--text); }
+
 .biome-locked { text-align: center; padding: 30px 16px; color: var(--muted); font-size: 15px; }
 .slot.syn { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.slot { flex-direction: column; align-items: center; text-align: center; min-width: 96px; padding: 8px 8px 6px; position: relative; }
+.slot .mini { width: 46px; height: 46px; }
+.slot .slot-rm { position: absolute; top: 4px; right: 6px; margin: 0; }
+.slot.empty { flex-direction: column; gap: 2px; }
+.slot .slot-plus { font-size: 22px; line-height: 1; }
 
 /* Themes de biome pour le pre (fond) */
 .meadow.biome-volcan { background: linear-gradient(#2a0a0a 0%, #5a1a10 40%, #8a2a14 72%, #b8401a 100%); }
