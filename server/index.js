@@ -225,7 +225,10 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   if (exploringIds(await reloadUser(req.user.id)).has(Number(id))) return res.status(400).json({ error: 'Ce Glump est en exploration (occupe).' });
 
   const refund = Math.round(creatureValue(c) * 0.5);
-  await run('DELETE FROM creatures WHERE id = ?', [id]);
+  // Le DELETE conditionnel est le verrou atomique : seule la requete qui supprime
+  // reellement la ligne rembourse -> pas de double-credit meme en concurrence (Turso).
+  const del = await run('DELETE FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if ((del.rowsAffected ?? del.changes ?? 0) === 0) return res.status(404).json({ error: 'Glump deja relache.' });
   await run('UPDATE users SET essence = essence + ? WHERE id = ?', [refund, req.user.id]);
   res.json({ ok: true, refund });
 }));
@@ -592,6 +595,7 @@ function purgeBattles() {
 app.post('/api/pvp/start', requireAuth, h(async (req, res) => {
   purgeBattles();
   const { opponentId, team } = req.body || {};
+  if (Number(opponentId) === req.user.id) return res.status(400).json({ error: 'Tu ne peux pas te battre contre toi-meme.' });
   if (!Array.isArray(team) || team.length < 1 || team.length > BALANCE.pvpTeamSize) {
     return res.status(400).json({ error: `Choisis 1 a ${BALANCE.pvpTeamSize} Glumps.` });
   }
@@ -627,6 +631,9 @@ app.post('/api/pvp/move', requireAuth, h(async (req, res) => {
 
   let result = null;
   if (b.state.over) {
+    // Verrou synchrone (avant tout await) : empeche deux coups finaux concurrents de crediter 2x la recompense.
+    if (b.settled) return res.status(400).json({ error: 'Combat deja termine.' });
+    b.settled = true;
     const iWon = b.state.winner === 'a';
     const user = await reloadUser(req.user.id);
     let trophies = user.pvp_trophies, essence = 0;
@@ -674,8 +681,10 @@ app.post('/api/creature/release-many', requireAuth, h(async (req, res) => {
   for (const id of ids) {
     const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
     if (!c || c.stage === 'egg' || c.favorite === 1 || exploringRM.has(Number(id))) continue;
+    // DELETE conditionnel = verrou atomique : pas de remboursement si la ligne a deja ete supprimee ailleurs.
+    const del = await run("DELETE FROM creatures WHERE id = ? AND owner_id = ? AND favorite = 0 AND stage != 'egg'", [id, req.user.id]);
+    if ((del.rowsAffected ?? del.changes ?? 0) === 0) continue;
     refund += Math.round(creatureValue(c) * 0.5);
-    await run('DELETE FROM creatures WHERE id = ?', [id]);
     released++;
   }
   if (refund > 0) await run('UPDATE users SET essence = essence + ? WHERE id = ?', [refund, req.user.id]);
@@ -791,9 +800,12 @@ app.post('/api/trade/accept', requireAuth, h(async (req, res) => {
     // Un Glump occupe (exploration) ne peut pas etre echange.
     if (exploringIds(await reloadUser(req.user.id)).has(Number(mine.id))) return { status: 400, error: 'Ton Glump est en exploration (occupe).' };
     if (exploringIds(await reloadUser(t.from_user)).has(Number(theirs.id))) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return { status: 400, error: 'Le Glump propose est devenu indisponible. Echange annule.' }; }
-    // Echange des proprietaires : on sort de la prairie ET du farm (biome remis a zero) pour eviter qu'un Glump farme/affiche chez l'ancien proprietaire.
-    await run('UPDATE creatures SET owner_id = ?, in_prairie = 0, biome = NULL WHERE id = ?', [req.user.id, theirs.id]);
-    await run('UPDATE creatures SET owner_id = ?, in_prairie = 0, biome = NULL WHERE id = ?', [t.from_user, mine.id]);
+    // Echange des proprietaires via UPDATE conditionnels (anti-dupe en concurrence sur Turso) :
+    // chaque transfert n'aboutit que si le Glump appartient encore a son proprietaire d'origine.
+    const tk = await run('UPDATE creatures SET owner_id = ?, in_prairie = 0, biome = NULL WHERE id = ? AND owner_id = ?', [req.user.id, theirs.id, t.from_user]);
+    if ((tk.rowsAffected ?? tk.changes ?? 0) === 0) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return { status: 400, error: 'Le Glump propose n\'est plus disponible. Echange annule.' }; }
+    const mk = await run('UPDATE creatures SET owner_id = ?, in_prairie = 0, biome = NULL WHERE id = ? AND owner_id = ?', [t.from_user, mine.id, req.user.id]);
+    if ((mk.rowsAffected ?? mk.changes ?? 0) === 0) { await run('UPDATE creatures SET owner_id = ? WHERE id = ?', [t.from_user, theirs.id]); return { status: 400, error: 'Ton Glump n\'est plus disponible.' }; }
     await run("UPDATE trades SET status = 'done' WHERE id = ?", [id]);
     return { ok: true, received: publicCreature(await get('SELECT * FROM creatures WHERE id = ?', [theirs.id])) };
   });
