@@ -666,6 +666,12 @@ $('#buy-slot').addEventListener('click', async () => {
 // ---------- Fiche detaillee d'un Glump ----------
 const STAT_LABEL = { force: 'Force', vita: 'Vitalite', speed: 'Vitesse' };
 function openDetail(id) {
+  renderDetail(id);
+  $('#detail').classList.remove('hidden');
+  $('#detail-overlay').classList.remove('hidden');
+}
+// Re-rend le contenu de la fiche SANS la (ré)afficher (utile apres un bonbon/evo).
+function renderDetail(id) {
   const c = STATE.creatures.find(x => x.id === id);
   if (!c) return;
   const stageTxt = c.stage === 'egg' ? 'Oeuf' : c.stage === 'baby' ? 'Bebe' : 'Adulte';
@@ -719,10 +725,9 @@ function openDetail(id) {
         ? `<button class="btn primary" data-evolve="${c.id}" style="width:100%;">⬆ Evoluer en ${c.evolvesToName}</button>`
         : `<div class="detail-sub">Evolue en <b>${c.evolvesToName}</b> au <b>niveau ${c.evolveLevel}</b> (actuel : ${c.level}).</div>`}
     </div>` : ''}`;
-  $('#detail').classList.remove('hidden');
-  $('#detail-overlay').classList.remove('hidden');
 }
 function closeDetail() { $('#detail').classList.add('hidden'); $('#detail-overlay').classList.add('hidden'); }
+function detailOpen() { return !$('#detail').classList.contains('hidden'); }
 $('#detail-close').addEventListener('click', closeDetail);
 $('#detail-overlay').addEventListener('click', closeDetail);
 $('#detail-body').addEventListener('click', async (e) => {
@@ -732,15 +737,20 @@ $('#detail-body').addEventListener('click', async (e) => {
     const id = Number(candyBtn.dataset.candy);
     try {
       const r = await api('/creature/candy', { method: 'POST', body: { id } });
-      await refresh(); openDetail(id);
-      flash(`+${r.xp} XP 🍬 (niveau ${r.creature.level})`);
+      // Mise a jour LOCALE (pas de refresh complet -> fluide) ; re-rend la fiche si ouverte.
+      const c = STATE.creatures.find(x => x.id === id);
+      if (c) Object.assign(c, r.creature);
+      if (typeof r.cost === 'number') STATE.user.essence = Math.max(0, STATE.user.essence - r.cost);
+      if (detailOpen()) renderDetail(id);
+      flash(`+${r.xp} XP 🍬 (niveau ${r.creature.level})`); processNewAch(r);
     } catch (err) { flash(err.message, "err"); }
   } else if (evoBtn) {
     const id = Number(evoBtn.dataset.evolve);
     try {
       const r = await api('/creature/evolve', { method: 'POST', body: { id } });
-      await refresh(); openDetail(id);
-      flash(`✨ ${r.fromName} a evolue en ${r.creature.speciesName} !`);
+      await refresh();
+      if (detailOpen()) renderDetail(id);
+      flash(`✨ ${r.fromName} a evolue en ${r.creature.speciesName} !`); processNewAch(r);
     } catch (err) { flash(err.message, "err"); }
   }
 });
