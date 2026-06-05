@@ -422,14 +422,32 @@ $('#explore-zones').addEventListener('click', async (e) => {
   if (collect) {
     try {
       const r = await api('/explore/collect', { method: 'POST', body: { id: collect.dataset.exploreCollect } });
-      const rw = r.rewards;
-      const its = Object.entries(rw.items || {}).map(([k, v]) => `${ITEM_EMOJI[k]}×${v}`).join(' ');
-      const eg = (rw.eggs && rw.eggs.length) ? ` · ${rw.eggs.length} œuf(s) 🥚` : '';
-      flash(`🎁 +${rw.amount} ${rw.resEmoji}${eg}${its ? ' · ' + its : ''}`);
       await refresh();
+      showReward(r.rewards);
     } catch (err) { flash(err.message, 'err'); }
   }
 });
+
+// Fenetre de recompense (exploration recoltee) : liste detaillee de tout ce qu'on gagne.
+function showReward(rw) {
+  if (!rw) return;
+  const rows = [];
+  if (rw.amount) rows.push(`<div class="rw-row"><span class="rw-ico">${rw.resEmoji}</span><span class="rw-lbl">${rw.resName || 'Ressource'}</span><b class="rw-amt">+${rw.amount}</b></div>`);
+  for (const [k, v] of Object.entries(rw.items || {})) {
+    rows.push(`<div class="rw-row"><span class="rw-ico">${ITEM_EMOJI[k] || '🎁'}</span><span class="rw-lbl">${ITEM_NAME[k] || k}</span><b class="rw-amt">×${v}</b></div>`);
+  }
+  for (const name of (rw.eggs || [])) {
+    rows.push(`<div class="rw-row"><span class="rw-ico">🥚</span><span class="rw-lbl">Œuf de ${name}</span><b class="rw-amt rw-new">NOUVEAU</b></div>`);
+  }
+  if (!rows.length) rows.push('<div class="rw-row rw-empty">Rien cette fois… pas de chance !</div>');
+  $('#reward-title').innerHTML = `${rw.zoneEmoji || '🧭'} ${rw.zoneName || 'Exploration'} <small>· ${rw.tier || ''}</small>`;
+  $('#reward-list').innerHTML = rows.join('');
+  $('#reward-modal').classList.remove('hidden');
+  $('#reward-overlay').classList.remove('hidden');
+}
+function closeReward() { $('#reward-modal').classList.add('hidden'); $('#reward-overlay').classList.add('hidden'); }
+$('#reward-ok')?.addEventListener('click', closeReward);
+$('#reward-overlay')?.addEventListener('click', closeReward);
 
 const RARITY_DOTS = (r) => '★'.repeat(r) + '☆'.repeat(5 - r);
 
@@ -746,6 +764,8 @@ $('#detail-body').addEventListener('click', async (e) => {
     } catch (err) { flash(err.message, "err"); }
   } else if (evoBtn) {
     const id = Number(evoBtn.dataset.evolve);
+    const c = STATE.creatures.find(x => x.id === id);
+    if (c && !await confirmDialog(`Faire évoluer ${c.nickname || c.speciesName} en ${c.evolvesToName} pour ${c.evolveCost} essence ?`)) return;
     try {
       const r = await api('/creature/evolve', { method: 'POST', body: { id } });
       await refresh();
@@ -1560,7 +1580,8 @@ function loadPvpTeam() { try { return JSON.parse(localStorage.getItem('veilborn_
 async function loadArena() {
   $('#pvp-trophies').textContent = `🏆 ${STATE.user.pvpTrophies}`;
   if (!pvpTeam.length) pvpTeam = loadPvpTeam(); // restaure l'equipe sauvegardee
-  pvpTeam = pvpTeam.filter(id => STATE.creatures.some(c => c.id === id && c.stage === 'adult' && !c.fainted));
+  const busyArena = matingParentIds();
+  pvpTeam = pvpTeam.filter(id => STATE.creatures.some(c => c.id === id && c.stage === 'adult' && !c.fainted && !c.exploring && !busyArena.has(c.id)));
   savePvpTeam();
   renderArenaTeam();
   $('#pvp-opponent').innerHTML = '';
@@ -1582,8 +1603,9 @@ $('#pvp-team').addEventListener('click', (e) => {
   const add = e.target.closest('[data-team-add]');
   if (rm) { pvpTeam = pvpTeam.filter(id => id !== Number(rm.dataset.teamRm)); savePvpTeam(); renderArenaTeam(); }
   else if (add) {
-    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !pvpTeam.includes(c.id) && !c.fainted);
-    if (!avail.length) { flash('Aucun Glump disponible (KO ?). Soigne-les en boutique.', 'err'); return; }
+    const busyAdd = matingParentIds();
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !pvpTeam.includes(c.id) && !c.fainted && !c.exploring && !busyAdd.has(c.id));
+    if (!avail.length) { flash('Aucun Glump disponible (KO, exploration ou accouplement ?).', 'err'); return; }
     openPicker('Ajouter à ton équipe', avail, pickCardHtml, (id) => {
       if (pvpTeam.length < 3 && !pvpTeam.includes(id)) pvpTeam.push(id);
       savePvpTeam(); closePicker(); renderArenaTeam();

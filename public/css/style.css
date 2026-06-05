@@ -380,6 +380,29 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .confirm-actions { display: flex; gap: 10px; justify-content: center; }
 .confirm-actions .btn { flex: 1; }
 
+/* Fenetre de recompense (exploration) */
+.reward-modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 80;
+  width: min(380px, 92vw); background: var(--panel-solid); border: 1px solid var(--line-strong);
+  border-radius: 20px; padding: 22px 22px 24px; text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,.6); animation: rewardPop .35s cubic-bezier(.2,1.3,.5,1) both;
+}
+@keyframes rewardPop { from { opacity: 0; transform: translate(-50%, -50%) scale(.8); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.reward-burst { font-size: 46px; line-height: 1; animation: beat 1s ease-in-out infinite; }
+.reward-modal h3 { margin: 6px 0 16px; font-size: 18px; }
+.reward-modal h3 small { color: var(--muted); font-weight: 600; font-size: 13px; }
+.reward-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.rw-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+  background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px;
+}
+.rw-ico { font-size: 22px; width: 26px; text-align: center; }
+.rw-lbl { flex: 1; text-align: left; font-size: 14px; }
+.rw-amt { font-size: 15px; color: var(--gold, #ffd23f); }
+.rw-amt.rw-new { font-size: 11px; color: #51d88a; letter-spacing: .5px; }
+.rw-empty { justify-content: center; color: var(--muted); font-style: italic; }
+.reward-modal .btn { width: 100%; }
+
 /* Tutoriel (carte en bas pour voir le menu changer au-dessus) */
 #tuto-overlay { background: rgba(4,7,15,.25); backdrop-filter: none; }
 .tuto {

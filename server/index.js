@@ -596,12 +596,14 @@ app.post('/api/pvp/start', requireAuth, h(async (req, res) => {
     return res.status(400).json({ error: `Choisis 1 a ${BALANCE.pvpTeamSize} Glumps.` });
   }
   const exploring = exploringIds(await reloadUser(req.user.id));
+  const matingSet = new Set((await all("SELECT parent_a, parent_b FROM creatures WHERE owner_id = ? AND stage = 'mating'", [req.user.id])).flatMap(m => [m.parent_a, m.parent_b]));
   const mine = [];
   for (const id of team) {
     const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage = 'adult'", [id, req.user.id]);
     if (!c) return res.status(400).json({ error: 'Equipe invalide (adultes uniquement).' });
     if (publicCreature(c).fainted) return res.status(400).json({ error: 'Un de tes Glumps est KO — ranime-le (Rappel) avant de combattre.' });
     if (exploring.has(Number(id))) return res.status(400).json({ error: 'Un de tes Glumps est en exploration (occupe).' });
+    if (matingSet.has(Number(id))) return res.status(400).json({ error: 'Un de tes Glumps est en accouplement (occupe).' });
     mine.push(c);
   }
   const opp = await get('SELECT id, username FROM users WHERE id = ?', [opponentId]);
@@ -876,7 +878,7 @@ app.post('/api/explore/collect', requireAuth, h(async (req, res) => {
     const left = exps.filter(e => e.id !== id);
     await run('UPDATE users SET expeditions_json = ?, items_json = ?, resources_json = ? WHERE id = ?',
       [JSON.stringify(left), JSON.stringify(items), JSON.stringify(res2), req.user.id]);
-    return { ok: true, rewards: { resource: zone.resource, resEmoji: zone.resEmoji, amount: t.res, items: gotItems, eggs: eggsLaid } };
+    return { ok: true, rewards: { resource: zone.resource, resName: zone.resName, resEmoji: zone.resEmoji, amount: t.res, items: gotItems, eggs: eggsLaid, zoneName: zone.name, zoneEmoji: zone.emoji, tier: t.name } };
   });
   if (out.error) return res.status(out.status).json({ error: out.error });
   res.json(out);

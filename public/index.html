@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=37" />
+  <link rel="stylesheet" href="css/style.css?v=38" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -264,6 +264,15 @@
       </div>
     </div>
 
+    <!-- Fenetre de recompense (exploration) -->
+    <div id="reward-overlay" class="overlay hidden"></div>
+    <div id="reward-modal" class="reward-modal hidden">
+      <div class="reward-burst">🎁</div>
+      <h3 id="reward-title">Exploration terminée !</h3>
+      <div id="reward-list" class="reward-list"></div>
+      <button id="reward-ok" class="btn primary">Récupérer</button>
+    </div>
+
     <!-- Panneau coulissant (drawer) -->
     <div id="drawer-overlay" class="overlay hidden"></div>
     <aside id="drawer" class="drawer hidden">
@@ -333,6 +342,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=46" type="module"></script>
+  <script src="js/app.js?v=47" type="module"></script>
 </body>
 </html>
