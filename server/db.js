@@ -142,6 +142,7 @@ export async function initDb() {
     "ALTER TABLE users ADD COLUMN active_biome TEXT NOT NULL DEFAULT 'plaine'", // biome actif unique
     'ALTER TABLE users ADD COLUMN expeditions_json TEXT', // explorations en cours
     'ALTER TABLE users ADD COLUMN items_json TEXT',       // sac d'objets (candy/potion/revive)
+    'ALTER TABLE creatures ADD COLUMN listed INTEGER NOT NULL DEFAULT 0', // 1 = en vente a l'Hotel des Ventes
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }
@@ -160,6 +161,22 @@ export async function initDb() {
       created_at  INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_trades_to ON trades(to_user, status);
+  `);
+
+  // Hotel des Ventes : annonces de Glumps a vendre (en essence).
+  await db.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS listings (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      seller_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      creature_id  INTEGER NOT NULL,
+      price        INTEGER NOT NULL,
+      status       TEXT NOT NULL DEFAULT 'active',  -- active | sold | cancelled
+      buyer_id     INTEGER,
+      created_at   INTEGER NOT NULL,
+      sold_at      INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_listings_active ON listings(status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_listings_seller ON listings(seller_id, status);
   `);
 
   // Nettoyage des sessions trop vieilles (>30 jours) pour eviter l'accumulation.

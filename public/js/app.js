@@ -203,6 +203,7 @@ function switchView(view) {
   if (view === 'dex') loadDex();
   if (view === 'arena') loadArena();
   if (view === 'explore') renderExplore();
+  if (view === 'market') loadMarket();
   if (view === 'prairie') startPrairie(); else stopPrairie();
 }
 $$('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
@@ -412,7 +413,7 @@ function startExplore(zoneId, tierId) {
   const z = STATE.exploreZones.find(x => x.id === zoneId);
   const t = z.tiers.find(x => x.id === tierId);
   const busy = matingParentIds();
-  const pool = STATE.creatures.filter(c => c.stage === 'adult' && z.types.includes(c.type) && c.level >= t.level && !c.exploring && !busy.has(c.id));
+  const pool = STATE.creatures.filter(c => c.stage === 'adult' && z.types.includes(c.type) && c.level >= t.level && !c.exploring && !c.listed && !busy.has(c.id));
   if (pool.length < t.count) { flash(`Il te faut ${t.count} Glumps ${z.typesLabel} niv ${t.level}+ disponibles (tu en as ${pool.length}).`, 'err'); return; }
   openTeamPicker(`Envoyer ${t.count} Glumps · ${z.emoji} ${z.name} ${cap(tierId)}`, pool, pickCardHtml, t.count, async (ids) => {
     try { await api('/explore/start', { method: 'POST', body: { biome: zoneId, tier: tierId, team: ids } }); closePicker(); flash('Expédition lancée ! 🧭'); await refresh(); }
@@ -563,7 +564,7 @@ $('#breeding-cells').addEventListener('click', async (e) => {
     const side = slot.dataset.pickParent;
     const other = side === 'a' ? breedSelB : breedSelA;
     const busy = matingParentIds();
-    const adults = STATE.creatures.filter(c => c.stage === 'adult' && c.id !== other && !busy.has(c.id));
+    const adults = STATE.creatures.filter(c => c.stage === 'adult' && c.id !== other && !c.listed && !busy.has(c.id));
     if (!adults.length) { flash('Aucun Glump disponible (occupés/au farm ?).', 'err'); return; }
     openPicker('Choisir le parent', adults, pickCardHtml, (id) => {
       if (side === 'a') breedSelA = id; else breedSelB = id;
@@ -632,6 +633,7 @@ function cardHtml(c, selecting = false) {
   const hpPct = Math.round(100 * (c.hp ?? c.maxHp) / (c.maxHp || 1));
   const sel = selecting && collSelected.has(c.id);
   return `<div class="card ${c.fainted ? 'fainted' : ''} ${c.favorite ? 'fav' : ''} ${sel ? 'sel' : ''}" data-id="${c.id}" data-rarity="${c.rarity}">
+    ${c.listed ? '<span class="sale-badge">🏷️ en vente</span>' : ''}
     ${selecting ? `<span class="sel-check">${sel ? '✅' : '⬜'}</span>` : ''}
     ${badges.join('')}
     <span class="badge lvl">Niv ${c.level || 1}</span>
@@ -1111,7 +1113,7 @@ $('#prairie-slots').addEventListener('click', async (e) => {
   } else if (add) {
     const b = (STATE.biomes || []).find(x => x.id === (STATE.user.activeBiome || 'plaine'));
     const busy = matingParentIds();
-    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.biome && !busy.has(c.id));
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.biome && !c.listed && !busy.has(c.id));
     if (!avail.length) { flash('Aucun Glump adulte disponible (occupés en accouplement ?).', 'err'); return; }
     openPicker(`Mettre au farm (${b?.emoji || ''} ${b?.name || ''})`, avail, pickBiomeCardHtml, async (id) => {
       try { await api('/biome/assign', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`Au farm ! ${b?.emoji || ''}`); }
@@ -1367,7 +1369,7 @@ $('#friends-list').addEventListener('click', async (e) => {
   const trade = e.target.closest('[data-trade-friend]');
   if (trade) {
     const toUser = Number(trade.dataset.tradeFriend);
-    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite);
+    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite && !c.listed);
     if (!mine.length) { flash('Aucun Glump échangeable (les favoris sont verrouillés).', 'err'); return; }
     openPicker(`Proposer un Glump à ${trade.dataset.name}`, mine, pickCardHtml, async (id) => {
       try { await api('/trade/propose', { method: 'POST', body: { toUser, creatureId: id } }); closePicker(); flash('Proposition envoyée 🔄'); loadTrades(); }
@@ -1386,7 +1388,7 @@ $('#trades-list').addEventListener('click', async (e) => {
   const acc = e.target.closest('[data-trade-accept]');
   const can = e.target.closest('[data-trade-cancel]');
   if (acc) {
-    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite);
+    const mine = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite && !c.listed);
     if (!mine.length) { flash('Aucun Glump à offrir en retour.', 'err'); return; }
     openPicker('Offrir lequel en retour ?', mine, pickCardHtml, async (id) => {
       try { const r = await api('/trade/accept', { method: 'POST', body: { id: Number(acc.dataset.tradeAccept), creatureId: id } }); closePicker(); flash(`Échange réussi ! Reçu : ${r.received.speciesName} 🎉`); await refresh(); loadSocial(); }
@@ -1644,7 +1646,7 @@ $('#pvp-team').addEventListener('click', (e) => {
   if (rm) { pvpTeam = pvpTeam.filter(id => id !== Number(rm.dataset.teamRm)); savePvpTeam(); renderArenaTeam(); }
   else if (add) {
     const busyAdd = matingParentIds();
-    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !pvpTeam.includes(c.id) && !c.fainted && !c.exploring && !busyAdd.has(c.id));
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !pvpTeam.includes(c.id) && !c.fainted && !c.exploring && !c.listed && !busyAdd.has(c.id));
     if (!avail.length) { flash('Aucun Glump disponible (KO, exploration ou accouplement ?).', 'err'); return; }
     openPicker('Ajouter à ton équipe', avail, pickCardHtml, (id) => {
       if (pvpTeam.length < 3 && !pvpTeam.includes(id)) pvpTeam.push(id);
@@ -1849,6 +1851,90 @@ $('#battle-moves').addEventListener('click', (e) => {
 function closeBattle() { $('#battle-modal').classList.add('hidden'); $('#battle-overlay').classList.add('hidden'); bState = null; }
 $('#battle-close').addEventListener('click', closeBattle);
 $('#battle-overlay').addEventListener('click', () => { if (!$('#battle-close').classList.contains('hidden')) closeBattle(); });
+
+// ============================================================
+//  Marché (Hôtel des Ventes)
+// ============================================================
+let marketData = { listings: [], taxPct: 5 };
+const marketFilter = { type: '', sort: 'recent', shinyOnly: false };
+async function loadMarket() {
+  try { marketData = await api('/market'); $('#market-tax').textContent = marketData.taxPct; renderMarket(); }
+  catch (err) { flash(err.message, 'err'); }
+}
+function ivSum(c) { return c.genes ? c.genes.force + c.genes.vita + c.genes.speed : 0; }
+function marketCardHtml(l, isMine) {
+  const c = l.creature;
+  const perfect = c.genes && c.genes.force === 31 && c.genes.vita === 31 && c.genes.speed === 31;
+  const iv = c.genes ? `${c.genes.force}·${c.genes.vita}·${c.genes.speed}` : '';
+  return `<div class="card market-card" data-rarity="${c.rarity}">
+    ${avatar(c)}
+    <div class="name">${c.variant === 1 ? '✨ ' : ''}${c.nickname || c.speciesName}</div>
+    <div class="sub">${c.type} · niv ${c.level} · P${c.power}</div>
+    <div class="mk-iv ${perfect ? 'perfect' : ''}">IV ${iv}${perfect ? ' ⭐' : ''}</div>
+    <div class="mk-price">✨ ${l.price.toLocaleString('fr-FR')}</div>
+    ${isMine
+      ? `<button class="btn small danger" data-mk-cancel="${l.id}">Retirer</button>`
+      : `<div class="mk-seller">par ${l.seller}</div><button class="btn small primary" data-mk-buy="${l.id}" data-name="${(c.nickname || c.speciesName).replace(/"/g, '')}" data-price="${l.price}">Acheter</button>`}
+  </div>`;
+}
+function renderMarket() {
+  const all = marketData.listings || [];
+  const typeSel = $('#market-type');
+  if (typeSel && typeSel.options.length <= 1) {
+    const types = [...new Set(all.map(l => l.creature.type))].filter(Boolean).sort();
+    typeSel.insertAdjacentHTML('beforeend', types.map(t => `<option value="${t}">${t}</option>`).join(''));
+  }
+  const mine = all.filter(l => l.mine);
+  $('#market-mine-title').classList.toggle('hidden', !mine.length);
+  $('#market-mine').innerHTML = mine.map(l => marketCardHtml(l, true)).join('');
+  let others = all.filter(l => !l.mine);
+  if (marketFilter.type) others = others.filter(l => l.creature.type === marketFilter.type);
+  if (marketFilter.shinyOnly) others = others.filter(l => l.creature.variant === 1);
+  const cmp = {
+    recent: (a, b) => b.id - a.id,
+    'price-asc': (a, b) => a.price - b.price,
+    'price-desc': (a, b) => b.price - a.price,
+    power: (a, b) => (b.creature.power || 0) - (a.creature.power || 0),
+    iv: (a, b) => ivSum(b.creature) - ivSum(a.creature),
+  }[marketFilter.sort] || ((a, b) => b.id - a.id);
+  others.sort(cmp);
+  $('#market-count').textContent = others.length;
+  $('#market-list').innerHTML = others.map(l => marketCardHtml(l, false)).join('') || '<p class="hint">Aucune annonce pour le moment. Sois le premier à vendre !</p>';
+}
+$('#market-sell')?.addEventListener('click', () => {
+  const busy = matingParentIds();
+  const sellable = STATE.creatures.filter(c => c.stage !== 'egg' && !c.favorite && !c.listed && !c.exploring && !busy.has(c.id));
+  if (!sellable.length) { flash('Aucun Glump vendable (ni œuf, ni favori, ni occupé).', 'err'); return; }
+  openPicker('Vendre quel Glump ?', sellable, pickCardHtml, async (id) => {
+    closePicker();
+    const c = STATE.creatures.find(x => x.id === id);
+    const s = await promptDialog(`Prix de ${c.nickname || c.speciesName} en essence ✨ :`, '', 'ex : 5000');
+    if (s === null) return;
+    const price = Math.floor(Number(s));
+    if (!Number.isInteger(price) || price < 1) { flash('Prix invalide.', 'err'); return; }
+    try { await api('/market/list', { method: 'POST', body: { creatureId: id, price } }); flash(`En vente à ${price.toLocaleString('fr-FR')} ✨`); await refresh(); loadMarket(); }
+    catch (err) { flash(err.message, 'err'); }
+  });
+});
+async function marketClick(e) {
+  const buy = e.target.closest('[data-mk-buy]');
+  const cancel = e.target.closest('[data-mk-cancel]');
+  if (buy) {
+    const price = Number(buy.dataset.price);
+    if (!await confirmDialog(`Acheter ${buy.dataset.name} pour ${price.toLocaleString('fr-FR')} ✨ ?`)) return;
+    try { const r = await api('/market/buy', { method: 'POST', body: { listingId: Number(buy.dataset.mkBuy) } }); flash(`Acheté ! ${r.creature.speciesName} est à toi 🎉`); await refresh(); loadMarket(); }
+    catch (err) { flash(err.message, 'err'); loadMarket(); }
+  } else if (cancel) {
+    try { await api('/market/cancel', { method: 'POST', body: { listingId: Number(cancel.dataset.mkCancel) } }); flash('Vente retirée.'); await refresh(); loadMarket(); }
+    catch (err) { flash(err.message, 'err'); }
+  }
+}
+$('#market-list')?.addEventListener('click', marketClick);
+$('#market-mine')?.addEventListener('click', marketClick);
+$('#market-type')?.addEventListener('change', e => { marketFilter.type = e.target.value; renderMarket(); });
+$('#market-sort')?.addEventListener('change', e => { marketFilter.sort = e.target.value; renderMarket(); });
+$('#market-shiny')?.addEventListener('click', () => { marketFilter.shinyOnly = !marketFilter.shinyOnly; $('#market-shiny').classList.toggle('on', marketFilter.shinyOnly); renderMarket(); });
+$('#market-refresh')?.addEventListener('click', loadMarket);
 
 // ============================================================
 //  Demarrage

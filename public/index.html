@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=45" />
+  <link rel="stylesheet" href="css/style.css?v=46" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -148,6 +148,31 @@
         </div>
       </section>
 
+      <!-- Vue Marché (Hôtel des Ventes) -->
+      <section id="view-market" class="view hidden">
+        <div class="panel">
+          <h2>🏛️ Hôtel des Ventes</h2>
+          <p class="hint">Achète et vends des Glumps entre joueurs, en essence ✨. Les Glumps rares (3×31, chromatiques) valent cher ! <b>Taxe de <span id="market-tax">5</span>% brûlée</b> à chaque vente. Un Glump en vente ne peut pas farmer/combattre/explorer.</p>
+          <div class="market-bar">
+            <button id="market-sell" class="btn primary">🏷️ Vendre un Glump</button>
+            <select id="market-type" aria-label="Filtrer par type"><option value="">Tous types</option></select>
+            <select id="market-sort" aria-label="Trier">
+              <option value="recent">Récents</option>
+              <option value="price-asc">Prix ↑</option>
+              <option value="price-desc">Prix ↓</option>
+              <option value="power">Puissance ↓</option>
+              <option value="iv">IV ↓</option>
+            </select>
+            <button id="market-shiny" class="btn small" aria-pressed="false" title="Chromatiques seulement">✨</button>
+            <button id="market-refresh" class="btn small" title="Rafraîchir">🔄</button>
+          </div>
+          <h3 id="market-mine-title" class="hidden" style="margin:14px 0 8px;">Mes ventes</h3>
+          <div id="market-mine" class="cards"></div>
+          <h3 style="margin:16px 0 8px;">Annonces (<span id="market-count">0</span>)</h3>
+          <div id="market-list" class="cards"></div>
+        </div>
+      </section>
+
       <!-- Vue Exploration -->
       <section id="view-explore" class="view hidden">
         <div class="panel">
@@ -185,6 +210,7 @@
       <button class="navbtn" data-view="dex"><span class="ic">📖</span><span class="lbl">Dex</span></button>
       <button class="navbtn" data-view="leaderboard"><span class="ic">🏆</span><span class="lbl">Rang</span></button>
       <button class="navbtn" data-view="arena"><span class="ic">⚔️</span><span class="lbl">Arène</span></button>
+      <button class="navbtn" data-view="market"><span class="ic">🏛️</span><span class="lbl">Marché</span></button>
     </nav>
 
     <!-- Selecteur de Glump pour la prairie -->
@@ -343,6 +369,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=57" type="module"></script>
+  <script src="js/app.js?v=58" type="module"></script>
 </body>
 </html>

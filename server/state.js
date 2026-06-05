@@ -297,6 +297,7 @@ export function publicCreature(c, now = Date.now(), activeBiome = null) {
     line: sp?.line ?? c.species, // lignee (pour une teinte chromatique coherente entre evolutions)
     fromBreeding: c.from_breeding === 1,
     favorite: c.favorite === 1,
+    listed: c.listed === 1, // en vente a l'Hotel des Ventes
     parentA: c.parent_a ?? null,
     parentB: c.parent_b ?? null,
     stage: c.stage,

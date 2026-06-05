@@ -937,3 +937,13 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
   padding-top: 12px; border-top: 1px solid var(--line); position: sticky; bottom: -20px; background: var(--panel-solid); }
 .picker-foot #picker-count { font-weight: 700; }
 .picker-list .card.sel { outline: 3px solid var(--good); outline-offset: -3px; box-shadow: 0 0 18px rgba(81,216,138,.4); }
+
+/* Hôtel des Ventes (marché) */
+.market-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.market-card .mk-iv { text-align: center; font-size: 11px; color: var(--muted); }
+.market-card .mk-iv.perfect { color: var(--gold, #ffd23f); font-weight: 700; }
+.market-card .mk-price { text-align: center; font-weight: 800; color: var(--gold, #ffd23f); margin: 4px 0 6px; font-size: 15px; }
+.market-card .mk-seller { text-align: center; font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+.market-card .btn { width: 100%; }
+#market-shiny.on { background: linear-gradient(135deg, #ffd23f, #ff9e3d); color: #3a2400; }
+.card .sale-badge { position: absolute; top: 6px; left: 6px; background: var(--gold, #ffd23f); color: #3a2400; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; z-index: 2; }

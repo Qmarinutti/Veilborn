@@ -168,6 +168,7 @@ app.post('/api/breed', requireAuth, h(async (req, res) => {
   if (a.stage !== 'adult' || b.stage !== 'adult') {
     return res.status(400).json({ error: 'Seuls les adultes peuvent se reproduire.' });
   }
+  if (a.listed === 1 || b.listed === 1) return res.status(400).json({ error: 'Un de ces Glumps est en vente (Hotel des Ventes).' });
   // Un parent deja en accouplement est occupe.
   const busy = await get(
     "SELECT 1 AS x FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating' AND (parent_a IN (?, ?) OR parent_b IN (?, ?)) LIMIT 1",
@@ -240,6 +241,7 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage === 'egg') return res.status(400).json({ error: 'On ne relache pas un oeuf.' });
   if (c.favorite === 1) return res.status(400).json({ error: 'Ce Glump est en favori (verrouille). Retire le coeur d\'abord.' });
+  if (c.listed === 1) return res.status(400).json({ error: 'Ce Glump est en vente (annule la vente d\'abord).' });
   if (exploringIds(await reloadUser(req.user.id)).has(Number(id))) return res.status(400).json({ error: 'Ce Glump est en exploration (occupe).' });
 
   const refund = Math.round(creatureValue(c) * 0.5);
@@ -339,6 +341,7 @@ app.post('/api/biome/assign', requireAuth, h(async (req, res) => {
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent farmer.' });
+  if (c.listed === 1) return res.status(400).json({ error: 'Ce Glump est en vente (occupe).' });
   if (c.biome) return res.json({ ok: true });
   // Occupe par un accouplement ou une exploration ?
   const mating = await get("SELECT 1 AS x FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating' AND (parent_a = ? OR parent_b = ?) LIMIT 1", [req.user.id, id, id]);
@@ -383,6 +386,7 @@ app.post('/api/prairie/assign', requireAuth, h(async (req, res) => {
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent farmer.' });
+  if (c.listed === 1) return res.status(400).json({ error: 'Ce Glump est en vente (occupe).' });
   if (c.biome === 'plaine') return res.json({ ok: true });
   const used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND biome = 'plaine'", [req.user.id])).n;
   if (used >= user.prairie_slots) return res.status(400).json({ error: 'Plaine pleine — achete un emplacement.' });
@@ -644,6 +648,7 @@ app.post('/api/pvp/start', requireAuth, h(async (req, res) => {
   for (const id of team) {
     const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage = 'adult'", [id, req.user.id]);
     if (!c) return res.status(400).json({ error: 'Equipe invalide (adultes uniquement).' });
+    if (c.listed === 1) return res.status(400).json({ error: 'Un de tes Glumps est en vente.' });
     if (publicCreature(c).fainted) return res.status(400).json({ error: 'Un de tes Glumps est KO — ranime-le (Rappel) avant de combattre.' });
     if (exploring.has(Number(id))) return res.status(400).json({ error: 'Un de tes Glumps est en exploration (occupe).' });
     if (matingSet.has(Number(id))) return res.status(400).json({ error: 'Un de tes Glumps est en accouplement (occupe).' });
@@ -719,7 +724,7 @@ app.post('/api/creature/release-many', requireAuth, h(async (req, res) => {
   let refund = 0, released = 0;
   for (const id of ids) {
     const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
-    if (!c || c.stage === 'egg' || c.favorite === 1 || exploringRM.has(Number(id))) continue;
+    if (!c || c.stage === 'egg' || c.favorite === 1 || c.listed === 1 || exploringRM.has(Number(id))) continue;
     // DELETE conditionnel = verrou atomique : pas de remboursement si la ligne a deja ete supprimee ailleurs.
     const del = await run("DELETE FROM creatures WHERE id = ? AND owner_id = ? AND favorite = 0 AND stage != 'egg'", [id, req.user.id]);
     if ((del.rowsAffected ?? del.changes ?? 0) === 0) continue;
@@ -807,6 +812,7 @@ app.post('/api/trade/propose', requireAuth, h(async (req, res) => {
   const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [creatureId, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable (ou oeuf).' });
   if (c.favorite === 1) return res.status(400).json({ error: 'Retire le favori avant d\'echanger ce Glump.' });
+  if (c.listed === 1) return res.status(400).json({ error: 'Ce Glump est en vente (Hotel des Ventes).' });
   if (exploringIds(await reloadUser(req.user.id)).has(Number(creatureId))) return res.status(400).json({ error: 'Ce Glump est en exploration (occupe).' });
   await run('INSERT INTO trades (from_user, to_user, from_creature, status, created_at) VALUES (?, ?, ?, ?, ?)',
     [req.user.id, tid, creatureId, 'pending', Date.now()]);
@@ -861,6 +867,88 @@ app.post('/api/trade/cancel', requireAuth, h(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// ---------- Hotel des Ventes (marche entre joueurs, paye en essence) ----------
+const MARKET_TAX = 0.05;            // 5% brules a chaque vente (le puits d'essence)
+const MARKET_MAX_PRICE = 50_000_000;
+
+// Mettre un Glump en vente.
+app.post('/api/market/list', requireAuth, h(async (req, res) => {
+  const { creatureId, price } = req.body || {};
+  const p = Math.floor(Number(price));
+  if (!Number.isInteger(p) || p < 1 || p > MARKET_MAX_PRICE) return res.status(400).json({ error: `Prix invalide (1 a ${MARKET_MAX_PRICE.toLocaleString('fr-FR')} ✨).` });
+  const out = await withLock(req.user.id, async () => {
+    const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [creatureId, req.user.id]);
+    if (!c) return { status: 404, error: 'Glump introuvable.' };
+    if (c.stage === 'egg') return { status: 400, error: 'On ne vend pas un oeuf.' };
+    if (c.favorite === 1) return { status: 400, error: 'Retire le favori avant de vendre.' };
+    if (c.listed === 1) return { status: 400, error: 'Ce Glump est deja en vente.' };
+    if (exploringIds(await reloadUser(req.user.id)).has(Number(creatureId))) return { status: 400, error: 'Ce Glump est en exploration.' };
+    const mating = await get("SELECT 1 x FROM creatures WHERE owner_id=? AND stage='mating' AND (parent_a=? OR parent_b=?) LIMIT 1", [req.user.id, creatureId, creatureId]);
+    if (mating) return { status: 400, error: 'Ce Glump est en accouplement.' };
+    await run('UPDATE creatures SET listed = 1, biome = NULL, in_prairie = 0 WHERE id = ?', [creatureId]);
+    await run('INSERT INTO listings (seller_id, creature_id, price, status, created_at) VALUES (?, ?, ?, ?, ?)', [req.user.id, creatureId, p, 'active', Date.now()]);
+    return { ok: true, price: p };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// Annuler ma vente (le Glump redevient utilisable).
+app.post('/api/market/cancel', requireAuth, h(async (req, res) => {
+  const { listingId } = req.body || {};
+  const out = await withLock(req.user.id, async () => {
+    const l = await get("SELECT * FROM listings WHERE id = ? AND seller_id = ? AND status = 'active'", [listingId, req.user.id]);
+    if (!l) return { status: 404, error: 'Annonce introuvable.' };
+    await run("UPDATE listings SET status = 'cancelled' WHERE id = ?", [listingId]);
+    await run('UPDATE creatures SET listed = 0 WHERE id = ? AND owner_id = ?', [l.creature_id, req.user.id]);
+    return { ok: true };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// Acheter une annonce (atomique : pas de dupe, pas de creation d'essence, taxe brulee).
+app.post('/api/market/buy', requireAuth, h(async (req, res) => {
+  const { listingId } = req.body || {};
+  const out = await withLock(req.user.id, async () => {
+    const l = await get("SELECT * FROM listings WHERE id = ? AND status = 'active'", [listingId]);
+    if (!l) return { status: 404, error: 'Annonce introuvable ou deja vendue.' };
+    if (l.seller_id === req.user.id) return { status: 400, error: 'Tu ne peux pas acheter ta propre annonce.' };
+    // 1) debite l'acheteur (atomique : echoue si pas assez)
+    if (!(await spend(req.user.id, l.price))) return { status: 400, error: `Pas assez d'essence (besoin de ${l.price.toLocaleString('fr-FR')} ✨).` };
+    // 2) VERROU : marque l'annonce vendue de facon conditionnelle -> un seul acheteur gagne
+    const sold = await run("UPDATE listings SET status='sold', buyer_id=?, sold_at=? WHERE id=? AND status='active'", [req.user.id, Date.now(), listingId]);
+    if ((sold.rowsAffected ?? sold.changes ?? 0) === 0) {
+      await run('UPDATE users SET essence = essence + ? WHERE id = ?', [l.price, req.user.id]); // rembourse
+      return { status: 400, error: 'Trop tard, deja vendue.' };
+    }
+    // 3) transfert du Glump (conditionnel : appartient encore au vendeur et en vente)
+    const tr = await run('UPDATE creatures SET owner_id=?, listed=0, biome=NULL, in_prairie=0, favorite=0 WHERE id=? AND owner_id=? AND listed=1', [req.user.id, l.creature_id, l.seller_id]);
+    if ((tr.rowsAffected ?? tr.changes ?? 0) === 0) {
+      await run('UPDATE users SET essence = essence + ? WHERE id = ?', [l.price, req.user.id]);
+      await run("UPDATE listings SET status='cancelled' WHERE id=?", [listingId]);
+      return { status: 400, error: 'Glump indisponible. Achat annule.' };
+    }
+    // 4) credite le vendeur (prix - taxe 5%) ; la taxe n'est creditee a personne = BRULEE
+    const tax = Math.floor(l.price * MARKET_TAX);
+    await run('UPDATE users SET essence = essence + ? WHERE id = ?', [l.price - tax, l.seller_id]);
+    const row = await get('SELECT * FROM creatures WHERE id = ?', [l.creature_id]);
+    return { ok: true, creature: publicCreature(row), price: l.price };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// Parcourir le marche (annonces actives) + savoir lesquelles sont les miennes.
+app.get('/api/market', requireAuth, h(async (req, res) => {
+  const rows = await all(
+    "SELECT l.id AS listing_id, l.price, l.seller_id, u.username AS seller, c.* " +
+    "FROM listings l JOIN users u ON u.id = l.seller_id JOIN creatures c ON c.id = l.creature_id " +
+    "WHERE l.status = 'active' ORDER BY l.created_at DESC LIMIT 200", []);
+  const listings = rows.map(r => ({ id: r.listing_id, price: r.price, seller: r.seller, mine: r.seller_id === req.user.id, creature: publicCreature(r) }));
+  res.json({ listings, taxPct: Math.round(MARKET_TAX * 100) });
+}));
+
 // ---------- Exploration : envoyer des Glumps explorer une zone ----------
 app.post('/api/explore/start', requireAuth, h(async (req, res) => {
   const { biome, tier, team: chosen } = req.body || {};
@@ -881,6 +969,7 @@ app.post('/api/explore/start', requireAuth, h(async (req, res) => {
     for (const id of chosen.map(Number)) {
       const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage = 'adult'", [id, req.user.id]);
       if (!c) return { status: 400, error: 'Glump invalide.' };
+      if (c.listed === 1) return { status: 400, error: 'Un de tes Glumps est en vente.' };
       if (!zone.types.includes(SPECIES[c.species]?.type)) return { status: 400, error: `Il faut des Glumps de type ${zone.typesLabel}.` };
       if (levelFromXp(c.xp || 0) < t.level) return { status: 400, error: `Niveau ${t.level}+ requis.` };
       if (exploring.has(id) || mating.has(id) || team.includes(id)) return { status: 400, error: 'Glump indisponible ou en double.' };
