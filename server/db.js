@@ -13,21 +13,27 @@ export const hasToken = !!authToken;
 
 export const db = createClient(authToken ? { url, authToken } : { url });
 
+// Garde-fou : libSQL refuse NaN/Infinity comme parametre (RangeError -> 500).
+// Un id NaN provient toujours d'une entree invalide et ne matcherait rien :
+// on le convertit en NULL pour obtenir un "aucun resultat" propre (404/400) au lieu d'un crash.
+function safeArgs(args) {
+  return (args || []).map(a => (typeof a === 'number' && !Number.isFinite(a)) ? null : a);
+}
 // Helpers : args positionnels avec "?".
 export async function get(sql, args = []) {
-  const r = await db.execute({ sql, args });
+  const r = await db.execute({ sql, args: safeArgs(args) });
   return r.rows[0];
 }
 export async function all(sql, args = []) {
-  const r = await db.execute({ sql, args });
+  const r = await db.execute({ sql, args: safeArgs(args) });
   return r.rows;
 }
 export async function run(sql, args = []) {
-  return db.execute({ sql, args });
+  return db.execute({ sql, args: safeArgs(args) });
 }
 // Insert + renvoie l'id cree (lastInsertRowid est un BigInt).
 export async function insert(sql, args = []) {
-  const r = await db.execute({ sql, args });
+  const r = await db.execute({ sql, args: safeArgs(args) });
   return Number(r.lastInsertRowid);
 }
 

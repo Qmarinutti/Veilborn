@@ -751,6 +751,7 @@ async function areFriends(a, b) {
 app.post('/api/trade/propose', requireAuth, h(async (req, res) => {
   const { toUser, creatureId } = req.body || {};
   const tid = Number(toUser);
+  if (!Number.isInteger(tid)) return res.status(400).json({ error: 'Destinataire invalide.' });
   if (tid === req.user.id) return res.status(400).json({ error: 'Tu ne peux pas echanger avec toi-meme.' });
   if (!(await areFriends(req.user.id, tid))) return res.status(400).json({ error: 'Tu dois etre ami avec ce joueur.' });
   const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [creatureId, req.user.id]);

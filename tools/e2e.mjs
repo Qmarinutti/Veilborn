@@ -90,7 +90,15 @@ section('Trade / echange');
 const tl = await A.c('/api/trade/list');
 ok(tl.status === 200, 'trade/list 200');
 const tBad = await A.c('/api/trade/propose', { method: 'POST', body: { creatureId: 999999, wantType: 'Feu' } });
-ok(tBad.status >= 400, 'trade/propose rejette creature inexistante (' + tBad.status + ')');
+ok(tBad.status >= 400 && tBad.status < 500, 'trade/propose sans toUser -> 4xx propre, pas 500 (' + tBad.status + ')');
+
+section('Robustesse entrees malformees (pas de 500)');
+const farmBad = await A.c('/api/farm/pasunnombre');
+ok(farmBad.status < 500, 'farm/:id non-numerique -> pas 500 (' + farmBad.status + ')');
+const socBad = await A.c('/api/social/remove', { method: 'POST', body: {} });
+ok(socBad.status < 500, 'social/remove sans friendId -> pas 500 (' + socBad.status + ')');
+const expBad3 = await A.c('/api/explore/start', { method: 'POST', body: { biome: 'volcan', tier: 'facile', team: ['a', 'b', 'c'] } });
+ok(expBad3.status >= 400 && expBad3.status < 500, 'explore/start team non-numerique -> 4xx, pas 500 (' + expBad3.status + ')');
 
 section('Progression / daily / dex');
 const prog = await A.c('/api/progress');
