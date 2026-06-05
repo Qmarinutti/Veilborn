@@ -18,6 +18,7 @@ import {
   EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes, parseExpeditions, parseItems, exploringIds } from './state.js';
+import { withLock } from './lock.js';
 import { hasArt } from './art.js';
 import { simulateBattle, startSession, playTurn } from './battle.js';
 import { moveButtons } from './moves.js';
@@ -90,18 +91,6 @@ async function ensureFriendCode(user) {
   const code = genFriendCode();
   await run('UPDATE users SET friend_code = ? WHERE id = ?', [code, user.id]);
   return code;
-}
-
-// Verrou par utilisateur : serialise les operations sensibles (reclamations de
-// recompenses) pour eviter les doubles-credits via requetes simultanees.
-const userLocks = new Map();
-async function withLock(userId, fn) {
-  while (userLocks.get(userId)) { try { await userLocks.get(userId); } catch {} }
-  let release;
-  const p = new Promise(r => (release = r));
-  userLocks.set(userId, p);
-  try { return await fn(); }
-  finally { userLocks.delete(userId); release(); }
 }
 
 // Depense atomique d'essence : echoue (renvoie false) si solde insuffisant.

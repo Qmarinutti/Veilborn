@@ -2,6 +2,7 @@
 // Tout est calcule "au moment de la lecture" a partir des timestamps :
 // le serveur peut dormir sans perdre la progression.
 import { get, all, run, batch } from './db.js';
+import { withLock } from './lock.js';
 import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
   evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
@@ -117,30 +118,39 @@ export async function getPlayerState(user) {
   // --- Tick farming : 1 biome actif, gains de ressource + XP (en memoire) ---
   const activeBiome = user.active_biome || 'plaine';
   const res = parseResources(user);
+  const resGain = {}; // gains de ressources NON-essence ce tick (a appliquer en relatif)
+  let essenceGain = 0;
   let elapsed = now - user.last_tick;
+  let didFarm = false;
   if (elapsed > 0) {
+    didFarm = true;
     const capMs = BALANCE.offlineCapHours * HOUR_MS;
     if (elapsed > capMs) elapsed = capMs;
     const secs = elapsed / 1000;
     const xpGain = Math.round(BALANCE.xpPerSec * secs);
     // Migration vers le biome actif (tous les farmeurs produisent SA ressource).
     for (const c of rows) if (c.biome != null && c.biome !== activeBiome) c.biome = activeBiome;
-    let essenceGain = 0;
     for (const c of rows) {
       if (c.stage !== 'adult' || c.biome == null) continue;
       const b = BIOMES[c.biome]; if (!b) continue;
       const amt = farmRate(c.species, c.xp, c.biome) * secs;
-      if (b.resource === 'essence') essenceGain += amt; else res[b.resource] = (res[b.resource] || 0) + amt;
+      if (b.resource === 'essence') essenceGain += amt;
+      else { res[b.resource] = (res[b.resource] || 0) + amt; resGain[b.resource] = (resGain[b.resource] || 0) + amt; }
       if (xpGain > 0) c.xp = (c.xp || 0) + xpGain; // l'XP en memoire (pour l'affichage)
     }
     essence += essenceGain;
     W.push({ sql: "UPDATE creatures SET biome=? WHERE owner_id=? AND biome IS NOT NULL AND biome != ?", args: [activeBiome, user.id, activeBiome] });
     if (xpGain > 0) W.push({ sql: "UPDATE creatures SET xp=xp+? WHERE owner_id=? AND biome IS NOT NULL AND stage='adult'", args: [xpGain, user.id] });
-    W.push({ sql: 'UPDATE users SET essence=?, resources_json=?, last_tick=? WHERE id=?', args: [essence, JSON.stringify(res), now, user.id] });
-  } else if (loginBonus > 0) {
-    W.push({ sql: 'UPDATE users SET essence=? WHERE id=?', args: [essence, user.id] });
   }
-  // Garde `user` a jour en memoire pour le reste du calcul.
+  // ESSENCE : ecriture RELATIVE (farming + bonus connexion). CRITIQUE : un ecriture absolue
+  // "essence = base + gain" effacerait une depense atomique concurrente (bonbon/oeuf) -> achats gratuits.
+  const essenceAdd = essenceGain + loginBonus;
+  if (didFarm) {
+    W.push({ sql: 'UPDATE users SET essence = essence + ?, last_tick = ? WHERE id = ?', args: [essenceAdd, now, user.id] });
+  } else if (essenceAdd !== 0) {
+    W.push({ sql: 'UPDATE users SET essence = essence + ? WHERE id = ?', args: [essenceAdd, user.id] });
+  }
+  // Garde `user` a jour en memoire pour le reste du calcul (affichage).
   user.essence = essence; user.login_streak = loginStreak; user.resources_json = JSON.stringify(res);
 
   const fresh = user; // plus de reloadUser : on travaille sur l'objet deja a jour
@@ -173,6 +183,17 @@ export async function getPlayerState(user) {
 
   // --- Ecriture groupee : TOUT le idle en UN SEUL aller-retour ---
   if (W.length) await batch(W, 'write');
+  // RESSOURCES (magma, ecume...) : JSON -> pas d'increment SQL possible. On ecrit sous VERROU
+  // avec relecture fraiche pour composer avec un achat d'oeuf typé (lui aussi verrouille) sans l'effacer.
+  // Seulement si on farme une ressource non-essence (biome special) -> le cas Plaine reste a 2 allers-retours.
+  if (didFarm && Object.keys(resGain).length) {
+    await withLock(user.id, async () => {
+      const u = await reloadUser(user.id);
+      const r2 = parseResources(u);
+      for (const k in resGain) r2[k] = (r2[k] || 0) + resGain[k];
+      await run('UPDATE users SET resources_json = ? WHERE id = ?', [JSON.stringify(r2), user.id]);
+    });
+  }
   if (hatched > 0) await progressDaily(user.id, 'hatch2', hatched);
 
   // --- Exploration : marque les Glumps en explo, etat des zones, sac ---
