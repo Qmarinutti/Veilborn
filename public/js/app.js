@@ -1058,12 +1058,21 @@ function closePicker() {
   $('#picker-overlay').classList.add('hidden');
   pickerState.onPick = null;
 }
+// Résumé IV compact (gènes /31) : doré si parfait (31), vert si haut (>=25), ⭐ si 2+ parfaits.
+function ivMini(c) {
+  if (!c.genes) return '';
+  const g = c.genes;
+  const cell = (v) => `<span class="${v >= 31 ? 'iv31' : v >= 25 ? 'ivhi' : ''}">${v}</span>`;
+  const perfect = [g.force, g.vita, g.speed].filter(v => v >= 31).length;
+  return `<div class="pick-iv">IV ${cell(g.force)}·${cell(g.vita)}·${cell(g.speed)}${perfect >= 2 ? ' ⭐' : ''}</div>`;
+}
 function pickCardHtml(c) {
   const pct = Math.round(100 * (c.hp ?? c.maxHp) / (c.maxHp || 1));
   return `<div class="card ${c.fainted ? 'fainted' : ''}" data-pick="${c.id}" data-rarity="${c.rarity}">
     ${avatar(c)}
     <div class="name">${c.nickname || c.speciesName}</div>
     <div class="sub">${c.fainted ? '💀 KO' : c.type + ' · P' + c.power}</div>
+    ${ivMini(c)}
     <div class="hpbar"><i style="width:${pct}%"></i></div>
   </div>`;
 }
