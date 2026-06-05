@@ -784,6 +784,11 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .mv-btn.k-attack { border-left: 3px solid var(--danger); }
 .mv-btn.k-heal { border-left: 3px solid var(--good); }
 .mv-btn.k-guard { border-left: 3px solid var(--warn); }
+/* Apercu d'efficacite des types sur les boutons d'attaque */
+.mv-btn .mv-eff { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 999px; vertical-align: middle; }
+.mv-btn.eff-super { background: rgba(81,216,138,.10); }
+.mv-btn.eff-super .mv-eff { background: rgba(81,216,138,.22); color: #51d88a; }
+.mv-btn.eff-weak .mv-eff { background: rgba(255,107,125,.18); color: #ff6b7d; }
 .mv-wait { grid-column: 1/-1; text-align: center; color: var(--muted); padding: 14px; }
 .dmg-pop.crit { color: #ffd34d; font-size: 22px; text-shadow: 0 0 8px rgba(255,211,77,.8); }
 .dmg-pop.dot { color: #c08cff; }

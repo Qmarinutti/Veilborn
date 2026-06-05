@@ -1678,13 +1678,34 @@ function bActiveHtml(f, id) {
       <span class="bf-hpval" id="${id}-val">${f.hp}/${f.maxHp}</span></div>
   </div>`;
 }
-function moveBtnsHtml(moves) {
+// Table d'efficacite des types (replique de server/battle.js) pour l'apercu avant de frapper.
+const TYPE_STRONG = {
+  Feu: ['Plante', 'Glace', 'Insecte', 'Acier'], Eau: ['Feu', 'Roche'], Plante: ['Eau', 'Roche'],
+  Foudre: ['Eau', 'Vent'], Roche: ['Feu', 'Glace', 'Insecte', 'Vent'], Glace: ['Plante', 'Vent', 'Dragon'],
+  Ombre: ['Mystique', 'Lumiere'], Lumiere: ['Ombre', 'Mystique'], Mystique: ['Poison', 'Insecte'],
+  Acier: ['Roche', 'Glace', 'Insecte'], Poison: ['Plante', 'Eau'], Vent: ['Plante', 'Insecte'],
+  Insecte: ['Plante', 'Mystique', 'Ombre'], Dragon: ['Dragon'],
+};
+function typeMultC(att, def) {
+  if (TYPE_STRONG[att]?.includes(def)) return 1.6;
+  if (TYPE_STRONG[def]?.includes(att)) return 0.7;
+  return 1;
+}
+// oppType = type de l'adversaire ACTIF -> apercu d'efficacite sur chaque attaque elementaire.
+function moveBtnsHtml(moves, oppType) {
   return moves.map(m => {
     const meta = m.kind === 'attack' ? `⚔ ${Math.round(m.power * 100)}%`
       : m.kind === 'status' ? `${STATUS_ICON[m.status] || ''} statut`
       : m.kind === 'heal' ? '💚 soin' : '🛡️ garde';
-    return `<button class="mv-btn k-${m.kind}" data-move="${m.id}">
-      <span class="mv-name">${m.name}</span>
+    // Efficacite : seulement pour les coups elementaires (pas Neutre/soin/garde).
+    let eff = '', effCls = '';
+    if (oppType && (m.kind === 'attack' || m.kind === 'status') && m.type && m.type !== 'Neutre') {
+      const mult = typeMultC(m.type, oppType);
+      if (mult > 1) { eff = '✓ super'; effCls = ' eff-super'; }
+      else if (mult < 1) { eff = '✗ faible'; effCls = ' eff-weak'; }
+    }
+    return `<button class="mv-btn k-${m.kind}${effCls}" data-move="${m.id}">
+      <span class="mv-name">${m.name}${eff ? ` <span class="mv-eff">${eff}</span>` : ''}</span>
       <span class="mv-meta">${meta} · ${Math.round(m.acc * 100)}%</span></button>`;
   }).join('');
 }
@@ -1703,7 +1724,7 @@ function renderBattle() {
   $('#b-me-active').innerHTML = bActiveHtml(s.me[s.activeMe], 'b-me');
   $('#b-opp-bench').innerHTML = benchHtml(s.opp, s.activeOpp);
   $('#b-me-bench').innerHTML = benchHtml(s.me, s.activeMe);
-  $('#battle-moves').innerHTML = s.over ? '' : moveBtnsHtml(s.myMoves);
+  $('#battle-moves').innerHTML = s.over ? '' : moveBtnsHtml(s.myMoves, s.opp[s.activeOpp]?.type);
 }
 // Anime un PV : tween de la barre + popup chiffre.
 function animateHp(side, hp, maxHp, popup, cls) {
