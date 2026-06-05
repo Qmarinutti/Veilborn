@@ -3,6 +3,7 @@
 //  Partage par index.js (endpoints) et state.js (eclosions).
 // ============================================================
 import { get, run } from './db.js';
+import { withLock } from './lock.js';
 
 // ---------- Succes (achievements) ----------
 export const ACHIEVEMENTS = [
@@ -74,15 +75,20 @@ export async function getDaily(user) {
   return data;
 }
 // Incremente la progression d'une quete (no-op si inactive/terminee).
+// SOUS VERROU (meme verrou que /daily/claim) : sinon ce read-modify-write de daily_json
+// pourrait effacer le flag claimed=true pose par /daily/claim -> recompense reclamable en boucle.
+// IMPORTANT : ne jamais appeler progressDaily DEPUIS un withLock deja tenu (verrou non reentrant).
 export async function progressDaily(userId, questId, by = 1) {
-  const u = await get('SELECT daily_json FROM users WHERE id = ?', [userId]);
-  let data; try { data = JSON.parse(u.daily_json || 'null'); } catch { data = null; }
-  if (!data || data.day !== todayStr()) return;
-  const q = data.quests.find(x => x.id === questId);
-  if (!q || q.claimed) return;
-  const def = DAILY_BY_ID[questId];
-  q.progress = Math.min(def.goal, (q.progress || 0) + by);
-  await run('UPDATE users SET daily_json = ? WHERE id = ?', [JSON.stringify(data), userId]);
+  await withLock(userId, async () => {
+    const u = await get('SELECT daily_json FROM users WHERE id = ?', [userId]);
+    let data; try { data = JSON.parse(u.daily_json || 'null'); } catch { data = null; }
+    if (!data || data.day !== todayStr()) return;
+    const q = data.quests.find(x => x.id === questId);
+    if (!q || q.claimed) return;
+    const def = DAILY_BY_ID[questId];
+    q.progress = Math.min(def.goal, (q.progress || 0) + by);
+    await run('UPDATE users SET daily_json = ? WHERE id = ?', [JSON.stringify(data), userId]);
+  });
 }
 // Vue enrichie (texte, but, recompense, complet ?) pour le client.
 export function dailyView(data) {

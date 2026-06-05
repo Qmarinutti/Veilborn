@@ -111,8 +111,10 @@ export async function getPlayerState(user) {
     const yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
     loginStreak = user.last_login_day === yesterday ? (user.login_streak || 0) + 1 : 1;
     loginBonus = Math.min(500, 50 * loginStreak);
-    essence += loginBonus;
-    W.push({ sql: 'UPDATE users SET login_streak=?, last_login_day=? WHERE id=?', args: [loginStreak, today, user.id] });
+    essence += loginBonus; // affichage seulement
+    // Credit ATOMIQUE conditionnel : seul le 1er /state du jour credite le bonus
+    // (deux /state concurrents passeraient tous deux le test en memoire -> double bonus).
+    W.push({ sql: 'UPDATE users SET login_streak=?, last_login_day=?, essence=essence+? WHERE id=? AND (last_login_day IS NULL OR last_login_day <> ?)', args: [loginStreak, today, loginBonus, user.id, today] });
   }
 
   // --- Tick farming : 1 biome actif, gains de ressource + XP (en memoire) ---
@@ -142,9 +144,10 @@ export async function getPlayerState(user) {
     W.push({ sql: "UPDATE creatures SET biome=? WHERE owner_id=? AND biome IS NOT NULL AND biome != ?", args: [activeBiome, user.id, activeBiome] });
     if (xpGain > 0) W.push({ sql: "UPDATE creatures SET xp=xp+? WHERE owner_id=? AND biome IS NOT NULL AND stage='adult'", args: [xpGain, user.id] });
   }
-  // ESSENCE : ecriture RELATIVE (farming + bonus connexion). CRITIQUE : un ecriture absolue
+  // ESSENCE : ecriture RELATIVE (farming). CRITIQUE : une ecriture absolue
   // "essence = base + gain" effacerait une depense atomique concurrente (bonbon/oeuf) -> achats gratuits.
-  const essenceAdd = essenceGain + loginBonus;
+  // (le bonus de connexion est credite separement, par l'UPDATE conditionnel ci-dessus.)
+  const essenceAdd = essenceGain;
   if (didFarm) {
     W.push({ sql: 'UPDATE users SET essence = essence + ?, last_tick = ? WHERE id = ?', args: [essenceAdd, now, user.id] });
   } else if (essenceAdd !== 0) {

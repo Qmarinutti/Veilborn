@@ -173,31 +173,33 @@ app.post('/api/breed', requireAuth, h(async (req, res) => {
     "SELECT 1 AS x FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating' AND (parent_a IN (?, ?) OR parent_b IN (?, ?)) LIMIT 1",
     [req.user.id, a.id, b.id, a.id, b.id]);
   if (busy) return res.status(400).json({ error: 'Un de ces Glumps est deja en accouplement.' });
-  const exploringB = exploringIds(await reloadUser(req.user.id));
-  if (exploringB.has(Number(a.id)) || exploringB.has(Number(b.id))) return res.status(400).json({ error: 'Un de ces Glumps est en exploration (occupe).' });
-
-  // Cellule libre ? (accouplement OU oeuf en cours occupent une cellule)
-  const cellRow = await get(
-    "SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage IN ('mating', 'egg')", [req.user.id]);
-  if (cellRow.n >= req.user.breeding_cells) {
-    return res.status(400).json({ error: 'Toutes tes cellules de reproduction sont occupees.' });
-  }
-
-  const user = await reloadUser(req.user.id);
-  const child = breed(a, b, { pityBonus: shinyPityBonus(user.shiny_pity) }); // forme de BASE
-  // Phase 1 : accouplement. L'oeuf "en cours de reproduction" attend reproductionSeconds.
-  const readyAt = Date.now() + reproductionSeconds(child.species) * 1000;
-  const id = await insertCreature(req.user.id, { ...child, stage: 'mating' }, { hatch_at: readyAt, from_breeding: 1, parent_a: a.id, parent_b: b.id });
-  // Les 2 parents quittent le farm (ils sont occupes a s'accoupler).
-  await run("UPDATE creatures SET biome = NULL, in_prairie = 0 WHERE id IN (?, ?)", [a.id, b.id]);
-  // Pity shiny + compteur de reproductions (succes "eleveur" a 10).
-  await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
+  // Section critique sous VERROU : re-verifie occupation des parents + cellule libre,
+  // puis cree l'oeuf -> empeche deux /breed concurrents de depasser la limite de cellules
+  // ou d'utiliser le meme parent deux fois.
+  const out = await withLock(req.user.id, async () => {
+    const stillBusy = await get(
+      "SELECT 1 AS x FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating' AND (parent_a IN (?, ?) OR parent_b IN (?, ?)) LIMIT 1",
+      [req.user.id, a.id, b.id, a.id, b.id]);
+    if (stillBusy) return { status: 400, error: 'Un de ces Glumps est deja en accouplement.' };
+    const cellRow = await get(
+      "SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage IN ('mating', 'egg')", [req.user.id]);
+    const user = await reloadUser(req.user.id);
+    if (cellRow.n >= user.breeding_cells) return { status: 400, error: 'Toutes tes cellules de reproduction sont occupees.' };
+    const child = breed(a, b, { pityBonus: shinyPityBonus(user.shiny_pity) }); // forme de BASE
+    const readyAt = Date.now() + reproductionSeconds(child.species) * 1000;
+    const id = await insertCreature(req.user.id, { ...child, stage: 'mating' }, { hatch_at: readyAt, from_breeding: 1, parent_a: a.id, parent_b: b.id });
+    await run("UPDATE creatures SET biome = NULL, in_prairie = 0 WHERE id IN (?, ?)", [a.id, b.id]);
+    await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
+    return { ok: true, id, variant: child.variant };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  // Hors verrou (progressDaily prend lui-meme le verrou).
   await progressDaily(req.user.id, 'breed1', 1);
   const newAch = [];
-  if (child.variant === 1) { const a2 = await unlockAch(req.user.id, 'shiny'); if (a2) newAch.push(a2); }
+  if (out.variant === 1) { const a2 = await unlockAch(req.user.id, 'shiny'); if (a2) newAch.push(a2); }
   const bred = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND from_breeding = 1", [req.user.id])).n;
   if (bred >= 10) { const a3 = await unlockAch(req.user.id, 'breeder'); if (a3) newAch.push(a3); }
-  const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
+  const row = await get('SELECT * FROM creatures WHERE id = ?', [out.id]);
   res.json({ ok: true, egg: publicCreature(row), newAch });
 }));
 
@@ -265,13 +267,11 @@ app.post('/api/shop/buy-egg', requireAuth, h(async (req, res) => {
   const isBasic = type === 'basic';
   if (!isBasic && !ELEMENTS.includes(type)) return res.status(400).json({ error: 'Type d\'oeuf inconnu.' });
 
-  const eggCount = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 0", [req.user.id])).n;
-  if (eggCount >= req.user.incubator_slots) {
-    return res.status(400).json({ error: 'Tous tes incubateurs sont occupes.' });
-  }
-
   const out = await withLock(req.user.id, async () => {
     const user = await reloadUser(req.user.id);
+    // Compte des incubateurs occupes DANS le verrou (sinon deux achats concurrents depassent la limite).
+    const eggCount = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 0", [req.user.id])).n;
+    if (eggCount >= user.incubator_slots) return { status: 400, error: 'Tous tes incubateurs sont occupes.' };
     let payInfo;
     if (isBasic) {
       if (!(await spend(req.user.id, SHOP_EGG_PRICE))) return { status: 400, error: `Pas assez d'essence (besoin de ${SHOP_EGG_PRICE}).` };
@@ -295,11 +295,11 @@ app.post('/api/shop/buy-egg', requireAuth, h(async (req, res) => {
     await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
     const newAch = [];
     if (child.variant === 1) { const a = await unlockAch(req.user.id, 'shiny'); if (a) newAch.push(a); }
-    await progressDaily(req.user.id, 'buyegg2', 1);
     const row = await get('SELECT * FROM creatures WHERE id = ?', [eggId]);
     return { ok: true, egg: publicCreature(row), ...payInfo, newAch };
   });
   if (out.error) return res.status(out.status).json({ error: out.error });
+  await progressDaily(req.user.id, 'buyegg2', 1); // HORS du verrou (progressDaily prend lui-meme le verrou)
   res.json(out);
 }));
 
