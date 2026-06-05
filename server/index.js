@@ -222,6 +222,7 @@ app.post('/api/creature/release', requireAuth, h(async (req, res) => {
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage === 'egg') return res.status(400).json({ error: 'On ne relache pas un oeuf.' });
   if (c.favorite === 1) return res.status(400).json({ error: 'Ce Glump est en favori (verrouille). Retire le coeur d\'abord.' });
+  if (exploringIds(await reloadUser(req.user.id)).has(Number(id))) return res.status(400).json({ error: 'Ce Glump est en exploration (occupe).' });
 
   const refund = Math.round(creatureValue(c) * 0.5);
   await run('DELETE FROM creatures WHERE id = ?', [id]);
@@ -666,10 +667,11 @@ app.post('/api/creature/favorite', requireAuth, h(async (req, res) => {
 app.post('/api/creature/release-many', requireAuth, h(async (req, res) => {
   const ids = Array.isArray((req.body || {}).ids) ? req.body.ids.map(Number).filter(Boolean) : [];
   if (!ids.length) return res.status(400).json({ error: 'Aucun Glump selectionne.' });
+  const exploringRM = exploringIds(await reloadUser(req.user.id));
   let refund = 0, released = 0;
   for (const id of ids) {
     const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
-    if (!c || c.stage === 'egg' || c.favorite === 1) continue;
+    if (!c || c.stage === 'egg' || c.favorite === 1 || exploringRM.has(Number(id))) continue;
     refund += Math.round(creatureValue(c) * 0.5);
     await run('DELETE FROM creatures WHERE id = ?', [id]);
     released++;
@@ -752,6 +754,7 @@ app.post('/api/trade/propose', requireAuth, h(async (req, res) => {
   const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [creatureId, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable (ou oeuf).' });
   if (c.favorite === 1) return res.status(400).json({ error: 'Retire le favori avant d\'echanger ce Glump.' });
+  if (exploringIds(await reloadUser(req.user.id)).has(Number(creatureId))) return res.status(400).json({ error: 'Ce Glump est en exploration (occupe).' });
   await run('INSERT INTO trades (from_user, to_user, from_creature, status, created_at) VALUES (?, ?, ?, ?, ?)',
     [req.user.id, tid, creatureId, 'pending', Date.now()]);
   res.json({ ok: true });
@@ -774,18 +777,25 @@ app.get('/api/trade/list', requireAuth, h(async (req, res) => {
 // Accepter : j'offre un de mes Glumps en retour ; on echange les proprietaires.
 app.post('/api/trade/accept', requireAuth, h(async (req, res) => {
   const { id, creatureId } = req.body || {};
-  const t = await get("SELECT * FROM trades WHERE id = ? AND to_user = ? AND status = 'pending'", [id, req.user.id]);
-  if (!t) return res.status(404).json({ error: 'Echange introuvable.' });
-  const theirs = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [t.from_creature, t.from_user]);
-  const mine = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [creatureId, req.user.id]);
-  if (!theirs || !mine) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return res.status(400).json({ error: 'Un des Glumps n\'est plus disponible.' }); }
-  if (mine.favorite === 1) return res.status(400).json({ error: 'Retire le favori avant d\'echanger ce Glump.' });
-  if (theirs.favorite === 1) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return res.status(400).json({ error: 'L\'autre joueur a verrouille ce Glump (favori). Echange annule.' }); }
-  // Echange des proprietaires (retire de la prairie pour eviter les incoherences de slots).
-  await run('UPDATE creatures SET owner_id = ?, in_prairie = 0 WHERE id = ?', [req.user.id, theirs.id]);
-  await run('UPDATE creatures SET owner_id = ?, in_prairie = 0 WHERE id = ?', [t.from_user, mine.id]);
-  await run("UPDATE trades SET status = 'done' WHERE id = ?", [id]);
-  res.json({ ok: true, received: publicCreature(await get('SELECT * FROM creatures WHERE id = ?', [theirs.id])) });
+  const out = await withLock(req.user.id, async () => {
+    const t = await get("SELECT * FROM trades WHERE id = ? AND to_user = ? AND status = 'pending'", [id, req.user.id]);
+    if (!t) return { status: 404, error: 'Echange introuvable.' };
+    const theirs = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [t.from_creature, t.from_user]);
+    const mine = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage != 'egg'", [creatureId, req.user.id]);
+    if (!theirs || !mine) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return { status: 400, error: 'Un des Glumps n\'est plus disponible.' }; }
+    if (mine.favorite === 1) return { status: 400, error: 'Retire le favori avant d\'echanger ce Glump.' };
+    if (theirs.favorite === 1) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return { status: 400, error: 'L\'autre joueur a verrouille ce Glump (favori). Echange annule.' }; }
+    // Un Glump occupe (exploration) ne peut pas etre echange.
+    if (exploringIds(await reloadUser(req.user.id)).has(Number(mine.id))) return { status: 400, error: 'Ton Glump est en exploration (occupe).' };
+    if (exploringIds(await reloadUser(t.from_user)).has(Number(theirs.id))) { await run("UPDATE trades SET status = 'cancelled' WHERE id = ?", [id]); return { status: 400, error: 'Le Glump propose est devenu indisponible. Echange annule.' }; }
+    // Echange des proprietaires : on sort de la prairie ET du farm (biome remis a zero) pour eviter qu'un Glump farme/affiche chez l'ancien proprietaire.
+    await run('UPDATE creatures SET owner_id = ?, in_prairie = 0, biome = NULL WHERE id = ?', [req.user.id, theirs.id]);
+    await run('UPDATE creatures SET owner_id = ?, in_prairie = 0, biome = NULL WHERE id = ?', [t.from_user, mine.id]);
+    await run("UPDATE trades SET status = 'done' WHERE id = ?", [id]);
+    return { ok: true, received: publicCreature(await get('SELECT * FROM creatures WHERE id = ?', [theirs.id])) };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
 }));
 // Refuser (destinataire) ou annuler (emetteur) un echange en attente.
 app.post('/api/trade/cancel', requireAuth, h(async (req, res) => {
