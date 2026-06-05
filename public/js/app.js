@@ -17,15 +17,20 @@ document.addEventListener('pointerdown', (e) => {
 let STATE = null;        // dernier etat serveur
 let SERVER_SKEW = 0;     // serverTime - Date.now() local, pour des comptes a rebours justes
 let pollTimer = null;
+let lastMutateAt = 0;    // date de la derniere action mutante (POST) -> anti "essence qui remonte" via poll perime
 
 async function api(path, opts = {}) {
+  const method = opts.method || 'GET';
+  // Toute action mutante peut depenser de l'essence : un /state demande AVANT elle est perime.
+  if (method !== 'GET') lastMutateAt = Date.now();
   const res = await fetch('/api' + path, {
-    method: opts.method || 'GET',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+  if (method !== 'GET') lastMutateAt = Date.now(); // aussi a la reponse (couvre toute la fenetre du serveur)
   return data;
 }
 
@@ -257,7 +262,16 @@ async function enterGame() {
 
 async function refresh() {
   try {
-    STATE = await api('/state');
+    const reqAt = Date.now();
+    const fresh = await api('/state');
+    // Anti-clobber : si ce poll a ete demande AVANT une action mutante (depense), il peut renvoyer
+    // une essence/ressource perimee (trop haute). On ne laisse jamais un poll perime REMONTER les soldes.
+    if (STATE && reqAt <= lastMutateAt) {
+      fresh.user.essence = Math.min(fresh.user.essence, STATE.user.essence);
+      const cur = STATE.user.resources || {}, nw = fresh.user.resources || {};
+      for (const k in nw) if (typeof cur[k] === 'number') nw[k] = Math.min(nw[k], cur[k]);
+    }
+    STATE = fresh;
     SERVER_SKEW = STATE.serverTime - Date.now();
     $('#who').textContent = STATE.user.username;
     const sw = $('#settings-who'); if (sw) sw.textContent = STATE.user.username;
