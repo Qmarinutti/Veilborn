@@ -24,7 +24,7 @@ import { simulateBattle, startSession, playTurn } from './battle.js';
 import { moveButtons } from './moves.js';
 import {
   ACHIEVEMENTS, DEX_MILESTONES, DAILY_POOL, parseAchSet, unlockAch,
-  getDaily, progressDaily, dailyView, todayStr,
+  getDaily, progressDaily, dailyView, todayStr, dexClaimedCount,
 } from './progress.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -713,10 +713,10 @@ app.get('/api/progress', requireAuth, h(async (req, res) => {
   const achievements = ACHIEVEMENTS.map(a => ({ ...a, unlocked: unlocked.has(a.id) }));
   // Paliers du dex : combien decouverts + lesquels reclamables.
   const discCount = (await get('SELECT COUNT(*) AS n FROM discoveries WHERE user_id = ? AND variant = 0', [req.user.id])).n;
-  const claimed = user.dex_claimed || 0;
-  const milestones = DEX_MILESTONES.map((m, i) => ({
+  const claimedCount = dexClaimedCount(user); // seuil (COUNT) du dernier palier reclame
+  const milestones = DEX_MILESTONES.map((m) => ({
     count: m.count, essence: m.essence, prairie: !!m.prairie, cell: !!m.cell, title: m.title || null,
-    reached: discCount >= m.count, claimed: i < claimed, claimable: discCount >= m.count && i >= claimed,
+    reached: discCount >= m.count, claimed: m.count <= claimedCount, claimable: discCount >= m.count && m.count > claimedCount,
   }));
   res.json({
     daily, achievements,
@@ -750,14 +750,16 @@ app.post('/api/dex/claim', requireAuth, h(async (req, res) => {
   const out = await withLock(req.user.id, async () => {
     const user = await reloadUser(req.user.id);
     const discCount = (await get('SELECT COUNT(*) AS n FROM discoveries WHERE user_id = ? AND variant = 0', [req.user.id])).n;
-    const idx = user.dex_claimed || 0;
-    const m = DEX_MILESTONES[idx];
-    if (!m) return { status: 400, error: 'Tous les paliers sont deja reclames.' };
-    if (discCount < m.count) return { status: 400, error: `Palier non atteint (${discCount}/${m.count}).` };
+    const claimedCount = dexClaimedCount(user); // count-based (robuste a l'ajout de paliers)
+    const m = DEX_MILESTONES.find(x => x.count > claimedCount && discCount >= x.count);
+    if (!m) {
+      const next = DEX_MILESTONES.find(x => x.count > claimedCount);
+      return { status: 400, error: next ? `Palier non atteint (${discCount}/${next.count}).` : 'Tous les paliers sont deja reclames.' };
+    }
     let extra = '';
     if (m.prairie) { await run('UPDATE users SET prairie_slots = prairie_slots + 1 WHERE id = ?', [req.user.id]); extra = '+1 emplacement de prairie'; }
     if (m.cell) { await run('UPDATE users SET breeding_cells = breeding_cells + 1 WHERE id = ?', [req.user.id]); extra = '+1 cellule de reproduction'; }
-    await run('UPDATE users SET dex_claimed = dex_claimed + 1, essence = essence + ? WHERE id = ?', [m.essence, req.user.id]);
+    await run('UPDATE users SET dex_claimed = ?, essence = essence + ? WHERE id = ?', [m.count, m.essence, req.user.id]);
     if (m.count >= SPECIES_COUNT) await unlockAch(req.user.id, 'dexmaster');
     return { ok: true, essence: m.essence, extra, title: m.title || null };
   });

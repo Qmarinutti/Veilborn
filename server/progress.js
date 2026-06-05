@@ -39,10 +39,22 @@ export const DEX_MILESTONES = [
   { count: 10, essence: 500 },
   { count: 25, essence: 1500 },
   { count: 50, essence: 4000, prairie: true },   // +1 emplacement de prairie
+  { count: 75, essence: 8000 },                   // (nouveau) comble le trou 50->100
   { count: 100, essence: 12000, cell: true },     // +1 cellule de reproduction
+  { count: 150, essence: 25000 },                 // (nouveau) comble le trou 100->200
   { count: 200, essence: 40000, prairie: true },
+  { count: 250, essence: 80000 },                 // (nouveau) comble le trou 200->300
   { count: 300, essence: 150000, title: 'Maitre du Glumpdex' },
 ];
+// Migration : avant, dex_claimed = INDEX dans l'ancienne liste [10,25,50,100,200,300].
+// Les counts commencent a 10 -> toute valeur stockee < 10 est un ANCIEN index, qu'on convertit
+// en COUNT (seuil du dernier palier reclame). Apres migration, dex_claimed stocke un COUNT (>=10).
+const OLD_DEX_COUNTS = [10, 25, 50, 100, 200, 300];
+export function dexClaimedCount(user) {
+  let v = user.dex_claimed || 0;
+  if (v > 0 && v < 10) v = OLD_DEX_COUNTS[Math.min(v, OLD_DEX_COUNTS.length) - 1];
+  return v;
+}
 
 // ---------- Quetes quotidiennes ----------
 export const DAILY_POOL = [

@@ -23,8 +23,8 @@ export const BALANCE = {
   breedHatchBaseSec: 180,      // phase 2 : eclosion de l'oeuf pondu
   breedingStartCells: 1,
   breedingMaxCells: 5,
-  // Cout pour debloquer la cellule 2, 3, 4, 5 (tres cher exprès).
-  breedingCellCosts: [25000, 50000, 250000, 1000000],
+  // Cout pour debloquer la cellule 2, 3, 4, 5. Courbe lissee (avant: la 5e etait a 1M = ~18j de farm = mur sec).
+  breedingCellCosts: [15000, 50000, 150000, 400000],
   // Duree de maturation bebe -> adulte (secondes), multipliee par la rarete.
   maturationBaseSec: 180,
   // Revenu idle d'essence par seconde et par adulte EN PRAIRIE = rarete * ce facteur.
@@ -296,12 +296,12 @@ export function randomBase() {
 export const SYNERGY_BONUS = 0.25; // +25% si le type du Glump correspond au biome
 export const BIOMES = {
   plaine:     { id: 'plaine',     name: 'Plaine',     emoji: '🌳', types: [],                            resource: 'essence', resName: 'Essence',  resEmoji: '✨', cost: 0 },
-  volcan:     { id: 'volcan',     name: 'Volcan',     emoji: '🌋', types: ['Feu', 'Acier'],              resource: 'magma',   resName: 'Magma',    resEmoji: '🌋', cost: 5000 },
-  ocean:      { id: 'ocean',      name: 'Océan',      emoji: '🌊', types: ['Eau', 'Glace'],              resource: 'ecume',   resName: 'Écume',    resEmoji: '🌊', cost: 5000 },
-  foret:      { id: 'foret',      name: 'Forêt',      emoji: '🌲', types: ['Plante', 'Insecte'],         resource: 'spores',  resName: 'Spores',   resEmoji: '🍃', cost: 5000 },
-  desert:     { id: 'desert',     name: 'Désert',     emoji: '🏜️', types: ['Roche', 'Poison'],           resource: 'sable',   resName: 'Sable',    resEmoji: '🏜️', cost: 5000 },
-  cieux:      { id: 'cieux',      name: 'Cieux',      emoji: '⛈️', types: ['Foudre', 'Vent', 'Dragon'],  resource: 'orage',   resName: 'Orage',    resEmoji: '⚡', cost: 8000 },
-  sanctuaire: { id: 'sanctuaire', name: 'Sanctuaire', emoji: '🔮', types: ['Ombre', 'Lumiere', 'Mystique'], resource: 'eclat', resName: 'Éclat',  resEmoji: '🔮', cost: 8000 },
+  volcan:     { id: 'volcan',     name: 'Volcan',     emoji: '🌋', types: ['Feu', 'Acier'],              resource: 'magma',   resName: 'Magma',    resEmoji: '🌋', cost: 4000 },
+  ocean:      { id: 'ocean',      name: 'Océan',      emoji: '🌊', types: ['Eau', 'Glace'],              resource: 'ecume',   resName: 'Écume',    resEmoji: '🌊', cost: 4000 },
+  foret:      { id: 'foret',      name: 'Forêt',      emoji: '🌲', types: ['Plante', 'Insecte'],         resource: 'spores',  resName: 'Spores',   resEmoji: '🍃', cost: 4000 },
+  desert:     { id: 'desert',     name: 'Désert',     emoji: '🏜️', types: ['Roche', 'Poison'],           resource: 'sable',   resName: 'Sable',    resEmoji: '🏜️', cost: 4000 },
+  cieux:      { id: 'cieux',      name: 'Cieux',      emoji: '⛈️', types: ['Foudre', 'Vent', 'Dragon'],  resource: 'orage',   resName: 'Orage',    resEmoji: '⚡', cost: 7000 },
+  sanctuaire: { id: 'sanctuaire', name: 'Sanctuaire', emoji: '🔮', types: ['Ombre', 'Lumiere', 'Mystique'], resource: 'eclat', resName: 'Éclat',  resEmoji: '🔮', cost: 7000 },
 };
 export const BIOME_LIST = Object.values(BIOMES);
 export const BIOME_IDS = Object.keys(BIOMES);
@@ -325,8 +325,8 @@ export const EXPLORE_TIERS = [
   { id: 'facile',     name: 'Facile',     count: 3, level: 10,  durationSec: 10 * 60,   res: 200,   items: 1, eggs: 1, eggChance: 0.6 },
   { id: 'normal',     name: 'Normal',     count: 4, level: 25,  durationSec: 45 * 60,   res: 1000,  items: 2, eggs: 1, eggChance: 1 },
   { id: 'difficile',  name: 'Difficile',  count: 4, level: 50,  durationSec: 2 * 3600,  res: 2800,  items: 3, eggs: 2, eggChance: 1 },
-  { id: 'hard',       name: 'Hard',       count: 2, level: 80,  durationSec: 5 * 3600,  res: 8000,  items: 4, eggs: 2, eggChance: 1 },
-  { id: 'impossible', name: 'Impossible', count: 3, level: 100, durationSec: 12 * 3600, res: 22000, items: 6, eggs: 3, eggChance: 1 },
+  { id: 'hard',       name: 'Hard',       count: 2, level: 80,  durationSec: 5 * 3600,  res: 12000, items: 4, eggs: 2, eggChance: 1 },
+  { id: 'impossible', name: 'Impossible', count: 3, level: 100, durationSec: 12 * 3600, res: 40000, items: 6, eggs: 3, eggChance: 1 },
 ];
 export const EXPLORE_TIER_BY_ID = Object.fromEntries(EXPLORE_TIERS.map(t => [t.id, t]));
 export const EXPLORE_ITEMS = ['candy', 'candy', 'potion', 'revive']; // pondere : un peu plus de bonbons

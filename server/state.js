@@ -110,7 +110,7 @@ export async function getPlayerState(user) {
   if (user.last_login_day !== today) {
     const yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
     loginStreak = user.last_login_day === yesterday ? (user.login_streak || 0) + 1 : 1;
-    loginBonus = Math.min(500, 50 * loginStreak);
+    loginBonus = Math.min(1000, 50 * loginStreak); // plafond releve (avant 500 = plateau des le jour 10)
     essence += loginBonus; // affichage seulement
     // Credit ATOMIQUE conditionnel : seul le 1er /state du jour credite le bonus
     // (deux /state concurrents passeraient tous deux le test en memoire -> double bonus).
