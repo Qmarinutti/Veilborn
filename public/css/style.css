@@ -278,6 +278,10 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .fighter-mini { width: 86px; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
 .fm-name { font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fm-lvl { font-size: 10px; color: var(--muted); }
+.fm-type { font-size: 10px; font-weight: 700; margin-top: 2px; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,.06); color: var(--muted); }
+.fm-type.mu-good { background: rgba(81,216,138,.20); color: #51d88a; }
+.fm-type.mu-bad { background: rgba(255,107,125,.20); color: #ff6b7d; }
+.pvp-slot .ps-type { font-size: 10px; font-weight: 700; color: var(--primary); }
 .rank-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
 .rank-row.me { color: var(--gold); font-weight: 700; }
 .rank-pos { width: 24px; color: var(--muted); font-weight: 700; }

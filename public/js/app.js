@@ -1624,10 +1624,11 @@ function renderArenaTeam() {
   for (let i = 0; i < 3; i++) {
     const c = pvpTeam[i] && STATE.creatures.find(x => x.id === pvpTeam[i]);
     html += c
-      ? `<div class="pvp-slot filled" data-team-rm="${c.id}">${creatureVisual(c, 56)}<span>${c.nickname || c.speciesName}</span><b class="rm">✕</b></div>`
+      ? `<div class="pvp-slot filled" data-team-rm="${c.id}">${creatureVisual(c, 56)}<span>${c.nickname || c.speciesName}</span><small class="ps-type">${c.type}</small><b class="rm">✕</b></div>`
       : `<div class="pvp-slot empty" data-team-add="1"><div class="add">+</div><span>Glump</span></div>`;
   }
   $('#pvp-team').innerHTML = html;
+  renderOpponent(); // rafraichit les indicateurs de matchup si un adversaire est affiche
 }
 $('#pvp-team').addEventListener('click', (e) => {
   const rm = e.target.closest('[data-team-rm]');
@@ -1643,22 +1644,36 @@ $('#pvp-team').addEventListener('click', (e) => {
     });
   }
 });
+// Matchup d'un type adverse vs MON equipe selectionnee (apercu avant le combat).
+function teamMatchup(oppType) {
+  const myTypes = pvpTeam.map(id => STATE.creatures.find(c => c.id === id)?.type).filter(Boolean);
+  if (!myTypes.length || !oppType) return { cls: '', tag: '' };
+  if (myTypes.some(t => typeMultC(t, oppType) > 1)) return { cls: 'mu-good', tag: '✓' };  // j'ai un contre
+  if (myTypes.every(t => typeMultC(oppType, t) > 1)) return { cls: 'mu-bad', tag: '⚠' };   // il domine toute mon equipe
+  return { cls: '', tag: '' };
+}
 function fighterMini(c) {
+  const mu = teamMatchup(c.type);
   return `<div class="fighter-mini" data-rarity="${c.rarity}">
     <div class="fm-sprite">${creatureVisual(c, 50)}</div>
     <div class="fm-name">${c.name || c.speciesName}</div>
     <div class="fm-lvl">Niv ${c.level} · P${c.power}</div>
+    <div class="fm-type ${mu.cls}">${c.type}${mu.tag ? ' ' + mu.tag : ''}</div>
   </div>`;
+}
+function renderOpponent() {
+  if (!pvpOpponent) return;
+  $('#pvp-opponent').innerHTML = `
+    <div class="opp-card">
+      <div class="opp-head"><b>${pvpOpponent.username}</b> · 🏆 ${pvpOpponent.trophies}</div>
+      <div class="opp-team">${pvpOpponent.team.map(fighterMini).join('')}</div>
+      <button id="pvp-fight" class="btn primary" style="width:100%;margin-top:10px;">⚔️ Combattre !</button>
+    </div>`;
 }
 $('#pvp-find').addEventListener('click', async () => {
   try {
     pvpOpponent = await api('/pvp/opponent');
-    $('#pvp-opponent').innerHTML = `
-      <div class="opp-card">
-        <div class="opp-head"><b>${pvpOpponent.username}</b> · 🏆 ${pvpOpponent.trophies}</div>
-        <div class="opp-team">${pvpOpponent.team.map(fighterMini).join('')}</div>
-        <button id="pvp-fight" class="btn primary" style="width:100%;margin-top:10px;">⚔️ Combattre !</button>
-      </div>`;
+    renderOpponent();
   } catch (err) { $('#pvp-opponent').innerHTML = `<p class="hint">${err.message}</p>`; }
 });
 $('#pvp-opponent').addEventListener('click', async (e) => {
