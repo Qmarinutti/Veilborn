@@ -224,6 +224,9 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
 }
 .incubator.empty { color: var(--muted); }
+.incubator { position: relative; }
+.incubator.is-bred { border-style: solid; border-color: #ff7eb6; }
+.incubator .egg-bred { position: absolute; top: 6px; right: 8px; font-size: 14px; }
 .incubator .egg { font-size: 38px; animation: wobble 2.5s ease-in-out infinite; }
 @keyframes wobble { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
 .incubator.ready { border-style: solid; border-color: var(--good); box-shadow: 0 0 24px rgba(81,216,138,.35); }
@@ -819,6 +822,7 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .biome-card .bc-emoji { font-size: 30px; line-height: 1; }
 .biome-card .bc-name { font-size: 14px; font-weight: 700; font-family: 'Fredoka', sans-serif; }
 .biome-card .bc-res { font-size: 11px; color: var(--muted); }
+.biome-card .bc-syn { font-size: 10px; font-weight: 700; color: var(--gold, #ffd23f); margin-top: 2px; }
 .biome-card .bc-status { font-size: 11px; font-weight: 700; margin-top: 3px; padding: 2px 9px; border-radius: 999px; }
 .bc-status.on { background: linear-gradient(135deg, var(--good), #8fe04f); color: #06321a; }
 .bc-status.own { background: rgba(108,140,255,.18); color: var(--primary); }

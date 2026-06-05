@@ -472,8 +472,9 @@ function matingParentIds() {
 function eggCellHtml(egg, mystery) {
   const ready = egg.remainingMs <= 0;
   const label = mystery && !ready ? '???' : `${egg.speciesName} ${RARITY_DOTS(egg.rarity)}`;
-  return `<div class="incubator ${ready ? 'ready' : ''}" data-egg="${egg.id}">
-    <div class="egg">${ready ? '🐣' : '🥚'}</div>
+  const bred = egg.fromBreeding ? '<div class="egg-bred" title="Issu de reproduction">💞</div>' : '';
+  return `<div class="incubator ${ready ? 'ready' : ''} ${egg.fromBreeding ? 'is-bred' : ''}" data-egg="${egg.id}">
+    ${bred}<div class="egg">${ready ? '🐣' : '🥚'}</div>
     <div class="sub">${label}</div>
     <div class="countdown" data-ready="${egg.readyAt}">${ready ? 'Eclot !' : ''}</div>
     <div class="egg-prog"><i data-egg-bar="${egg.id}" data-total="${egg.totalMs || 0}"></i></div>
@@ -488,6 +489,10 @@ function renderIncubators() {
     html += e[i] ? eggCellHtml(e[i], false)
       : `<div class="incubator empty"><div class="egg">⬚</div><div>Libre</div></div>`;
   }
+  // Oeufs issus de reproduction : ils eclosent ICI une fois l'accouplement termine (en plus des incubateurs achetes).
+  // Mystere (???) jusqu'a l'eclosion -> on decouvre l'espece/rarete a la naissance.
+  const bred = STATE.creatures.filter(c => c.fromBreeding && c.stage === 'egg');
+  for (const egg of bred) html += eggCellHtml(egg, true);
   $('#incubators').innerHTML = html;
   const buyBtn = $('#buy-slot');
   if (slots >= 8) { buyBtn.disabled = true; buyBtn.textContent = 'Max'; }
@@ -497,7 +502,8 @@ function renderIncubators() {
 let breedSelA = null, breedSelB = null; // parents selectionnes dans la cellule "composer"
 function renderBreedingCells() {
   const max = STATE.user.breedingCells;
-  const eggsList = bredEggs();
+  // La cellule n'affiche que l'ACCOUPLEMENT. L'oeuf pondu part en eclosion (incubateurs).
+  const eggsList = STATE.creatures.filter(c => c.fromBreeding && c.stage === 'mating');
   $('#breeding-info').textContent = `${eggsList.length}/${max}`;
   const find = (id) => STATE.creatures.find(c => c.id === id);
   const parentBox = (c, extra = '') => c
@@ -940,14 +946,19 @@ function renderBiomeTabs() {
   if (!STATE) return;
   const biomes = STATE.biomes || [];
   currentBiome = STATE.user.activeBiome || 'plaine';
+  // Combien de mes farmeurs gagneraient le +25% de synergie dans chaque biome (= type assorti).
+  const farmers = STATE.creatures.filter(c => c.stage === 'adult' && c.farming);
   $('#biome-tabs').innerHTML = biomes.map(b => {
     const status = b.active ? `<span class="bc-status on">● ACTIF</span>`
       : b.owned ? `<span class="bc-status own">Activer</span>`
         : `<span class="bc-status lock">🔒 ✨${b.cost.toLocaleString('fr-FR')}</span>`;
+    const syn = b.types.length ? farmers.filter(c => b.types.includes(c.type)).length : 0;
+    const synBadge = syn > 0 ? `<span class="bc-syn" title="${syn} de tes farmeurs gagnent +25% ici">⭐ ${syn} synergie${syn > 1 ? 's' : ''}</span>` : '';
     return `<button class="biome-card ${b.active ? 'active' : ''} ${b.owned ? '' : 'locked'}" data-biome="${b.id}" data-owned="${b.owned ? 1 : 0}" title="${b.types.length ? 'Types : ' + b.types.join(', ') : 'Neutre'}">
       <span class="bc-emoji">${b.emoji}</span>
       <span class="bc-name">${b.name}</span>
       <span class="bc-res">${b.resEmoji} ${b.resName}</span>
+      ${synBadge}
       ${status}
     </button>`;
   }).join('');

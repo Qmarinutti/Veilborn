@@ -239,7 +239,7 @@ export async function getPlayerState(user) {
     }
   }
   const farmingCount = rows.filter(c => c.biome && BIOMES[c.biome]).length;
-  const breedingUsed = rows.filter(c => c.from_breeding === 1 && (c.stage === 'egg' || c.stage === 'mating')).length;
+  const breedingUsed = rows.filter(c => c.from_breeding === 1 && c.stage === 'mating').length; // cellule = accouplement uniquement
   const biomes = BIOME_LIST.map(b => ({
     id: b.id, name: b.name, emoji: b.emoji, types: b.types,
     resource: b.resource, resName: b.resName, resEmoji: b.resEmoji,

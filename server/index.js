@@ -181,8 +181,10 @@ app.post('/api/breed', requireAuth, h(async (req, res) => {
       "SELECT 1 AS x FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating' AND (parent_a IN (?, ?) OR parent_b IN (?, ?)) LIMIT 1",
       [req.user.id, a.id, b.id, a.id, b.id]);
     if (stillBusy) return { status: 400, error: 'Un de ces Glumps est deja en accouplement.' };
+    // La cellule n'est occupee que pendant l'ACCOUPLEMENT. Une fois l'oeuf pondu, il part
+    // en eclosion (section incubateurs) et libere la cellule -> on peut relancer une repro.
     const cellRow = await get(
-      "SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage IN ('mating', 'egg')", [req.user.id]);
+      "SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating'", [req.user.id]);
     const user = await reloadUser(req.user.id);
     if (cellRow.n >= user.breeding_cells) return { status: 400, error: 'Toutes tes cellules de reproduction sont occupees.' };
     const child = breed(a, b, { pityBonus: shinyPityBonus(user.shiny_pity) }); // forme de BASE
