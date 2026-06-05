@@ -9,7 +9,7 @@ import { hashPassword } from '../server/auth.js';
 await initDb();
 // Cree un utilisateur de test directement
 const now = Date.now();
-const { hash, salt } = hashPassword('pw');
+const { hash, salt } = await hashPassword('pw');
 const uname = 'clob_' + Math.floor(now % 1e7);
 const todayStr = new Date(now).toISOString().slice(0, 10); // neutralise le bonus de connexion
 const { lastInsertRowid } = await run(

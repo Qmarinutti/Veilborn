@@ -1,14 +1,20 @@
-// Authentification simple : hash scrypt + session cookie httpOnly.
-import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+// Authentification simple : hash scrypt (ASYNC) + session cookie httpOnly.
+import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
+import { promisify } from 'node:util';
 import { get, run } from './db.js';
 
-export function hashPassword(password, salt = randomBytes(16).toString('hex')) {
-  const hash = scryptSync(password, salt, 64).toString('hex');
-  return { hash, salt };
+const scryptAsync = promisify(scrypt);
+
+// ASYNC : scrypt est lourd (~75ms CPU). En version synchrone il BLOQUE l'event loop
+// -> sous charge (beaucoup de connexions/inscriptions) le serveur n'accepte plus rien.
+// La version async tourne sur le threadpool libuv (jusqu'a 4 en parallele) sans bloquer.
+export async function hashPassword(password, salt = randomBytes(16).toString('hex')) {
+  const buf = await scryptAsync(password, salt, 64);
+  return { hash: buf.toString('hex'), salt };
 }
 
-export function verifyPassword(password, salt, expectedHash) {
-  const { hash } = hashPassword(password, salt);
+export async function verifyPassword(password, salt, expectedHash) {
+  const { hash } = await hashPassword(password, salt);
   const a = Buffer.from(hash, 'hex');
   const b = Buffer.from(expectedHash, 'hex');
   return a.length === b.length && timingSafeEqual(a, b);

@@ -6,7 +6,7 @@ import { hashPassword } from '../server/auth.js';
 await initDb();
 const now = Date.now();
 const yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
-const { hash, salt } = hashPassword('pw');
+const { hash, salt } = await hashPassword('pw');
 const uname = 'login_' + Math.floor(now % 1e7);
 const { lastInsertRowid } = await run(
   'INSERT INTO users (username, pass_hash, pass_salt, essence, incubator_slots, prairie_slots, breeding_cells, login_streak, last_login_day, last_tick, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',

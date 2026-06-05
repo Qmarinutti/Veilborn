@@ -9,7 +9,7 @@ import { SPECIES_IDS } from '../server/game.js';
 if (process.argv[2] === 'setup') {
   await initDb();
   const now = Date.now();
-  const { hash, salt } = hashPassword('pw');
+  const { hash, salt } = await hashPassword('pw');
   const uname = 'dex_' + Math.floor(now % 1e7);
   const { lastInsertRowid } = await run(
     'INSERT INTO users (username, pass_hash, pass_salt, essence, incubator_slots, prairie_slots, breeding_cells, dex_claimed, last_tick, last_login_day, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',

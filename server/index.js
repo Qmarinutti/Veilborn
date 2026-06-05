@@ -114,7 +114,7 @@ app.post('/api/register', authThrottle, h(async (req, res) => {
   const exists = await get('SELECT id FROM users WHERE username = ?', [username]);
   if (exists) return res.status(409).json({ error: 'Ce pseudo est deja pris.' });
 
-  const { hash, salt } = hashPassword(password);
+  const { hash, salt } = await hashPassword(password);
   const now = Date.now();
   const userId = await insert(
     'INSERT INTO users (username, pass_hash, pass_salt, essence, incubator_slots, friend_code, last_tick, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -132,7 +132,7 @@ app.post('/api/register', authThrottle, h(async (req, res) => {
 app.post('/api/login', authThrottle, h(async (req, res) => {
   const { username, password } = req.body || {};
   const user = await get('SELECT * FROM users WHERE username = ?', [username || '']);
-  if (!user || !verifyPassword(password || '', user.pass_salt, user.pass_hash)) {
+  if (!user || !(await verifyPassword(password || '', user.pass_salt, user.pass_hash))) {
     return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect.' });
   }
   const token = await createSession(user.id);

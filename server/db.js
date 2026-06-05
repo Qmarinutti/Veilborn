@@ -44,6 +44,16 @@ export async function batch(stmts, mode = 'write') {
 }
 
 export async function initDb() {
+  // SQLite LOCAL : mode WAL + synchronous=NORMAL -> les ecritures (chaque /state ecrit
+  // l'essence farmee) n'attendent plus un fsync complet a chaque transaction. Gros gain
+  // de debit. (Sur Turso, c'est gere cote serveur -> on n'applique qu'en local.)
+  if (!usingTurso) {
+    try {
+      await db.execute('PRAGMA journal_mode = WAL');
+      await db.execute('PRAGMA synchronous = NORMAL');
+      await db.execute('PRAGMA busy_timeout = 5000');
+    } catch {}
+  }
   await db.executeMultiple(`
     CREATE TABLE IF NOT EXISTS users (
       id              INTEGER PRIMARY KEY AUTOINCREMENT,

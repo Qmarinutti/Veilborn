@@ -8,7 +8,7 @@ import { hashPassword } from '../server/auth.js';
 
 await initDb();
 const now = Date.now();
-const { hash, salt } = hashPassword('pw');
+const { hash, salt } = await hashPassword('pw');
 const uname = 'daily_' + Math.floor(now % 1e7);
 const daily = JSON.stringify({ day: todayStr(), quests: [{ id: 'candy3', progress: 3, claimed: false }] });
 const { lastInsertRowid } = await run(

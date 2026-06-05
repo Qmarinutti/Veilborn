@@ -8,7 +8,7 @@ const mode = process.argv[2];
 if (mode === 'setup') {
   await initDb();
   const now = Date.now();
-  const { hash, salt } = hashPassword('pw');
+  const { hash, salt } = await hashPassword('pw');
   const uname = 'breed_' + Math.floor(now % 1e7);
   const { lastInsertRowid } = await run(
     'INSERT INTO users (username, pass_hash, pass_salt, essence, incubator_slots, prairie_slots, breeding_cells, daily_json, last_tick, last_login_day, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
