@@ -862,19 +862,43 @@ function renderPrairieSlots() {
   $('#prairie-slots').innerHTML = html;
 }
 
-// Selecteur generique : openPicker(titre, items, renderFn, onPick(id)).
-let pickerOnPick = null;
+// Selecteur generique CENTRE avec tri/filtre : openPicker(titre, items, renderFn, onPick(id)).
+let pickerState = { items: [], render: null, onPick: null, sort: 'level', type: '' };
 function openPicker(title, items, render, onPick) {
-  $('#picker .drawer-head h3').textContent = title;
-  $('#picker-list').innerHTML = items.length ? items.map(render).join('') : '<p class="hint">Rien de disponible.</p>';
-  pickerOnPick = onPick;
+  pickerState = { items: items.slice(), render, onPick, sort: 'level', type: '' };
+  $('#picker-title').textContent = title;
+  // Remplit le filtre par element depuis les items.
+  const types = [...new Set(items.map(c => c.type).filter(Boolean))].sort();
+  $('#picker-type').innerHTML = '<option value="">Tous éléments</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+  $('#picker-type').value = '';
+  $$('.psort').forEach(b => b.classList.toggle('active', b.dataset.psort === 'level'));
+  renderPickerList();
   $('#picker').classList.remove('hidden');
   $('#picker-overlay').classList.remove('hidden');
 }
+function renderPickerList() {
+  let items = pickerState.items.slice();
+  if (pickerState.type) items = items.filter(c => c.type === pickerState.type);
+  const cmp = {
+    level: (a, b) => (b.level || 0) - (a.level || 0) || (b.power || 0) - (a.power || 0),
+    rarity: (a, b) => (b.rarity || 0) - (a.rarity || 0) || (b.power || 0) - (a.power || 0),
+    power: (a, b) => (b.power || 0) - (a.power || 0),
+  }[pickerState.sort] || (() => 0);
+  items.sort(cmp);
+  $('#picker-list').innerHTML = items.length ? items.map(pickerState.render).join('') : '<p class="hint">Rien de disponible.</p>';
+}
+$('#picker-sort').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-psort]');
+  if (!b) return;
+  pickerState.sort = b.dataset.psort;
+  $$('.psort').forEach(x => x.classList.toggle('active', x === b));
+  renderPickerList();
+});
+$('#picker-type').addEventListener('change', (e) => { pickerState.type = e.target.value; renderPickerList(); });
 function closePicker() {
   $('#picker').classList.add('hidden');
   $('#picker-overlay').classList.add('hidden');
-  pickerOnPick = null;
+  pickerState.onPick = null;
 }
 function pickCardHtml(c) {
   const pct = Math.round(100 * (c.hp ?? c.maxHp) / (c.maxHp || 1));
@@ -921,7 +945,7 @@ function pickBiomeCardHtml(c) {
 }
 $('#picker-list').addEventListener('click', (e) => {
   const el = e.target.closest('[data-pick]');
-  if (el && pickerOnPick) pickerOnPick(Number(el.dataset.pick));
+  if (el && pickerState.onPick) pickerState.onPick(Number(el.dataset.pick));
 });
 $('#picker-close').addEventListener('click', closePicker);
 $('#picker-overlay').addEventListener('click', closePicker);

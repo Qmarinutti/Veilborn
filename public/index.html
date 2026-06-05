@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=33" />
+  <link rel="stylesheet" href="css/style.css?v=34" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -178,14 +178,20 @@
 
     <!-- Selecteur de Glump pour la prairie -->
     <div id="picker-overlay" class="overlay hidden"></div>
-    <aside id="picker" class="drawer hidden">
+    <div id="picker" class="picker-modal hidden">
       <div class="drawer-head">
-        <h3>Mettre un Glump en prairie</h3>
+        <h3 id="picker-title">Choisir</h3>
         <button id="picker-close" class="btn small">✕</button>
       </div>
-      <p class="hint">Choisis un adulte a faire farmer (clique dessus).</p>
+      <div id="picker-sort" class="picker-sort">
+        <span class="psort-lbl">Trier :</span>
+        <button class="psort active" data-psort="level">Niveau</button>
+        <button class="psort" data-psort="rarity">Rareté</button>
+        <button class="psort" data-psort="power">Puissance</button>
+        <select id="picker-type" aria-label="Filtrer par élément"><option value="">Tous éléments</option></select>
+      </div>
       <div id="picker-list" class="cards picker-list"></div>
-    </aside>
+    </div>
 
     <!-- Fiche detaillee d'un Glump -->
     <div id="detail-overlay" class="overlay hidden"></div>
@@ -313,6 +319,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=41" type="module"></script>
+  <script src="js/app.js?v=42" type="module"></script>
 </body>
 </html>
