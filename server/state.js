@@ -9,6 +9,7 @@ import {
   incubationSeconds, breedingSeconds, maturationSeconds,
   reproductionSeconds, breedHatchSeconds,
   BIOMES, BIOME_LIST, RESOURCES, SYNERGY_BONUS, isSynergy,
+  EXPLORE_ZONES, EXPLORE_TIERS,
 } from './game.js';
 import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet } from './progress.js';
 const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
@@ -26,6 +27,21 @@ export function parseResources(user) {
   for (const res of RESOURCES) if (res !== 'essence') out[res] = Number(r[res] || 0);
   return out;
 }
+// Expeditions d'exploration en cours (tableau) et sac d'objets.
+export function parseExpeditions(user) {
+  try { const e = JSON.parse(user.expeditions_json || '[]'); return Array.isArray(e) ? e : []; } catch { return []; }
+}
+export function parseItems(user) {
+  let it; try { it = JSON.parse(user.items_json || '{}'); } catch { it = {}; }
+  return { candy: Number(it.candy || 0), potion: Number(it.potion || 0), revive: Number(it.revive || 0) };
+}
+// Ids des Glumps actuellement en exploration (occupes).
+export function exploringIds(user) {
+  const set = new Set();
+  for (const ex of parseExpeditions(user)) for (const id of (ex.team || [])) set.add(id);
+  return set;
+}
+
 // Lit les biomes possedes (la Plaine est toujours debloquee).
 export function parseBiomes(user) {
   let b; try { b = JSON.parse(user.biomes_json || '[]'); } catch { b = []; }
@@ -166,6 +182,32 @@ export async function getPlayerState(user) {
   if (achSet.size !== achBefore) await run('UPDATE users SET ach_json = ? WHERE id = ?', [JSON.stringify([...achSet]), user.id]);
   if (hatched > 0) await progressDaily(user.id, 'hatch2', hatched);
 
+  // --- Exploration : marque les Glumps en explo, etat des zones, sac ---
+  const exploring = exploringIds(fresh);
+  for (const pc of creatures) pc.exploring = exploring.has(pc.id);
+  const items = parseItems(fresh);
+  const expeditions = parseExpeditions(fresh).map(ex => ({
+    ...ex, remainingMs: Math.max(0, (ex.readyAt || 0) - now), ready: (ex.readyAt || 0) <= now,
+  }));
+  // Pour chaque zone, statut de chaque difficulte (debloquee selon les monstres possedes).
+  const adultsByType = {};
+  for (const c of rows) if (c.stage === 'adult') {
+    const t = SPECIES[c.species]?.type, lvl = levelFromXp(c.xp || 0);
+    (adultsByType[t] = adultsByType[t] || []).push({ id: c.id, lvl, busy: exploring.has(c.id) || c.stage === 'mating' });
+  }
+  const activeZones = new Set(expeditions.map(e => e.biome));
+  const exploreZones = EXPLORE_ZONES.map(z => ({
+    ...z,
+    active: activeZones.has(z.id),
+    tiers: EXPLORE_TIERS.map(t => {
+      const pool = (adultsByType[z.type] || []);
+      const owned = pool.filter(c => c.lvl >= t.level).length;        // assez de monstres pour debloquer ?
+      const available = pool.filter(c => c.lvl >= t.level && !c.busy).length; // dispos a envoyer
+      return { id: t.id, name: t.name, count: t.count, level: t.level, durationSec: t.durationSec,
+        unlocked: owned >= t.count, canStart: available >= t.count, owned, need: t.count };
+    }),
+  }));
+
   // --- Biomes : production par ressource + occupation par biome ---
   const ownedBiomes = parseBiomes(fresh);
   const resources = parseResources(fresh);
@@ -203,10 +245,13 @@ export async function getPlayerState(user) {
       nextCellCost: fresh.breeding_cells < BALANCE.breedingMaxCells ? breedingCellCost(fresh.breeding_cells) : null,
       pvpTrophies: fresh.pvp_trophies ?? 1000,
       loginStreak: fresh.login_streak || 0,
+      items, // sac : { candy, potion, revive }
     },
     essencePerSec: Number(ratePerRes.essence.toFixed(3)),
     resourcePerSec: Object.fromEntries(RESOURCES.filter(r => r !== 'essence').map(r => [r, Number(ratePerRes[r].toFixed(3))])),
     biomes,
+    exploreZones,
+    expeditions,
     creatures,
     discovered,
     discoveredShiny,

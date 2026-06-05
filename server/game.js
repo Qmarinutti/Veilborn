@@ -312,6 +312,28 @@ for (const b of BIOME_LIST) for (const t of b.types) BIOME_OF_TYPE[t] = b.id;
 
 export const TYPE_EGG_COST = 200; // cout d'un oeuf typé, dans la ressource du biome
 export function biomeOf(id) { return BIOMES[id] || null; }
+
+// =====================================================================
+//  EXPLORATION : on envoie des Glumps explorer une zone liee a un biome.
+//  Chaque zone a 5 difficultes, debloquees selon les MONSTRES qu'on possede
+//  (X monstres du type de la zone au niveau Y). Recompenses selon la difficulte.
+// =====================================================================
+export const EXPLORE_TIERS = [
+  { id: 'facile',     name: 'Facile',     count: 3, level: 10,  durationSec: 10 * 60,   resMul: 1,  items: 1, eggChance: 0.5 },
+  { id: 'normal',     name: 'Normal',     count: 4, level: 25,  durationSec: 45 * 60,   resMul: 3,  items: 2, eggChance: 0.8 },
+  { id: 'difficile',  name: 'Difficile',  count: 4, level: 50,  durationSec: 2 * 3600,  resMul: 8,  items: 3, eggChance: 1 },
+  { id: 'hard',       name: 'Hard',       count: 2, level: 80,  durationSec: 5 * 3600,  resMul: 22, items: 4, eggChance: 1 },
+  { id: 'impossible', name: 'Impossible', count: 3, level: 100, durationSec: 12 * 3600, resMul: 60, items: 5, eggChance: 1 },
+];
+export const EXPLORE_TIER_BY_ID = Object.fromEntries(EXPLORE_TIERS.map(t => [t.id, t]));
+export const EXPLORE_RES_BASE = 150; // ressource gagnee = base * resMul du tier
+export const EXPLORE_ITEMS = ['candy', 'potion', 'revive']; // objets possibles
+
+// Zones d'exploration : une par biome special (hors Plaine). Type = type principal du biome.
+export const EXPLORE_ZONES = BIOME_LIST.filter(b => b.id !== 'plaine').map(b => ({
+  id: b.id, name: b.name, emoji: b.emoji, type: b.types[0], resource: b.resource, resName: b.resName, resEmoji: b.resEmoji,
+}));
+export const EXPLORE_ZONE_BY_ID = Object.fromEntries(EXPLORE_ZONES.map(z => [z.id, z]));
 export function biomeBuyCost(id) { return BIOMES[id] ? BIOMES[id].cost : null; }
 // Le Glump de type t gagne-t-il le bonus dans ce biome ?
 export function isSynergy(biomeId, type) { return !!BIOMES[biomeId]?.types.includes(type); }

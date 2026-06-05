@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=34" />
+  <link rel="stylesheet" href="css/style.css?v=35" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -147,6 +147,15 @@
         </div>
       </section>
 
+      <!-- Vue Exploration -->
+      <section id="view-explore" class="view hidden">
+        <div class="panel">
+          <h2>🧭 Exploration</h2>
+          <p class="hint">Envoie des Glumps explorer une zone (liée à un biome). Une difficulté se débloque selon les <b>monstres que tu possèdes</b> (X du bon type au niveau Y). Plus c'est dur, meilleures sont les récompenses (ressource, œuf typé, objets) ! Un Glump en explo n'est <b>plus dispo en farm ni en arène</b>.</p>
+          <div id="explore-zones" class="explore-zones"></div>
+        </div>
+      </section>
+
       <!-- Vue visite -->
       <section id="view-visit" class="view hidden">
         <div class="panel">
@@ -170,7 +179,8 @@
       <button class="navbtn active" data-view="box"><span class="ic">📦</span><span class="lbl">Collection</span></button>
       <button class="navbtn" data-view="eggs"><span class="ic">🥚</span><span class="lbl">Oeufs</span></button>
       <button class="navbtn" data-view="breed"><span class="ic">💞</span><span class="lbl">Repro</span></button>
-      <button class="navbtn" data-view="prairie"><span class="ic">🌳</span><span class="lbl">Prairie</span></button>
+      <button class="navbtn" data-view="prairie"><span class="ic">🗺️</span><span class="lbl">Biomes</span></button>
+      <button class="navbtn" data-view="explore"><span class="ic">🧭</span><span class="lbl">Explo</span></button>
       <button class="navbtn" data-view="dex"><span class="ic">📖</span><span class="lbl">Dex</span></button>
       <button class="navbtn" data-view="leaderboard"><span class="ic">🏆</span><span class="lbl">Rang</span></button>
       <button class="navbtn" data-view="arena"><span class="ic">⚔️</span><span class="lbl">Arène</span></button>
@@ -319,6 +329,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=42" type="module"></script>
+  <script src="js/app.js?v=43" type="module"></script>
 </body>
 </html>

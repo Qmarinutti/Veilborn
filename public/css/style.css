@@ -850,3 +850,33 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .psort.active { background: linear-gradient(135deg, var(--primary), var(--primary2)); color: #fff; border-color: transparent; }
 .picker-sort select { padding: 6px 10px; border-radius: 10px; font-size: 13px; margin-left: auto; }
 #picker .picker-list { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+
+/* ============================================================
+   Exploration
+   ============================================================ */
+.explore-zones { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.explore-zone { background: var(--panel2); border: 1px solid var(--line-strong); border-radius: 18px; padding: 16px; }
+.ez-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.ez-head .ez-emoji { font-size: 38px; }
+.ez-head .ez-name { font-size: 18px; font-weight: 700; font-family: 'Fredoka', sans-serif; }
+.ez-head .ez-sub { font-size: 12px; color: var(--muted); }
+.explore-tiers { display: flex; flex-direction: column; gap: 6px; }
+.ex-tier { display: grid; grid-template-columns: 1fr 1.4fr auto auto; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 12px; background: var(--panel); border-left: 4px solid var(--tc); }
+.ex-tier.locked { opacity: .5; }
+.ex-tier .ex-tname { font-weight: 700; color: var(--tc); }
+.ex-tier .ex-req { font-size: 12px; color: var(--muted); }
+.ex-tier .ex-dur { font-size: 12px; color: var(--muted); }
+.ex-need { font-size: 12px; color: var(--warn); font-weight: 600; }
+.ex-lock { font-size: 12px; color: var(--muted); }
+.explore-running { text-align: center; padding: 16px; }
+.explore-running .er-info { margin-bottom: 12px; font-size: 14px; }
+.explore-running .er-time { font-size: 22px; font-weight: 700; color: var(--accent); font-family: 'Fredoka', sans-serif; }
+.bag-count { font-size: 11px; color: var(--good); font-weight: 700; }
+.shop-acts { display: flex; gap: 6px; align-items: center; }
+@media (max-width: 560px) {
+  .explore-zones { grid-template-columns: 1fr; }
+  .ex-tier { grid-template-columns: 1fr auto; row-gap: 2px; }
+  .bottomnav .navbtn { min-width: 0; padding: 8px 5px; }
+  .bottomnav .navbtn .lbl { font-size: 10px; }
+}

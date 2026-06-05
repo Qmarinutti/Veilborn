@@ -118,6 +118,8 @@ export async function initDb() {
     'ALTER TABLE users ADD COLUMN biomes_json TEXT',
     'ALTER TABLE creatures ADD COLUMN biome TEXT',
     "ALTER TABLE users ADD COLUMN active_biome TEXT NOT NULL DEFAULT 'plaine'", // biome actif unique
+    'ALTER TABLE users ADD COLUMN expeditions_json TEXT', // explorations en cours
+    'ALTER TABLE users ADD COLUMN items_json TEXT',       // sac d'objets (candy/potion/revive)
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }

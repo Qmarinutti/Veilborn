@@ -15,8 +15,9 @@ import {
   levelFromXp, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
   breedingSeconds, reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
+  EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_RES_BASE, EXPLORE_ITEMS,
 } from './game.js';
-import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes } from './state.js';
+import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes, parseExpeditions, parseItems, exploringIds } from './state.js';
 import { hasArt } from './art.js';
 import { simulateBattle, startSession, playTurn } from './battle.js';
 import { moveButtons } from './moves.js';
@@ -158,6 +159,8 @@ app.post('/api/breed', requireAuth, h(async (req, res) => {
     "SELECT 1 AS x FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating' AND (parent_a IN (?, ?) OR parent_b IN (?, ?)) LIMIT 1",
     [req.user.id, a.id, b.id, a.id, b.id]);
   if (busy) return res.status(400).json({ error: 'Un de ces Glumps est deja en accouplement.' });
+  const exploringB = exploringIds(await reloadUser(req.user.id));
+  if (exploringB.has(Number(a.id)) || exploringB.has(Number(b.id))) return res.status(400).json({ error: 'Un de ces Glumps est en exploration (occupe).' });
 
   // Cellule libre ? (accouplement OU oeuf en cours occupent une cellule)
   const cellRow = await get(
@@ -317,9 +320,10 @@ app.post('/api/biome/assign', requireAuth, h(async (req, res) => {
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   if (c.stage !== 'adult') return res.status(400).json({ error: 'Seuls les adultes peuvent farmer.' });
   if (c.biome) return res.json({ ok: true });
-  // Occupe par un accouplement en cours ?
+  // Occupe par un accouplement ou une exploration ?
   const mating = await get("SELECT 1 AS x FROM creatures WHERE owner_id = ? AND from_breeding = 1 AND stage = 'mating' AND (parent_a = ? OR parent_b = ?) LIMIT 1", [req.user.id, id, id]);
   if (mating) return res.status(400).json({ error: 'Ce Glump est en accouplement (occupe).' });
+  if (exploringIds(user).has(Number(id))) return res.status(400).json({ error: 'Ce Glump est en exploration (occupe).' });
   const used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND biome IS NOT NULL", [req.user.id])).n;
   if (used >= user.prairie_slots) return res.status(400).json({ error: 'Plus d\'emplacement libre — achete-en un.' });
   await run("UPDATE creatures SET biome = ?, in_prairie = 1 WHERE id = ?", [active, id]);
@@ -590,11 +594,13 @@ app.post('/api/pvp/start', requireAuth, h(async (req, res) => {
   if (!Array.isArray(team) || team.length < 1 || team.length > BALANCE.pvpTeamSize) {
     return res.status(400).json({ error: `Choisis 1 a ${BALANCE.pvpTeamSize} Glumps.` });
   }
+  const exploring = exploringIds(await reloadUser(req.user.id));
   const mine = [];
   for (const id of team) {
     const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage = 'adult'", [id, req.user.id]);
     if (!c) return res.status(400).json({ error: 'Equipe invalide (adultes uniquement).' });
     if (publicCreature(c).fainted) return res.status(400).json({ error: 'Un de tes Glumps est KO — ranime-le (Rappel) avant de combattre.' });
+    if (exploring.has(Number(id))) return res.status(400).json({ error: 'Un de tes Glumps est en exploration (occupe).' });
     mine.push(c);
   }
   const opp = await get('SELECT id, username FROM users WHERE id = ?', [opponentId]);
@@ -788,6 +794,116 @@ app.post('/api/trade/cancel', requireAuth, h(async (req, res) => {
     [id, req.user.id, req.user.id]);
   res.json({ ok: true });
 }));
+
+// ---------- Exploration : envoyer des Glumps explorer une zone ----------
+app.post('/api/explore/start', requireAuth, h(async (req, res) => {
+  const { biome, tier } = req.body || {};
+  const zone = EXPLORE_ZONE_BY_ID[biome];
+  const t = EXPLORE_TIER_BY_ID[tier];
+  if (!zone || !t) return res.status(400).json({ error: 'Zone ou difficulte inconnue.' });
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const exps = parseExpeditions(user);
+    if (exps.some(e => e.biome === biome)) return { status: 400, error: 'Une exploration est deja en cours dans cette zone.' };
+    const exploring = exploringIds(user);
+    // Monstres qualifiants : adultes du type de la zone, niveau requis, non occupes.
+    const rows = await all("SELECT id, species, xp, stage FROM creatures WHERE owner_id = ? AND stage = 'adult'", [req.user.id]);
+    const mating = new Set((await all("SELECT parent_a, parent_b FROM creatures WHERE owner_id = ? AND stage = 'mating'", [req.user.id])).flatMap(m => [m.parent_a, m.parent_b]));
+    const qualif = rows
+      .map(c => ({ id: c.id, lvl: levelFromXp(c.xp || 0), type: SPECIES[c.species]?.type }))
+      .filter(c => c.type === zone.type && c.lvl >= t.level && !exploring.has(c.id) && !mating.has(c.id))
+      .sort((a, b) => b.lvl - a.lvl);
+    if (qualif.length < t.count) {
+      return { status: 400, error: `Il faut ${t.count} Glumps ${zone.type} niveau ${t.level}+ disponibles (tu en as ${qualif.length}).` };
+    }
+    const team = qualif.slice(0, t.count).map(c => c.id);
+    const exped = { id: randomBytes(6).toString('hex'), biome, tier, team, startedAt: Date.now(), readyAt: Date.now() + t.durationSec * 1000 };
+    exps.push(exped);
+    await run('UPDATE users SET expeditions_json = ? WHERE id = ?', [JSON.stringify(exps), req.user.id]);
+    // Les explorateurs quittent le farm.
+    await run(`UPDATE creatures SET biome = NULL, in_prairie = 0 WHERE id IN (${team.map(() => '?').join(',')})`, team);
+    return { ok: true, expedition: exped, zone: zone.name };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// Recolter une exploration terminee.
+app.post('/api/explore/collect', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const exps = parseExpeditions(user);
+    const ex = exps.find(e => e.id === id);
+    if (!ex) return { status: 404, error: 'Exploration introuvable.' };
+    if ((ex.readyAt || 0) > Date.now()) return { status: 400, error: 'Exploration pas encore terminee.' };
+    const zone = EXPLORE_ZONE_BY_ID[ex.biome];
+    const t = EXPLORE_TIER_BY_ID[ex.tier];
+    // Recompenses : ressource du biome + objets + (chance d')oeuf typé.
+    const res2 = parseResources(user);
+    const gainRes = EXPLORE_RES_BASE * t.resMul;
+    res2[zone.resource] = (res2[zone.resource] || 0) + gainRes;
+    const items = parseItems(user);
+    const gotItems = {};
+    for (let i = 0; i < t.items; i++) { const it = EXPLORE_ITEMS[Math.floor(Math.random() * EXPLORE_ITEMS.length)]; items[it]++; gotItems[it] = (gotItems[it] || 0) + 1; }
+    // Oeuf typé (si chance + incubateur libre)
+    let egg = null;
+    if (Math.random() < t.eggChance) {
+      const eggCount = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 0", [req.user.id])).n;
+      if (eggCount < user.incubator_slots) {
+        const species = randomBaseOfType(zone.type);
+        const child = wildCreature(species, { adult: false, pityBonus: shinyPityBonus(user.shiny_pity) });
+        const hatchAt = Date.now() + incubationSeconds(species) * 1000;
+        await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 0 });
+        await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
+        egg = SPECIES[species]?.name || species;
+      }
+    }
+    const left = exps.filter(e => e.id !== id);
+    await run('UPDATE users SET expeditions_json = ?, items_json = ?, resources_json = ? WHERE id = ?',
+      [JSON.stringify(left), JSON.stringify(items), JSON.stringify(res2), req.user.id]);
+    return { ok: true, rewards: { resource: zone.resource, resEmoji: zone.resEmoji, amount: gainRes, items: gotItems, egg } };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// ---------- Utiliser un objet du sac (gratuit) ----------
+async function useItem(req, res, kind, apply) {
+  const { id } = req.body || {};
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const items = parseItems(user);
+    if (items[kind] <= 0) return { status: 400, error: 'Tu n\'as pas cet objet.' };
+    const r = await apply(user);
+    if (r && r.error) return r;
+    items[kind]--;
+    await run('UPDATE users SET items_json = ? WHERE id = ?', [JSON.stringify(items), req.user.id]);
+    return { ok: true, ...(r || {}) };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}
+app.post('/api/item/candy', requireAuth, h((req, res) => useItem(req, res, 'candy', async () => {
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [req.body.id, req.user.id]);
+  if (!c || c.stage === 'egg') return { status: 400, error: 'Glump invalide.' };
+  await run('UPDATE creatures SET xp = xp + ? WHERE id = ?', [BALANCE.candyXp, req.body.id]);
+  return { xp: BALANCE.candyXp };
+})));
+app.post('/api/item/potion', requireAuth, h((req, res) => useItem(req, res, 'potion', async () => {
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [req.body.id, req.user.id]);
+  if (!c) return { status: 404, error: 'Glump introuvable.' };
+  const pc = publicCreature(c);
+  if (pc.fainted) return { status: 400, error: 'KO : utilise un Rappel.' };
+  await run('UPDATE creatures SET hp = NULL WHERE id = ?', [req.body.id]);
+})));
+app.post('/api/item/revive', requireAuth, h((req, res) => useItem(req, res, 'revive', async () => {
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [req.body.id, req.user.id]);
+  if (!c) return { status: 404, error: 'Glump introuvable.' };
+  const pc = publicCreature(c);
+  if (!pc.fainted) return { status: 400, error: 'Ce Glump n\'est pas KO.' };
+  await run('UPDATE creatures SET hp = ? WHERE id = ?', [Math.round(pc.maxHp / 2), req.body.id]);
+})));
 
 // Liste des succes (definitions) pour le client.
 app.get('/api/achievements', (req, res) => res.json({ achievements: ACHIEVEMENTS }));

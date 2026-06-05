@@ -197,6 +197,7 @@ function switchView(view) {
   if (view === 'leaderboard') loadLeaderboard();
   if (view === 'dex') loadDex();
   if (view === 'arena') loadArena();
+  if (view === 'explore') renderExplore();
   if (view === 'prairie') startPrairie(); else stopPrairie();
 }
 $$('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
@@ -304,6 +305,7 @@ function renderAll() {
   renderBreedingCells();
   renderCollection();
   updateNavBadges();
+  renderExplore();
   if (prairieActive) { renderBiomeTabs(); buildMeadow(); renderPrairieSlots(); }
 }
 
@@ -331,10 +333,73 @@ function updateNavBadges() {
       b.textContent = n > 9 ? '9+' : n;
     } else if (b) b.remove();
   };
+  const exploReady = (STATE.expeditions || []).filter(e => e.ready).length;
   setBadge('eggs', eggsReady);
   setBadge('breed', bredReady);
   setBadge('box', canEvolve);
+  setBadge('explore', exploReady);
 }
+
+// ============================================================
+//  Exploration
+// ============================================================
+const TIER_COLOR = { facile: '#51d88a', normal: '#4db8ff', difficile: '#9a6cff', hard: '#ffb347', impossible: '#ff6b7d' };
+const ITEM_EMOJI = { candy: '🍬', potion: '❤️', revive: '✨' };
+const ITEM_NAME = { candy: 'Super Bonbon', potion: 'Potion', revive: 'Rappel' };
+function fmtDur(s) { if (s >= 3600) return (s % 3600 === 0 ? s / 3600 : (s / 3600).toFixed(1)) + 'h'; if (s >= 60) return Math.round(s / 60) + 'min'; return s + 's'; }
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function renderExplore() {
+  if (!STATE || $('#view-explore').classList.contains('hidden')) return;
+  const zones = STATE.exploreZones || [];
+  const exps = STATE.expeditions || [];
+  $('#explore-zones').innerHTML = zones.map(z => {
+    const exp = exps.find(e => e.biome === z.id);
+    let body;
+    if (exp) {
+      body = `<div class="explore-running">
+        <div class="er-info">🧭 Expédition <b>${cap(exp.tier)}</b> · ${exp.team.length} Glumps partis</div>
+        ${exp.ready
+          ? `<button class="btn primary" data-explore-collect="${exp.id}">🎁 Récolter les récompenses</button>`
+          : `<div class="countdown er-time" data-ready="${exp.readyAt}">…</div>`}
+      </div>`;
+    } else {
+      body = `<div class="explore-tiers">` + z.tiers.map(t => {
+        const action = t.canStart
+          ? `<button class="btn small primary" data-explore-start="${z.id}" data-tier="${t.id}">Lancer</button>`
+          : t.unlocked ? `<span class="ex-need">${t.owned}/${t.need} dispo</span>`
+            : `<span class="ex-lock">🔒 verrouillé</span>`;
+        return `<div class="ex-tier ${t.unlocked ? '' : 'locked'}" style="--tc:${TIER_COLOR[t.id]}">
+          <span class="ex-tname">${t.name}</span>
+          <span class="ex-req">${t.need}× ${z.type} niv ${t.level}+</span>
+          <span class="ex-dur">⏱ ${fmtDur(t.durationSec)}</span>
+          <span class="ex-act">${action}</span>
+        </div>`;
+      }).join('') + `</div>`;
+    }
+    return `<div class="explore-zone">
+      <div class="ez-head"><span class="ez-emoji">${z.emoji}</span>
+        <div><div class="ez-name">${z.name}</div><div class="ez-sub">Type ${z.type} · récolte ${z.resName} ${z.resEmoji}</div></div></div>
+      ${body}
+    </div>`;
+  }).join('') || '<p class="hint">Aucune zone.</p>';
+}
+$('#explore-zones').addEventListener('click', async (e) => {
+  const start = e.target.closest('[data-explore-start]');
+  const collect = e.target.closest('[data-explore-collect]');
+  if (start) {
+    try { await api('/explore/start', { method: 'POST', body: { biome: start.dataset.exploreStart, tier: start.dataset.tier } }); flash('Expédition lancée ! 🧭'); await refresh(); }
+    catch (err) { flash(err.message, 'err'); }
+  } else if (collect) {
+    try {
+      const r = await api('/explore/collect', { method: 'POST', body: { id: collect.dataset.exploreCollect } });
+      const rw = r.rewards;
+      const its = Object.entries(rw.items || {}).map(([k, v]) => `${ITEM_EMOJI[k]}×${v}`).join(' ');
+      flash(`🎁 +${rw.amount} ${rw.resEmoji}${rw.egg ? ' · œuf ' + rw.egg + ' 🥚' : ''}${its ? ' · ' + its : ''}`);
+      await refresh();
+    } catch (err) { flash(err.message, 'err'); }
+  }
+});
 
 const RARITY_DOTS = (r) => '★'.repeat(r) + '☆'.repeat(5 - r);
 
@@ -1267,22 +1332,23 @@ function renderShopTerrain() {
 }
 function renderShopItem() {
   const c = shopData.candy || {}, po = shopData.potion || {}, rv = shopData.revive || {};
-  $('#shop-item').innerHTML = `
-    <div class="shop-item">
-      <div class="shop-egg">🍬</div>
-      <div class="shop-info"><div class="shop-name">Super Bonbon</div><div class="shop-sub">+${c.xp} XP à un Glump</div></div>
-      <button class="btn small primary" id="buy-candy">✨ ${c.cost}</button>
-    </div>
-    <div class="shop-item">
-      <div class="shop-egg">❤️</div>
-      <div class="shop-info"><div class="shop-name">Potion</div><div class="shop-sub">Restaure tous les PV d'un Glump</div></div>
-      <button class="btn small primary" id="buy-potion">✨ ${po.cost}</button>
-    </div>
-    <div class="shop-item">
-      <div class="shop-egg">✨</div>
-      <div class="shop-info"><div class="shop-name">Rappel</div><div class="shop-sub">Ranime un Glump KO (50% PV)</div></div>
-      <button class="btn small primary" id="buy-revive">✨ ${rv.cost}</button>
+  const it = STATE?.user?.items || { candy: 0, potion: 0, revive: 0 };
+  const subs = { candy: `+${c.xp} XP à un Glump`, potion: 'Restaure tous les PV', revive: 'Ranime un Glump KO (50% PV)' };
+  const costs = { candy: c.cost, potion: po.cost, revive: rv.cost };
+  const buyId = { candy: 'buy-candy', potion: 'buy-potion', revive: 'buy-revive' };
+  const row = (k) => {
+    const n = it[k] || 0;
+    return `<div class="shop-item">
+      <div class="shop-egg">${ITEM_EMOJI[k]}</div>
+      <div class="shop-info"><div class="shop-name">${ITEM_NAME[k]}${n > 0 ? ` <span class="bag-count">sac ×${n}</span>` : ''}</div><div class="shop-sub">${subs[k]}</div></div>
+      <div class="shop-acts">
+        ${n > 0 ? `<button class="btn small" data-use-item="${k}">Utiliser</button>` : ''}
+        <button class="btn small primary" id="${buyId[k]}">✨ ${costs[k]}</button>
+      </div>
     </div>`;
+  };
+  $('#shop-item').innerHTML = `<p class="hint">Les objets gagnés en exploration vont dans ton <b>sac</b> (utilisables gratuitement). Tu peux aussi en acheter avec de l'essence.</p>` +
+    row('candy') + row('potion') + row('revive');
 }
 function renderShopBonus() {
   $('#shop-bonus').innerHTML = `
@@ -1304,6 +1370,20 @@ $('#shop-modal').addEventListener('click', async (e) => {
     const t = eggTile.dataset.buyEggType;
     try { const r = await api('/shop/buy-egg', { method: 'POST', body: { type: t } }); flash(`Œuf ${t === 'basic' ? 'basique' : t} acheté ! 🥚`); await refresh(); renderShopEgg(); processNewAch(r); }
     catch (err) { flash(err.message, "err"); }
+    return;
+  }
+  const useItem = e.target.closest('[data-use-item]');
+  if (useItem) {
+    const k = useItem.dataset.useItem;
+    let pool, title;
+    if (k === 'candy') { pool = STATE.creatures.filter(c => c.stage !== 'egg'); title = 'Super Bonbon à…'; }
+    else if (k === 'potion') { pool = STATE.creatures.filter(c => c.stage === 'adult' && !c.fainted && c.hp < c.maxHp); title = 'Soigner quel Glump ?'; }
+    else { pool = STATE.creatures.filter(c => c.fainted); title = 'Ranimer quel Glump ?'; }
+    if (!pool.length) { flash('Aucun Glump concerné.', 'err'); return; }
+    openPicker(title, pool, pickCardHtml, async (id) => {
+      try { await api('/item/' + k, { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`${ITEM_NAME[k]} utilisé ${ITEM_EMOJI[k]}`); renderShopItem(); }
+      catch (err) { flash(err.message, 'err'); }
+    });
     return;
   }
   if (e.target.closest('#buy-candy')) {
