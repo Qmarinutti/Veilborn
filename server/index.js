@@ -840,7 +840,7 @@ app.post('/api/explore/start', requireAuth, h(async (req, res) => {
     for (const id of chosen.map(Number)) {
       const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage = 'adult'", [id, req.user.id]);
       if (!c) return { status: 400, error: 'Glump invalide.' };
-      if (SPECIES[c.species]?.type !== zone.type) return { status: 400, error: `Il faut des Glumps de type ${zone.type}.` };
+      if (!zone.types.includes(SPECIES[c.species]?.type)) return { status: 400, error: `Il faut des Glumps de type ${zone.typesLabel}.` };
       if (levelFromXp(c.xp || 0) < t.level) return { status: 400, error: `Niveau ${t.level}+ requis.` };
       if (exploring.has(id) || mating.has(id) || team.includes(id)) return { status: 400, error: 'Glump indisponible ou en double.' };
       team.push(id);
@@ -879,7 +879,8 @@ app.post('/api/explore/collect', requireAuth, h(async (req, res) => {
       let free = user.incubator_slots - (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 0", [req.user.id])).n;
       let pity = user.shiny_pity || 0;
       for (let i = 0; i < t.eggs && free > 0; i++) {
-        const species = randomBaseOfType(zone.type);
+        const eggType = zone.types[Math.floor(Math.random() * zone.types.length)]; // un type au hasard parmi ceux de la zone
+        const species = randomBaseOfType(eggType);
         const child = wildCreature(species, { adult: false, pityBonus: shinyPityBonus(pity) });
         await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: Date.now() + incubationSeconds(species) * 1000, from_breeding: 0 });
         pity = child.variant === 1 ? 0 : pity + 1;

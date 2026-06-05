@@ -331,9 +331,13 @@ export const EXPLORE_TIERS = [
 export const EXPLORE_TIER_BY_ID = Object.fromEntries(EXPLORE_TIERS.map(t => [t.id, t]));
 export const EXPLORE_ITEMS = ['candy', 'candy', 'potion', 'revive']; // pondere : un peu plus de bonbons
 
-// Zones d'exploration : une par biome special (hors Plaine). Type = type principal du biome.
+// Zones d'exploration : une par biome special (hors Plaine).
+// Les types ACCEPTES sont tous ceux du biome (ex. Foret = Plante OU Insecte) ; le compte
+// requis est le TOTAL parmi ces types (3 Glumps Plante/Insecte au total, pas 3 d'un seul).
 export const EXPLORE_ZONES = BIOME_LIST.filter(b => b.id !== 'plaine').map(b => ({
-  id: b.id, name: b.name, emoji: b.emoji, type: b.types[0], resource: b.resource, resName: b.resName, resEmoji: b.resEmoji,
+  id: b.id, name: b.name, emoji: b.emoji,
+  types: b.types, typesLabel: b.types.join('/'),
+  resource: b.resource, resName: b.resName, resEmoji: b.resEmoji,
 }));
 export const EXPLORE_ZONE_BY_ID = Object.fromEntries(EXPLORE_ZONES.map(z => [z.id, z]));
 export function biomeBuyCost(id) { return BIOMES[id] ? BIOMES[id].cost : null; }

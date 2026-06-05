@@ -389,11 +389,11 @@ function renderExplore() {
           : t.unlocked ? `<span class="ex-need">${t.owned}/${t.need} dispo</span>`
             : `<span class="ex-lock">🔒 ${t.owned}/${t.need}</span>`;
         // Recompenses POSSIBLES (aleatoires) : ressource fixe + œuf(s) du type + objets aleatoires
-        const reward = `<b>+${rw.res} ${z.resEmoji}</b> · ${rw.eggs}× œuf ${z.type} 🥚 · ${rw.items}× objet (🍬/❤️/✨)`;
+        const reward = `<b>+${rw.res} ${z.resEmoji}</b> · ${rw.eggs}× œuf ${z.typesLabel} 🥚 · ${rw.items}× objet (🍬/❤️/✨)`;
         return `<div class="ex-tier ${t.unlocked ? '' : 'locked'}" style="--tc:${TIER_COLOR[t.id]}">
           <div class="ex-main">
             <div class="ex-top"><span class="ex-tname">${t.name}</span>
-              <span class="ex-req">${t.need}× ${z.type} niv ${t.level}+ · ⏱ ${fmtDur(t.durationSec)}</span></div>
+              <span class="ex-req">${t.need}× ${z.typesLabel} niv ${t.level}+ · ⏱ ${fmtDur(t.durationSec)}</span></div>
             <div class="ex-reward">🎁 ${reward}</div>
           </div>
           <span class="ex-act">${action}</span>
@@ -402,7 +402,7 @@ function renderExplore() {
     }
     return `<div class="explore-zone">
       <div class="ez-head"><span class="ez-emoji">${z.emoji}</span>
-        <div class="ez-id"><div class="ez-name">${z.name}</div><div class="ez-sub">Type ${z.type} · récolte ${z.resName} ${z.resEmoji}</div></div>
+        <div class="ez-id"><div class="ez-name">${z.name}</div><div class="ez-sub">Types ${z.typesLabel} · récolte ${z.resName} ${z.resEmoji}</div></div>
         ${badge}</div>
       <div class="explore-tiers">${body}</div>
     </div>`;
@@ -412,8 +412,8 @@ function startExplore(zoneId, tierId) {
   const z = STATE.exploreZones.find(x => x.id === zoneId);
   const t = z.tiers.find(x => x.id === tierId);
   const busy = matingParentIds();
-  const pool = STATE.creatures.filter(c => c.stage === 'adult' && c.type === z.type && c.level >= t.level && !c.exploring && !busy.has(c.id));
-  if (pool.length < t.count) { flash(`Il te faut ${t.count} Glumps ${z.type} niv ${t.level}+ disponibles (tu en as ${pool.length}).`, 'err'); return; }
+  const pool = STATE.creatures.filter(c => c.stage === 'adult' && z.types.includes(c.type) && c.level >= t.level && !c.exploring && !busy.has(c.id));
+  if (pool.length < t.count) { flash(`Il te faut ${t.count} Glumps ${z.typesLabel} niv ${t.level}+ disponibles (tu en as ${pool.length}).`, 'err'); return; }
   openTeamPicker(`Envoyer ${t.count} Glumps · ${z.emoji} ${z.name} ${cap(tierId)}`, pool, pickCardHtml, t.count, async (ids) => {
     try { await api('/explore/start', { method: 'POST', body: { biome: zoneId, tier: tierId, team: ids } }); closePicker(); flash('Expédition lancée ! 🧭'); await refresh(); }
     catch (err) { flash(err.message, 'err'); }

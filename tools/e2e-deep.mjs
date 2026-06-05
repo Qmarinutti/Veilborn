@@ -72,7 +72,7 @@ console.log('  (info) Glump monte au niv ' + lvl + ' avant epuisement de l\'esse
 const stA2 = (await A('/api/state')).data;
 const type = farmer.type;
 // Trouver une zone de ce type
-const zone = stA2.exploreZones?.find(z => z.type === type);
+const zone = stA2.exploreZones?.find(z => (z.types || []).includes(type));
 if (zone) {
   const start = await A('/api/explore/start', { method: 'POST', body: { biome: zone.id, tier: 'facile', team: [farmer.id, farmer.id, farmer.id] } });
   ok(start.status >= 400, 'explore/start refuse les doublons (' + start.status + ')');

@@ -200,7 +200,8 @@ export async function getPlayerState(user) {
     ...z,
     active: activeZones.has(z.id),
     tiers: EXPLORE_TIERS.map(t => {
-      const pool = (adultsByType[z.type] || []);
+      // Pool = adultes de TOUS les types acceptes par la zone (ex. Plante + Insecte pour la Foret).
+      const pool = z.types.flatMap(ty => adultsByType[ty] || []);
       const owned = pool.filter(c => c.lvl >= t.level).length;        // assez de monstres pour debloquer ?
       const available = pool.filter(c => c.lvl >= t.level && !c.busy).length; // dispos a envoyer
       return { id: t.id, name: t.name, count: t.count, level: t.level, durationSec: t.durationSec,
