@@ -369,10 +369,14 @@ function renderExplore() {
           ? `<button class="btn small primary" data-explore-start="${z.id}" data-tier="${t.id}">Lancer</button>`
           : t.unlocked ? `<span class="ex-need">${t.owned}/${t.need} dispo</span>`
             : `<span class="ex-lock">🔒 verrouillé</span>`;
+        const rw = t.reward || {};
+        const rewardTxt = `${rw.res} ${z.resEmoji} · ${rw.eggs}🥚 · ${rw.items}🎒`;
         return `<div class="ex-tier ${t.unlocked ? '' : 'locked'}" style="--tc:${TIER_COLOR[t.id]}">
-          <span class="ex-tname">${t.name}</span>
-          <span class="ex-req">${t.need}× ${z.type} niv ${t.level}+</span>
-          <span class="ex-dur">⏱ ${fmtDur(t.durationSec)}</span>
+          <div class="ex-main">
+            <span class="ex-tname">${t.name}</span>
+            <span class="ex-req">${t.need}× ${z.type} niv ${t.level}+ · ⏱ ${fmtDur(t.durationSec)}</span>
+            <span class="ex-reward">🎁 ${rewardTxt}</span>
+          </div>
           <span class="ex-act">${action}</span>
         </div>`;
       }).join('') + `</div>`;
@@ -395,7 +399,8 @@ $('#explore-zones').addEventListener('click', async (e) => {
       const r = await api('/explore/collect', { method: 'POST', body: { id: collect.dataset.exploreCollect } });
       const rw = r.rewards;
       const its = Object.entries(rw.items || {}).map(([k, v]) => `${ITEM_EMOJI[k]}×${v}`).join(' ');
-      flash(`🎁 +${rw.amount} ${rw.resEmoji}${rw.egg ? ' · œuf ' + rw.egg + ' 🥚' : ''}${its ? ' · ' + its : ''}`);
+      const eg = (rw.eggs && rw.eggs.length) ? ` · ${rw.eggs.length} œuf(s) 🥚` : '';
+      flash(`🎁 +${rw.amount} ${rw.resEmoji}${eg}${its ? ' · ' + its : ''}`);
       await refresh();
     } catch (err) { flash(err.message, 'err'); }
   }

@@ -15,7 +15,7 @@ import {
   levelFromXp, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
   breedingSeconds, reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
-  EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_RES_BASE, EXPLORE_ITEMS,
+  EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes, parseExpeditions, parseItems, exploringIds } from './state.js';
 import { hasArt } from './art.js';
@@ -839,30 +839,31 @@ app.post('/api/explore/collect', requireAuth, h(async (req, res) => {
     if ((ex.readyAt || 0) > Date.now()) return { status: 400, error: 'Exploration pas encore terminee.' };
     const zone = EXPLORE_ZONE_BY_ID[ex.biome];
     const t = EXPLORE_TIER_BY_ID[ex.tier];
-    // Recompenses : ressource du biome + objets + (chance d')oeuf typé.
+    // Recompenses : ressource du biome + objets + oeufs typés (limites par les incubateurs libres).
     const res2 = parseResources(user);
-    const gainRes = EXPLORE_RES_BASE * t.resMul;
-    res2[zone.resource] = (res2[zone.resource] || 0) + gainRes;
+    res2[zone.resource] = (res2[zone.resource] || 0) + t.res;
     const items = parseItems(user);
     const gotItems = {};
     for (let i = 0; i < t.items; i++) { const it = EXPLORE_ITEMS[Math.floor(Math.random() * EXPLORE_ITEMS.length)]; items[it]++; gotItems[it] = (gotItems[it] || 0) + 1; }
-    // Oeuf typé (si chance + incubateur libre)
-    let egg = null;
+    // Oeufs typés (jusqu'a t.eggs, dans la limite des incubateurs libres).
+    const eggsLaid = [];
     if (Math.random() < t.eggChance) {
-      const eggCount = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 0", [req.user.id])).n;
-      if (eggCount < user.incubator_slots) {
+      let free = user.incubator_slots - (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND stage = 'egg' AND from_breeding = 0", [req.user.id])).n;
+      let pity = user.shiny_pity || 0;
+      for (let i = 0; i < t.eggs && free > 0; i++) {
         const species = randomBaseOfType(zone.type);
-        const child = wildCreature(species, { adult: false, pityBonus: shinyPityBonus(user.shiny_pity) });
-        const hatchAt = Date.now() + incubationSeconds(species) * 1000;
-        await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: hatchAt, from_breeding: 0 });
-        await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [child.variant === 1 ? 0 : (user.shiny_pity || 0) + 1, req.user.id]);
-        egg = SPECIES[species]?.name || species;
+        const child = wildCreature(species, { adult: false, pityBonus: shinyPityBonus(pity) });
+        await insertCreature(req.user.id, { ...child, stage: 'egg' }, { hatch_at: Date.now() + incubationSeconds(species) * 1000, from_breeding: 0 });
+        pity = child.variant === 1 ? 0 : pity + 1;
+        eggsLaid.push(SPECIES[species]?.name || species);
+        free--;
       }
+      await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [pity, req.user.id]);
     }
     const left = exps.filter(e => e.id !== id);
     await run('UPDATE users SET expeditions_json = ?, items_json = ?, resources_json = ? WHERE id = ?',
       [JSON.stringify(left), JSON.stringify(items), JSON.stringify(res2), req.user.id]);
-    return { ok: true, rewards: { resource: zone.resource, resEmoji: zone.resEmoji, amount: gainRes, items: gotItems, egg } };
+    return { ok: true, rewards: { resource: zone.resource, resEmoji: zone.resEmoji, amount: t.res, items: gotItems, eggs: eggsLaid } };
   });
   if (out.error) return res.status(out.status).json({ error: out.error });
   res.json(out);

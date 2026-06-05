@@ -204,7 +204,8 @@ export async function getPlayerState(user) {
       const owned = pool.filter(c => c.lvl >= t.level).length;        // assez de monstres pour debloquer ?
       const available = pool.filter(c => c.lvl >= t.level && !c.busy).length; // dispos a envoyer
       return { id: t.id, name: t.name, count: t.count, level: t.level, durationSec: t.durationSec,
-        unlocked: owned >= t.count, canStart: available >= t.count, owned, need: t.count };
+        unlocked: owned >= t.count, canStart: available >= t.count, owned, need: t.count,
+        reward: { res: t.res, items: t.items, eggs: t.eggs } };
     }),
   }));
 

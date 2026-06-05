@@ -861,12 +861,14 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .ez-head .ez-name { font-size: 18px; font-weight: 700; font-family: 'Fredoka', sans-serif; }
 .ez-head .ez-sub { font-size: 12px; color: var(--muted); }
 .explore-tiers { display: flex; flex-direction: column; gap: 6px; }
-.ex-tier { display: grid; grid-template-columns: 1fr 1.4fr auto auto; align-items: center; gap: 8px;
+.ex-tier { display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 8px 12px; border-radius: 12px; background: var(--panel); border-left: 4px solid var(--tc); }
 .ex-tier.locked { opacity: .5; }
+.ex-tier .ex-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .ex-tier .ex-tname { font-weight: 700; color: var(--tc); }
 .ex-tier .ex-req { font-size: 12px; color: var(--muted); }
-.ex-tier .ex-dur { font-size: 12px; color: var(--muted); }
+.ex-tier .ex-reward { font-size: 12px; color: var(--gold); }
+.ex-act { flex: none; }
 .ex-need { font-size: 12px; color: var(--warn); font-weight: 600; }
 .ex-lock { font-size: 12px; color: var(--muted); }
 .explore-running { text-align: center; padding: 16px; }
@@ -876,7 +878,7 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .shop-acts { display: flex; gap: 6px; align-items: center; }
 @media (max-width: 560px) {
   .explore-zones { grid-template-columns: 1fr; }
-  .ex-tier { grid-template-columns: 1fr auto; row-gap: 2px; }
+  .ex-tier { flex-wrap: wrap; }
   .bottomnav .navbtn { min-width: 0; padding: 8px 5px; }
   .bottomnav .navbtn .lbl { font-size: 10px; }
 }
