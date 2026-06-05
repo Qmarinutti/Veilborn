@@ -664,6 +664,7 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .coll-toolbar select { padding: 9px 10px; border-radius: 12px; border: 1px solid var(--line-strong);
   background: var(--panel2); color: var(--text); font-size: 13px; cursor: pointer; }
 .coll-toolbar .btn.on, #coll-fav-only.on { background: linear-gradient(135deg, var(--good), #8fe04f); color: #06321a; }
+#coll-shiny-only.on { background: linear-gradient(135deg, #ffd23f, #ff9e3d); color: #3a2400; }
 .coll-bulkbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; padding: 10px 14px;
   background: var(--panel2); border-radius: 12px; border: 1px solid var(--line-strong); }
 .coll-bulkbar #coll-selcount { font-weight: 600; margin-right: auto; }

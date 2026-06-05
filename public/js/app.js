@@ -574,7 +574,7 @@ $('#breeding-cells').addEventListener('click', async (e) => {
   }
 });
 
-const collFilter = { search: '', type: '', sort: 'recent', favOnly: false };
+const collFilter = { search: '', type: '', sort: 'recent', favOnly: false, shinyOnly: false };
 let collSelectMode = false;
 const collSelected = new Set();
 
@@ -594,6 +594,7 @@ function renderCollection() {
   if (q) owned = owned.filter(c => (c.nickname || '').toLowerCase().includes(q) || c.speciesName.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
   if (collFilter.type) owned = owned.filter(c => c.type === collFilter.type);
   if (collFilter.favOnly) owned = owned.filter(c => c.favorite);
+  if (collFilter.shinyOnly) owned = owned.filter(c => c.variant === 1);
 
   // Tri
   const cmp = {
@@ -787,6 +788,12 @@ $('#coll-fav-only')?.addEventListener('click', () => {
   collFilter.favOnly = !collFilter.favOnly;
   $('#coll-fav-only').classList.toggle('on', collFilter.favOnly);
   $('#coll-fav-only').setAttribute('aria-pressed', String(collFilter.favOnly));
+  renderCollection();
+});
+$('#coll-shiny-only')?.addEventListener('click', () => {
+  collFilter.shinyOnly = !collFilter.shinyOnly;
+  $('#coll-shiny-only').classList.toggle('on', collFilter.shinyOnly);
+  $('#coll-shiny-only').setAttribute('aria-pressed', String(collFilter.shinyOnly));
   renderCollection();
 });
 function setSelectMode(on) {
