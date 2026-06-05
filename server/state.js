@@ -1,7 +1,7 @@
 // Calcul de l'etat idle d'un joueur : revenu d'essence + eclosions + maturations.
 // Tout est calcule "au moment de la lecture" a partir des timestamps :
 // le serveur peut dormir sans perdre la progression.
-import { get, all, run } from './db.js';
+import { get, all, run, batch } from './db.js';
 import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
   evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
@@ -55,70 +55,6 @@ function farmRate(species, xp, biomeId) {
   return rarityOf(species) * BALANCE.essencePerRarityPerSec * levelIncomeMul(xp) * syn;
 }
 
-// Met a jour les ressources idle : chaque Glump assigne a un biome produit
-// la ressource de ce biome (essence pour la Plaine), avec bonus de synergie.
-async function tickFarming(user) {
-  const now = Date.now();
-  let elapsed = now - user.last_tick;
-  if (elapsed <= 0) return;
-  const cap = BALANCE.offlineCapHours * HOUR_MS;
-  if (elapsed > cap) elapsed = cap;
-  const secs = elapsed / 1000;
-
-  // Un seul biome actif : tous les farmeurs produisent SA ressource.
-  const active = user.active_biome || 'plaine';
-  await run("UPDATE creatures SET biome = ? WHERE owner_id = ? AND biome IS NOT NULL AND biome != ?", [active, user.id, active]);
-
-  const farmers = await all(
-    "SELECT species, xp, biome FROM creatures WHERE owner_id = ? AND stage = 'adult' AND biome IS NOT NULL", [user.id]);
-
-  const res = parseResources(user);
-  let essenceGain = 0;
-  for (const c of farmers) {
-    const b = BIOMES[c.biome]; if (!b) continue;
-    const amt = farmRate(c.species, c.xp, c.biome) * secs;
-    if (b.resource === 'essence') essenceGain += amt;
-    else res[b.resource] = (res[b.resource] || 0) + amt;
-  }
-
-  // Les Glumps qui farment gagnent aussi de l'XP.
-  const xpGain = Math.round(BALANCE.xpPerSec * secs);
-  if (xpGain > 0) {
-    await run("UPDATE creatures SET xp = xp + ? WHERE owner_id = ? AND biome IS NOT NULL AND stage = 'adult'",
-      [xpGain, user.id]);
-  }
-
-  await run('UPDATE users SET essence = ?, resources_json = ?, last_tick = ? WHERE id = ?',
-    [user.essence + essenceGain, JSON.stringify(res), now, user.id]);
-}
-
-// Fait avancer la repro (accouplement -> oeuf), les eclosions, et les maturations.
-async function tickCreatures(userId) {
-  const now = Date.now();
-  // Phase 1 -> 2 : accouplement termine -> l'oeuf est pondu et commence son eclosion.
-  const mated = await all(
-    "SELECT * FROM creatures WHERE owner_id = ? AND stage = 'mating' AND hatch_at <= ?", [userId, now]);
-  for (const egg of mated) {
-    await run("UPDATE creatures SET stage = 'egg', hatch_at = ? WHERE id = ?",
-      [now + breedHatchSeconds(egg.species) * 1000, egg.id]);
-  }
-  // Eclosion : chaque oeuf pret devient bebe, avec un mature_at selon l'espece.
-  const ready = await all(
-    "SELECT * FROM creatures WHERE owner_id = ? AND stage = 'egg' AND hatch_at <= ?",
-    [userId, now]);
-  for (const egg of ready) {
-    const matureMs = now + maturationMsFor(egg.species);
-    await run("UPDATE creatures SET stage = 'baby', hatch_at = NULL, mature_at = ? WHERE id = ?",
-      [matureMs, egg.id]);
-  }
-  // Bebes -> adultes.
-  await run(
-    "UPDATE creatures SET stage = 'adult', mature_at = NULL " +
-    "WHERE owner_id = ? AND stage = 'baby' AND mature_at IS NOT NULL AND mature_at <= ?",
-    [userId, now]);
-  return ready.length; // nb d'oeufs eclos ce tick (pour quetes/succes)
-}
-
 function maturationMsFor(speciesId) {
   return BALANCE.maturationBaseSec * rarityOf(speciesId) * 1000;
 }
@@ -128,46 +64,100 @@ export async function reloadUser(userId) {
 }
 
 // Applique tout le idle puis renvoie l'etat complet pour le client.
+// OPTIMISE : 1 batch de LECTURE (creatures + decouvertes) + 1 batch d'ECRITURE,
+// au lieu de ~10 allers-retours Turso. Tout le idle est calcule EN MEMOIRE.
 export async function getPlayerState(user) {
-  const hatched = await tickCreatures(user.id);
-  await tickFarming(user);
-  let fresh = await reloadUser(user.id);
+  const now = Date.now();
+  const W = []; // requetes d'ecriture, executees en UN SEUL aller-retour a la fin
 
-  // Bonus de connexion quotidien + streak (une fois par jour).
-  let loginBonus = 0;
-  const today = todayStr();
-  if (fresh.last_login_day !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const streak = fresh.last_login_day === yesterday ? (fresh.login_streak || 0) + 1 : 1;
-    loginBonus = Math.min(500, 50 * streak);
-    await run('UPDATE users SET login_streak = ?, last_login_day = ?, essence = essence + ? WHERE id = ?',
-      [streak, today, loginBonus, fresh.id]);
-    fresh = await reloadUser(user.id);
+  // --- Lecture unique (1 aller-retour) : creatures + decouvertes ---
+  const [cRes, dRes] = await batch([
+    { sql: 'SELECT * FROM creatures WHERE owner_id = ? ORDER BY created_at ASC', args: [user.id] },
+    { sql: 'SELECT species, variant FROM discoveries WHERE user_id = ?', args: [user.id] },
+  ], 'read');
+  const rows = cRes.rows;
+  const discRows = dRes.rows;
+
+  // --- Tick creatures : transitions de stade (memoire + writes batchees) ---
+  // Comme avant, UNE transition par tick par creature (les timers redemarrent a `now`).
+  let hatched = 0;
+  for (const c of rows) { // accouplement termine -> l'oeuf commence son eclosion
+    if (c.stage === 'mating' && c.hatch_at != null && c.hatch_at <= now) {
+      c.stage = 'egg'; c.hatch_at = now + breedHatchSeconds(c.species) * 1000;
+      W.push({ sql: "UPDATE creatures SET stage='egg', hatch_at=? WHERE id=?", args: [c.hatch_at, c.id] });
+    }
+  }
+  for (const c of rows) { // eclosion : oeuf -> bebe
+    if (c.stage === 'egg' && c.hatch_at != null && c.hatch_at <= now) {
+      c.stage = 'baby'; c.mature_at = now + maturationMsFor(c.species); c.hatch_at = null;
+      W.push({ sql: "UPDATE creatures SET stage='baby', hatch_at=NULL, mature_at=? WHERE id=?", args: [c.mature_at, c.id] });
+      hatched++;
+    }
+  }
+  for (const c of rows) { // bebe -> adulte
+    if (c.stage === 'baby' && c.mature_at != null && c.mature_at <= now) {
+      c.stage = 'adult'; c.mature_at = null;
+      W.push({ sql: "UPDATE creatures SET stage='adult', mature_at=NULL WHERE id=?", args: [c.id] });
+    }
   }
 
-  const rows = await all(
-    'SELECT * FROM creatures WHERE owner_id = ? ORDER BY created_at ASC', [user.id]);
+  // --- Bonus de connexion quotidien (1x/jour) en memoire ---
+  let essence = user.essence;
+  let loginBonus = 0;
+  let loginStreak = user.login_streak || 0;
+  const today = todayStr();
+  if (user.last_login_day !== today) {
+    const yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
+    loginStreak = user.last_login_day === yesterday ? (user.login_streak || 0) + 1 : 1;
+    loginBonus = Math.min(500, 50 * loginStreak);
+    essence += loginBonus;
+    W.push({ sql: 'UPDATE users SET login_streak=?, last_login_day=? WHERE id=?', args: [loginStreak, today, user.id] });
+  }
 
-  const now = Date.now();
-  const activeBiome = fresh.active_biome || 'plaine';
+  // --- Tick farming : 1 biome actif, gains de ressource + XP (en memoire) ---
+  const activeBiome = user.active_biome || 'plaine';
+  const res = parseResources(user);
+  let elapsed = now - user.last_tick;
+  if (elapsed > 0) {
+    const capMs = BALANCE.offlineCapHours * HOUR_MS;
+    if (elapsed > capMs) elapsed = capMs;
+    const secs = elapsed / 1000;
+    const xpGain = Math.round(BALANCE.xpPerSec * secs);
+    // Migration vers le biome actif (tous les farmeurs produisent SA ressource).
+    for (const c of rows) if (c.biome != null && c.biome !== activeBiome) c.biome = activeBiome;
+    let essenceGain = 0;
+    for (const c of rows) {
+      if (c.stage !== 'adult' || c.biome == null) continue;
+      const b = BIOMES[c.biome]; if (!b) continue;
+      const amt = farmRate(c.species, c.xp, c.biome) * secs;
+      if (b.resource === 'essence') essenceGain += amt; else res[b.resource] = (res[b.resource] || 0) + amt;
+      if (xpGain > 0) c.xp = (c.xp || 0) + xpGain; // l'XP en memoire (pour l'affichage)
+    }
+    essence += essenceGain;
+    W.push({ sql: "UPDATE creatures SET biome=? WHERE owner_id=? AND biome IS NOT NULL AND biome != ?", args: [activeBiome, user.id, activeBiome] });
+    if (xpGain > 0) W.push({ sql: "UPDATE creatures SET xp=xp+? WHERE owner_id=? AND biome IS NOT NULL AND stage='adult'", args: [xpGain, user.id] });
+    W.push({ sql: 'UPDATE users SET essence=?, resources_json=?, last_tick=? WHERE id=?', args: [essence, JSON.stringify(res), now, user.id] });
+  } else if (loginBonus > 0) {
+    W.push({ sql: 'UPDATE users SET essence=? WHERE id=?', args: [essence, user.id] });
+  }
+  // Garde `user` a jour en memoire pour le reste du calcul.
+  user.essence = essence; user.login_streak = loginStreak; user.resources_json = JSON.stringify(res);
+
+  const fresh = user; // plus de reloadUser : on travaille sur l'objet deja a jour
   const creatures = rows.map(c => publicCreature(c, now, activeBiome));
 
-  // Decouvertes : on lit d'abord ce qui est deja connu, et on n'ECRIT que les
-  // NOUVELLES paires (en regime stable -> 0 ecriture, au lieu d'1 par espece a chaque fois).
-  const discRows = await all('SELECT species, variant FROM discoveries WHERE user_id = ?', [user.id]);
+  // Decouvertes : on n'ECRIT que les NOUVELLES paires (regime stable -> 0 ecriture).
   const discSet = new Set(discRows.map(d => d.species + ':' + d.variant));
   const ownedPairs = [...new Set(rows.map(r => r.species + ':' + (r.variant || 0)))];
-  const newPairs = ownedPairs.filter(p => !discSet.has(p));
-  for (const pair of newPairs) {
+  for (const pair of ownedPairs.filter(p => !discSet.has(p))) {
     const i = pair.lastIndexOf(':');
-    await run('INSERT OR IGNORE INTO discoveries (user_id, species, variant) VALUES (?, ?, ?)',
-      [user.id, pair.slice(0, i), Number(pair.slice(i + 1))]);
+    W.push({ sql: 'INSERT OR IGNORE INTO discoveries (user_id, species, variant) VALUES (?, ?, ?)', args: [user.id, pair.slice(0, i), Number(pair.slice(i + 1))] });
     discSet.add(pair);
   }
   const discovered = [...discSet].filter(p => p.endsWith(':0')).map(p => p.slice(0, -2));
   const discoveredShiny = [...discSet].filter(p => p.endsWith(':1')).map(p => p.slice(0, -2));
 
-  // Succes : on lit l'ensemble UNE fois (depuis fresh) et on ecrit UNE fois si du nouveau.
+  // Succes : lus une fois (depuis fresh), ecrits une fois si du nouveau.
   const achSet = parseAchSet(fresh);
   const achBefore = achSet.size;
   const newAchievements = [];
@@ -179,7 +169,10 @@ export async function getPlayerState(user) {
   tryAch('shiny', discoveredShiny.length >= 1);
   tryAch('level50', maxLevel >= 50);
   tryAch('rich', fresh.essence >= 50000);
-  if (achSet.size !== achBefore) await run('UPDATE users SET ach_json = ? WHERE id = ?', [JSON.stringify([...achSet]), user.id]);
+  if (achSet.size !== achBefore) W.push({ sql: 'UPDATE users SET ach_json = ? WHERE id = ?', args: [JSON.stringify([...achSet]), user.id] });
+
+  // --- Ecriture groupee : TOUT le idle en UN SEUL aller-retour ---
+  if (W.length) await batch(W, 'write');
   if (hatched > 0) await progressDaily(user.id, 'hatch2', hatched);
 
   // --- Exploration : marque les Glumps en explo, etat des zones, sac ---

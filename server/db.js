@@ -36,6 +36,12 @@ export async function insert(sql, args = []) {
   const r = await db.execute({ sql, args: safeArgs(args) });
   return Number(r.lastInsertRowid);
 }
+// Groupe plusieurs requetes en UN SEUL aller-retour reseau (transaction).
+// stmts : tableau de { sql, args }. mode : 'read' | 'write' | 'deferred'.
+export async function batch(stmts, mode = 'write') {
+  if (!stmts.length) return [];
+  return db.batch(stmts.map(s => ({ sql: s.sql, args: safeArgs(s.args || []) })), mode);
+}
 
 export async function initDb() {
   await db.executeMultiple(`
