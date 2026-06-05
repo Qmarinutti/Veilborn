@@ -1563,7 +1563,8 @@ function closeDrawer() {
   $('#drawer-overlay').classList.add('hidden');
 }
 $$('.railbtn').forEach(b => b.addEventListener('click', () => {
-  if (b.dataset.drawer === 'shop') openShop();
+  if (b.dataset.view) switchView(b.dataset.view);   // bouton de vue (ex: Classement) dans le rail
+  else if (b.dataset.drawer === 'shop') openShop();
   else openDrawer(b.dataset.drawer);
 }));
 $('#drawer-close').addEventListener('click', closeDrawer);
