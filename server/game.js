@@ -323,7 +323,7 @@ export function biomeOf(id) { return BIOMES[id] || null; }
 // crees que si des incubateurs sont libres.
 export const EXPLORE_TIERS = [
   { id: 'facile',     name: 'Facile',     count: 3, level: 10,  durationSec: 10 * 60,   res: 200,   items: 1, eggs: 1, eggChance: 0.6 },
-  { id: 'normal',     name: 'Normal',     count: 4, level: 25,  durationSec: 45 * 60,   res: 800,   items: 2, eggs: 1, eggChance: 1 },
+  { id: 'normal',     name: 'Normal',     count: 4, level: 25,  durationSec: 45 * 60,   res: 1000,  items: 2, eggs: 1, eggChance: 1 },
   { id: 'difficile',  name: 'Difficile',  count: 4, level: 50,  durationSec: 2 * 3600,  res: 2800,  items: 3, eggs: 2, eggChance: 1 },
   { id: 'hard',       name: 'Hard',       count: 2, level: 80,  durationSec: 5 * 3600,  res: 8000,  items: 4, eggs: 2, eggChance: 1 },
   { id: 'impossible', name: 'Impossible', count: 3, level: 100, durationSec: 12 * 3600, res: 22000, items: 6, eggs: 3, eggChance: 1 },

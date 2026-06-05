@@ -28,7 +28,31 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
-app.use(express.json());
+app.set('trust proxy', 1); // Render est derriere un proxy -> req.ip = vraie IP cliente
+app.use(express.json({ limit: '64kb' })); // body raisonnable (evite l'abus memoire)
+
+// En-tetes de securite basiques sur toutes les reponses.
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+});
+
+// Anti-brute-force simple (en prod uniquement, pour ne pas gener les tests locaux) :
+// limite les tentatives login/register par IP sur une fenetre glissante.
+const authHits = new Map();
+function authThrottle(req, res, next) {
+  if (!usingTurso) return next();
+  const ip = req.ip || 'unknown';
+  const now = Date.now(), windowMs = 60000, max = 12;
+  const arr = (authHits.get(ip) || []).filter(t => now - t < windowMs);
+  arr.push(now);
+  authHits.set(ip, arr);
+  if (authHits.size > 5000) authHits.clear(); // garde-fou memoire
+  if (arr.length > max) return res.status(429).json({ error: 'Trop de tentatives. Reessaie dans une minute.' });
+  next();
+}
 
 // Enrobe un handler async pour router les erreurs vers express.
 const h = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -48,8 +72,9 @@ async function insertCreature(ownerId, c, extra = {}) {
 }
 
 function setCookie(res, token) {
+  const secure = usingTurso ? ' Secure;' : ''; // HTTPS en prod (Render) ; pas en local http
   res.setHeader('Set-Cookie',
-    `sid=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`);
+    `sid=${token}; HttpOnly;${secure} Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`);
 }
 
 // Code ami (8 caracteres, alphabet sans I/O/0/1 pour eviter les confusions).
@@ -89,10 +114,10 @@ async function spend(userId, amount) {
 }
 
 // ---------- Auth ----------
-app.post('/api/register', h(async (req, res) => {
+app.post('/api/register', authThrottle, h(async (req, res) => {
   const { username, password, starter } = req.body || {};
-  if (!username || !password || username.length < 3 || password.length < 4) {
-    return res.status(400).json({ error: 'Pseudo (>=3) et mot de passe (>=4) requis.' });
+  if (!username || !password || username.length < 3 || username.length > 20 || password.length < 4 || password.length > 100) {
+    return res.status(400).json({ error: 'Pseudo (3-20 caracteres) et mot de passe (4-100) requis.' });
   }
   if (!STARTER_IDS.includes(starter)) {
     return res.status(400).json({ error: 'Choisis ton Glump de depart.' });
@@ -115,7 +140,7 @@ app.post('/api/register', h(async (req, res) => {
   res.json({ ok: true });
 }));
 
-app.post('/api/login', h(async (req, res) => {
+app.post('/api/login', authThrottle, h(async (req, res) => {
   const { username, password } = req.body || {};
   const user = await get('SELECT * FROM users WHERE username = ?', [username || '']);
   if (!user || !verifyPassword(password || '', user.pass_salt, user.pass_hash)) {
