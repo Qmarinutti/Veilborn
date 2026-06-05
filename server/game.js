@@ -213,10 +213,15 @@ export function breed(parentA, parentB, { pityBonus = 0 } = {}) {
   const pool = BASE_BY_TIER[tier].length ? BASE_BY_TIER[tier] : BASE_BY_TIER[1];
   const species = pick(pool);
 
+  // Heritage : l'enfant prend une valeur DANS l'intervalle des deux parents (min..max),
+  // pas la moyenne. Ex : parents 27 et 31 -> enfant 27/28/29/30/31. Un parent qui a deja
+  // un 31 peut donc le transmettre directement. Petite chance de +1 pour qu'une lignee
+  // puisse progresser au fil des generations (sinon les genes ne feraient que stagner/descendre).
   const inherit = (a, b) => {
-    const avg = (a + b) / 2;
-    const mut = rand(BALANCE.mutationRange * 2 + 1) - BALANCE.mutationRange;
-    return Math.max(0, Math.min(BALANCE.maxGene, Math.round(avg + mut)));
+    const lo = Math.min(a, b), hi = Math.max(a, b);
+    let g = lo + rand(hi - lo + 1);   // uniforme dans [min, max] des parents
+    if (rand(100) < 12) g += 1;       // 12% : mutation chanceuse +1
+    return Math.max(0, Math.min(BALANCE.maxGene, g));
   };
 
   const parentShiny = parentA.variant === 1 || parentB.variant === 1;
