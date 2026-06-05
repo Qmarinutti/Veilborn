@@ -348,6 +348,16 @@ export function publicCreature(c, now = Date.now(), activeBiome = null) {
   out.farmBiomeName = b.name;
   out.farmSynergy = syn;
 
+  // Couts de montee de niveau directe (+1/+5/+10), payee en essence (meme taux que l'ancien bonbon).
+  if (c.stage !== 'egg' && out.level < 100) {
+    const perXp = BALANCE.candyCost / BALANCE.candyXp;
+    out.levelup = {};
+    for (const n of [1, 5, 10]) {
+      const t = Math.min(100, out.level + n);
+      out.levelup[n] = { to: t, gain: t - out.level, cost: Math.max(1, Math.ceil((xpForLevel(t) - (c.xp || 0)) * perXp)) };
+    }
+  }
+
   // Evolution disponible ?
   const evo = evolutionOf(c.species);
   if (evo) {

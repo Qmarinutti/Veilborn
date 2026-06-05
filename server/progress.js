@@ -61,7 +61,7 @@ export const DAILY_POOL = [
   { id: 'hatch2', icon: '🥚', text: 'Faire eclore 2 oeufs', goal: 2, reward: 200 },
   { id: 'breed1', icon: '💞', text: 'Reproduire 1 Glump', goal: 1, reward: 150 },
   { id: 'pvp3', icon: '⚔️', text: 'Gagner 3 combats', goal: 3, reward: 300 },
-  { id: 'candy3', icon: '🍬', text: 'Donner 3 Super Bonbons', goal: 3, reward: 150 },
+  { id: 'candy3', icon: '⬆️', text: 'Monter un Glump de niveau 3 fois', goal: 3, reward: 150 },
   { id: 'evolve1', icon: '⬆️', text: 'Faire evoluer 1 Glump', goal: 1, reward: 250 },
   { id: 'buyegg2', icon: '🛒', text: 'Acheter 2 oeufs', goal: 2, reward: 150 },
 ];

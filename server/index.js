@@ -12,7 +12,7 @@ import {
 import {
   BALANCE, STARTER_IDS, SPECIES, SPECIES_COUNT, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
-  levelFromXp, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
+  levelFromXp, xpForLevel, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
   breedingSeconds, reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
   EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS,
@@ -425,6 +425,29 @@ app.post('/api/creature/candy', requireAuth, h(async (req, res) => {
   const newAch = [];
   if (levelFromXp(row.xp) >= 50) { const a = await unlockAch(req.user.id, 'level50'); if (a) newAch.push(a); }
   res.json({ ok: true, creature: publicCreature(row), cost: BALANCE.candyCost, xp: BALANCE.candyXp, newAch });
+}));
+
+// ---------- Montee de niveau directe : +1 / +5 / +10 niveaux, payee en essence ----------
+const ESSENCE_PER_XP = BALANCE.candyCost / BALANCE.candyXp; // meme taux que le bonbon (0.5)
+const MAX_LEVEL = 100;
+app.post('/api/creature/levelup', requireAuth, h(async (req, res) => {
+  const { id, levels } = req.body || {};
+  const n = [1, 5, 10].includes(Number(levels)) ? Number(levels) : 1;
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
+  if (c.stage === 'egg') return res.status(400).json({ error: 'Un oeuf ne peut pas monter de niveau.' });
+  const cur = levelFromXp(c.xp || 0);
+  if (cur >= MAX_LEVEL) return res.status(400).json({ error: 'Niveau maximum (100) atteint.' });
+  const target = Math.min(MAX_LEVEL, cur + n);
+  const xpNeeded = xpForLevel(target) - (c.xp || 0);
+  const cost = Math.max(1, Math.ceil(xpNeeded * ESSENCE_PER_XP));
+  if (!(await spend(req.user.id, cost))) return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
+  await run('UPDATE creatures SET xp = ? WHERE id = ?', [xpForLevel(target), id]);
+  await progressDaily(req.user.id, 'candy3', 1); // la quete "monter de niveau" reutilise cet id
+  const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
+  const newAch = [];
+  if (target >= 50) { const a = await unlockAch(req.user.id, 'level50'); if (a) newAch.push(a); }
+  res.json({ ok: true, creature: publicCreature(row), cost, gained: target - cur, level: target, newAch });
 }));
 
 // ---------- Soins : Potion (PV max) / Rappel (ranime un KO) ----------

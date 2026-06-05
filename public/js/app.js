@@ -739,8 +739,13 @@ function renderDetail(id) {
     </div>
     <div class="detail-block"><div class="detail-lbl">Niveau ${c.level}</div>
       <div class="xpbar"><i style="width:${xpPct}%"></i></div>
-      <div class="detail-sub">${c.xpInto}/${c.xpNext} XP — ${c.inPrairie ? "gagne de l'XP en farmant 🗺️" : 'place-le dans un biome pour progresser'}</div>
-      <button class="btn small primary candy" data-candy="${c.id}" style="margin-top:10px;width:100%;">🍬 Super Bonbon ✨60 (+120 XP)</button>
+      <div class="detail-sub">${c.xpInto}/${c.xpNext} XP — ${c.inPrairie ? "gagne aussi de l'XP en farmant 🗺️" : 'place-le dans un biome pour aussi gagner de l\'XP'}</div>
+      ${c.level >= 100 ? '<div class="detail-sub" style="margin-top:8px;"><b>🏆 Niveau maximum (100)</b></div>'
+        : c.levelup ? `<div class="levelup-row">
+          <button class="btn small primary" data-levelup="${c.id}" data-levels="1">+1 niv<small>✨${c.levelup[1].cost.toLocaleString('fr-FR')}</small></button>
+          <button class="btn small primary" data-levelup="${c.id}" data-levels="5">+${c.levelup[5].gain} niv<small>✨${c.levelup[5].cost.toLocaleString('fr-FR')}</small></button>
+          <button class="btn small primary" data-levelup="${c.id}" data-levels="10">+${c.levelup[10].gain} niv<small>✨${c.levelup[10].cost.toLocaleString('fr-FR')}</small></button>
+        </div>` : ''}
     </div>
     ${hpBlock}
     ${farmBlock}
@@ -760,18 +765,20 @@ function detailOpen() { return !$('#detail').classList.contains('hidden'); }
 $('#detail-close').addEventListener('click', closeDetail);
 $('#detail-overlay').addEventListener('click', closeDetail);
 $('#detail-body').addEventListener('click', async (e) => {
-  const candyBtn = e.target.closest('[data-candy]');
+  const luBtn = e.target.closest('[data-levelup]');
   const evoBtn = e.target.closest('[data-evolve]');
-  if (candyBtn) {
-    const id = Number(candyBtn.dataset.candy);
+  if (luBtn) {
+    const id = Number(luBtn.dataset.levelup);
+    const levels = Number(luBtn.dataset.levels);
     try {
-      const r = await api('/creature/candy', { method: 'POST', body: { id } });
-      // Mise a jour LOCALE (pas de refresh complet -> fluide) ; re-rend la fiche si ouverte.
+      const r = await api('/creature/levelup', { method: 'POST', body: { id, levels } });
+      // Mise a jour LOCALE (fluide) + re-rend fiche ET box (sinon la box garde l'ancien niveau).
       const c = STATE.creatures.find(x => x.id === id);
       if (c) Object.assign(c, r.creature);
       if (typeof r.cost === 'number') STATE.user.essence = Math.max(0, STATE.user.essence - r.cost);
       if (detailOpen()) renderDetail(id);
-      flash(`+${r.xp} XP 🍬 (niveau ${r.creature.level})`); processNewAch(r);
+      renderCollection();
+      flash(`+${r.gained} niveau${r.gained > 1 ? 'x' : ''} → niv ${r.level} (−${r.cost.toLocaleString('fr-FR')} ✨)`); processNewAch(r);
     } catch (err) { flash(err.message, "err"); }
   } else if (evoBtn) {
     const id = Number(evoBtn.dataset.evolve);
@@ -781,6 +788,7 @@ $('#detail-body').addEventListener('click', async (e) => {
       const r = await api('/creature/evolve', { method: 'POST', body: { id } });
       await refresh();
       if (detailOpen()) renderDetail(id);
+      renderCollection();
       flash(`✨ ${r.fromName} a evolue en ${r.creature.speciesName} !`); processNewAch(r);
     } catch (err) { flash(err.message, "err"); }
   }
