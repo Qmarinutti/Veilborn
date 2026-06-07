@@ -362,6 +362,30 @@ app.post('/api/biome/remove', requireAuth, h(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// Assigner PLUSIEURS Glumps au farm d'un coup (selection multiple), dans la limite des emplacements.
+app.post('/api/biome/assign-many', requireAuth, h(async (req, res) => {
+  const ids = Array.isArray((req.body || {}).ids) ? req.body.ids.map(Number).filter(Boolean) : [];
+  if (!ids.length) return res.status(400).json({ error: 'Aucun Glump.' });
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const active = user.active_biome || 'plaine';
+    let used = (await get("SELECT COUNT(*) AS n FROM creatures WHERE owner_id = ? AND biome IS NOT NULL", [req.user.id])).n;
+    const mating = new Set((await all("SELECT parent_a, parent_b FROM creatures WHERE owner_id = ? AND stage = 'mating'", [req.user.id])).flatMap(m => [m.parent_a, m.parent_b]));
+    const exploring = exploringIds(user);
+    let assigned = 0;
+    for (const id of ids) {
+      if (used >= user.prairie_slots) break;
+      const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+      if (!c || c.stage !== 'adult' || c.biome || c.listed === 1 || mating.has(id) || exploring.has(id)) continue;
+      await run("UPDATE creatures SET biome = ?, in_prairie = 1 WHERE id = ? AND biome IS NULL", [active, id]);
+      used++; assigned++;
+    }
+    return { ok: true, assigned, full: used >= user.prairie_slots };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
 // Acheter un terrain (biome) avec de l'essence.
 app.post('/api/biome/buy', requireAuth, h(async (req, res) => {
   const { biome } = req.body || {};

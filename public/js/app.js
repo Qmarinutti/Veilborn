@@ -679,8 +679,12 @@ function renderCollection() {
   if (collFilter.shinyOnly) owned = owned.filter(c => c.variant === 1);
 
   // Tri
+  const ivT = (c) => c.genes ? c.genes.force + c.genes.vita + c.genes.speed : 0;
   const cmp = {
     recent: (a, b) => b.id - a.id,
+    power: (a, b) => (b.power || 0) - (a.power || 0),
+    iv: (a, b) => ivT(b) - ivT(a) || (b.power || 0) - (a.power || 0),
+    weak: (a, b) => (a.power || 0) - (b.power || 0) || ivT(a) - ivT(b), // faibles d'abord (a relacher)
     value: (a, b) => b.value - a.value,
     level: (a, b) => (b.level || 0) - (a.level || 0),
     rarity: (a, b) => b.rarity - a.rarity || b.value - a.value,
@@ -707,8 +711,10 @@ function cardHtml(c, selecting = false) {
   const xpPct = Math.min(100, Math.round(100 * (c.xpInto || 0) / (c.xpNext || 1)));
   const hpPct = Math.round(100 * (c.hp ?? c.maxHp) / (c.maxHp || 1));
   const sel = selecting && collSelected.has(c.id);
+  const isNew = c.createdAt && (serverNow() - c.createdAt < 2 * 3600 * 1000); // < 2h
   return `<div class="card ${c.fainted ? 'fainted' : ''} ${c.favorite ? 'fav' : ''} ${sel ? 'sel' : ''}" data-id="${c.id}" data-rarity="${c.rarity}">
     ${c.listed ? '<span class="sale-badge">🏷️ en vente</span>' : ''}
+    ${isNew && !c.listed ? '<span class="sale-badge new-badge">🆕 NOUVEAU</span>' : ''}
     ${selecting ? `<span class="sel-check">${sel ? '✅' : '⬜'}</span>` : ''}
     ${badges.join('')}
     <span class="badge lvl">Niv ${c.level || 1}</span>
@@ -716,7 +722,8 @@ function cardHtml(c, selecting = false) {
     ${avatar(c)}
     <div class="rarity-dots">${RARITY_DOTS(c.rarity)}</div>
     <div class="name">${c.nickname || c.speciesName}</div>
-    <div class="sub">${c.type} · val. ${c.value}</div>
+    <div class="sub">${c.type} · 💪${c.power} · val. ${c.value}</div>
+    ${c.stage !== 'egg' ? ivMini(c) : ''}
     <div class="stats">
       <span><b>${c.stats.force}</b>FOR</span>
       <span><b>${c.stats.vita}</b>VIT</span>
@@ -1106,6 +1113,11 @@ function openTeamPicker(title, items, render, count, onConfirm) {
   pickerState = { items: items.slice(), render, onPick: null, sort: 'level', type: '', multi: true, count, selected: new Set(), onConfirm };
   setupPicker(title, items);
 }
+// Multi "jusqu'a N" : selectionne de 1 a maxCount Glumps (ex: remplir des emplacements de farm).
+function openMultiPicker(title, items, render, maxCount, onConfirm) {
+  pickerState = { items: items.slice(), render, onPick: null, sort: 'level', type: '', multi: true, max: true, count: maxCount, selected: new Set(), onConfirm };
+  setupPicker(title, items);
+}
 function setupPicker(title, items) {
   $('#picker-title').textContent = title;
   const types = [...new Set(items.map(c => c.type).filter(Boolean))].sort();
@@ -1121,8 +1133,13 @@ function setupPicker(title, items) {
 function updatePickerCount() {
   if (!pickerState.multi) return;
   const n = pickerState.selected.size;
-  $('#picker-count').textContent = `${n}/${pickerState.count} sélectionné(s)`;
-  $('#picker-confirm').disabled = n !== pickerState.count;
+  if (pickerState.max) {
+    $('#picker-count').textContent = `${n} / ${pickerState.count} max`;
+    $('#picker-confirm').disabled = (n < 1 || n > pickerState.count);
+  } else {
+    $('#picker-count').textContent = `${n}/${pickerState.count} sélectionné(s)`;
+    $('#picker-confirm').disabled = n !== pickerState.count;
+  }
 }
 function renderPickerList() {
   let items = pickerState.items.slice();
@@ -1137,9 +1154,10 @@ function renderPickerList() {
   if (pickerState.multi) for (const id of pickerState.selected) $(`#picker-list [data-pick="${id}"]`)?.classList.add('sel');
 }
 $('#picker-confirm')?.addEventListener('click', () => {
-  if (pickerState.multi && pickerState.selected.size === pickerState.count && pickerState.onConfirm) {
-    pickerState.onConfirm([...pickerState.selected]);
-  }
+  if (!pickerState.multi || !pickerState.onConfirm) return;
+  const n = pickerState.selected.size;
+  const ok = pickerState.max ? (n >= 1 && n <= pickerState.count) : (n === pickerState.count);
+  if (ok) pickerState.onConfirm([...pickerState.selected]);
 });
 $('#picker-sort').addEventListener('click', (e) => {
   const b = e.target.closest('[data-psort]');
@@ -1165,6 +1183,7 @@ function ivMini(c) {
 function pickCardHtml(c) {
   const pct = Math.round(100 * (c.hp ?? c.maxHp) / (c.maxHp || 1));
   return `<div class="card ${c.fainted ? 'fainted' : ''}" data-pick="${c.id}" data-rarity="${c.rarity}">
+    ${c.farming ? '<span class="pick-farm" title="Farme en prairie — il quittera le farm si tu l\'envoies">🗺️</span>' : ''}
     ${avatar(c)}
     <div class="name">${c.nickname || c.speciesName}</div>
     <div class="sub">${c.fainted ? '💀 KO' : c.type + ' · P' + c.power}</div>
@@ -1188,11 +1207,12 @@ $('#prairie-slots').addEventListener('click', async (e) => {
   } else if (add) {
     const b = (STATE.biomes || []).find(x => x.id === (STATE.user.activeBiome || 'plaine'));
     const busy = matingParentIds();
-    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.biome && !c.listed && !busy.has(c.id));
-    if (!avail.length) { flash('Aucun Glump adulte disponible (occupés en accouplement ?).', 'err'); return; }
-    openPicker(`Mettre au farm (${b?.emoji || ''} ${b?.name || ''})`, avail, pickBiomeCardHtml, async (id) => {
-      try { await api('/biome/assign', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`Au farm ! ${b?.emoji || ''}`); }
-      catch (err) { flash(err.message, "err"); }
+    const avail = STATE.creatures.filter(c => c.stage === 'adult' && !c.biome && !c.listed && !c.exploring && !busy.has(c.id));
+    if (!avail.length) { flash('Aucun Glump adulte disponible.', 'err'); return; }
+    const free = Math.max(1, (STATE.user.prairieSlots || 0) - (STATE.user.prairieUsed || 0));
+    openMultiPicker(`Mettre au farm (${b?.emoji || ''} ${b?.name || ''}) — ${free} libre(s)`, avail, pickBiomeCardHtml, free, async (ids) => {
+      try { const r = await api('/biome/assign-many', { method: 'POST', body: { ids } }); closePicker(); await refresh(); flash(`${r.assigned} Glump(s) au farm ! ${b?.emoji || ''}`); }
+      catch (err) { flash(err.message, 'err'); }
     });
   }
 });

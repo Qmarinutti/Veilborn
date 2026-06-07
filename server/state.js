@@ -298,6 +298,7 @@ export function publicCreature(c, now = Date.now(), activeBiome = null) {
     fromBreeding: c.from_breeding === 1,
     favorite: c.favorite === 1,
     listed: c.listed === 1, // en vente a l'Hotel des Ventes
+    createdAt: c.created_at, // pour le badge "nouveau"
     parentA: c.parent_a ?? null,
     parentB: c.parent_b ?? null,
     stage: c.stage,
