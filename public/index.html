@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=46" />
+  <link rel="stylesheet" href="css/style.css?v=47" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -198,6 +198,7 @@
       <button class="railbtn" data-view="leaderboard" title="Classement des éleveurs">🏆</button>
       <button class="railbtn" data-drawer="progress" title="Progression (quêtes, succès, paliers)">🏅</button>
       <button class="railbtn" data-drawer="shop" title="Boutique">🛒</button>
+      <button class="railbtn" data-drawer="bag" title="Sac (objets)">🎒</button>
       <button class="railbtn" data-drawer="settings" title="Reglages">⚙️</button>
       <button class="railbtn" data-drawer="social" title="Social / Amis">👥</button>
     </div>
@@ -348,6 +349,8 @@
           <h3 style="margin:18px 0 8px; font-size:15px;">🔄 Échanges</h3>
           <div id="trades-list"></div>
         </div>
+
+        <div id="drawer-bag" class="drawer-section hidden"></div>
       </div>
     </aside>
 
@@ -369,6 +372,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=62" type="module"></script>
+  <script src="js/app.js?v=63" type="module"></script>
 </body>
 </html>

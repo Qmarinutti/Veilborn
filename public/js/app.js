@@ -1225,7 +1225,7 @@ function prairieLoop() {
 // ============================================================
 //  Drawer lateral : evenements / boutique / reglages
 // ============================================================
-const DRAWER_TITLES = { progress: '🏅 Progression', shop: '🛒 Boutique', settings: '⚙️ Reglages', social: '👥 Social' };
+const DRAWER_TITLES = { progress: '🏅 Progression', shop: '🛒 Boutique', settings: '⚙️ Reglages', social: '👥 Social', bag: '🎒 Sac' };
 function openDrawer(type) {
   $('#drawer-title').textContent = DRAWER_TITLES[type] || '';
   $$('.drawer-section').forEach(s => s.classList.add('hidden'));
@@ -1234,9 +1234,44 @@ function openDrawer(type) {
   if (type === 'social') loadSocial();
   if (type === 'settings') syncAudioToggles();
   if (type === 'progress') loadProgress();
+  if (type === 'bag') renderBag();
   $('#drawer').classList.remove('hidden');
   $('#drawer-overlay').classList.remove('hidden');
 }
+
+// ---------- Sac : objets possedes (loot explo / achat), utilisables ----------
+function useBagItem(k) {
+  let pool, title;
+  if (k === 'candy') { pool = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating'); title = 'Super Bonbon à…'; }
+  else if (k === 'potion') { pool = STATE.creatures.filter(c => c.stage === 'adult' && !c.fainted && c.hp < c.maxHp); title = 'Soigner quel Glump ?'; }
+  else { pool = STATE.creatures.filter(c => c.fainted); title = 'Ranimer quel Glump ?'; }
+  if (!pool.length) { flash('Aucun Glump concerné.', 'err'); return; }
+  openPicker(title, pool, pickCardHtml, async (id) => {
+    try { await api('/item/' + k, { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`${ITEM_NAME[k]} utilisé ${ITEM_EMOJI[k]}`); renderBag(); if (typeof renderShopItem === 'function') renderShopItem(); }
+    catch (err) { flash(err.message, 'err'); }
+  });
+}
+const BAG_SUB = { candy: '+XP à un Glump (le monte de niveau)', potion: 'Restaure tous les PV', revive: 'Ranime un Glump KO (50% PV)' };
+function renderBag() {
+  const it = STATE?.user?.items || { candy: 0, potion: 0, revive: 0 };
+  const total = (it.candy || 0) + (it.potion || 0) + (it.revive || 0);
+  const row = (k) => {
+    const n = it[k] || 0;
+    return `<div class="bag-row ${n ? '' : 'empty'}">
+      <span class="bag-ico">${ITEM_EMOJI[k]}</span>
+      <span class="bag-info"><b>${ITEM_NAME[k]}</b> ×${n}<small>${BAG_SUB[k]}</small></span>
+      ${n > 0 ? `<button class="btn small primary" data-use-item="${k}">Utiliser</button>` : '<span class="bag-none">vide</span>'}
+    </div>`;
+  };
+  $('#drawer-bag').innerHTML =
+    `<p class="hint">Les objets gagnés en exploration ou achetés vont ici. Utilise-les sur tes Glumps.</p>` +
+    (total === 0 ? '' : '') + row('candy') + row('potion') + row('revive') +
+    `<p class="hint" style="margin-top:12px;">Tu peux en acheter d'autres dans la 🛒 Boutique.</p>`;
+}
+$('#drawer-bag')?.addEventListener('click', (e) => {
+  const u = e.target.closest('[data-use-item]');
+  if (u) useBagItem(u.dataset.useItem);
+});
 
 // ---------- Progression : quetes du jour, paliers dex, succes ----------
 async function loadProgress() {
@@ -1502,19 +1537,7 @@ $('#shop-modal').addEventListener('click', async (e) => {
     return;
   }
   const useItem = e.target.closest('[data-use-item]');
-  if (useItem) {
-    const k = useItem.dataset.useItem;
-    let pool, title;
-    if (k === 'candy') { pool = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating'); title = 'Super Bonbon à…'; }
-    else if (k === 'potion') { pool = STATE.creatures.filter(c => c.stage === 'adult' && !c.fainted && c.hp < c.maxHp); title = 'Soigner quel Glump ?'; }
-    else { pool = STATE.creatures.filter(c => c.fainted); title = 'Ranimer quel Glump ?'; }
-    if (!pool.length) { flash('Aucun Glump concerné.', 'err'); return; }
-    openPicker(title, pool, pickCardHtml, async (id) => {
-      try { await api('/item/' + k, { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`${ITEM_NAME[k]} utilisé ${ITEM_EMOJI[k]}`); renderShopItem(); }
-      catch (err) { flash(err.message, 'err'); }
-    });
-    return;
-  }
+  if (useItem) { useBagItem(useItem.dataset.useItem); return; }
   if (e.target.closest('#buy-candy')) {
     const glumps = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating');
     openPicker('Donner un Super Bonbon à…', glumps, pickCardHtml, async (id) => {

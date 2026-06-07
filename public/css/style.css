@@ -947,3 +947,11 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .market-card .btn { width: 100%; }
 #market-shiny.on { background: linear-gradient(135deg, #ffd23f, #ff9e3d); color: #3a2400; }
 .card .sale-badge { position: absolute; top: 6px; left: 6px; background: var(--gold, #ffd23f); color: #3a2400; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; z-index: 2; }
+
+/* Sac (objets) */
+.bag-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; }
+.bag-row.empty { opacity: .55; }
+.bag-row .bag-ico { font-size: 26px; width: 30px; text-align: center; }
+.bag-row .bag-info { flex: 1; display: flex; flex-direction: column; font-size: 14px; }
+.bag-row .bag-info small { color: var(--muted); font-size: 11px; }
+.bag-row .bag-none { color: var(--muted); font-size: 12px; }
