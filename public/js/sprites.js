@@ -10,7 +10,7 @@ let UID = 0;
 
 // Version des images : a incrementer quand des sprites sont regeneres,
 // pour forcer le navigateur a recharger (cache-busting).
-const SPRITE_VER = 5;
+const SPRITE_VER = 6;
 
 // Especes disposant d'une VRAIE image (fichier public/sprites/<id>.png).
 // Des qu'une image est prete, on ajoute l'id ici -> elle remplace le sprite SVG.

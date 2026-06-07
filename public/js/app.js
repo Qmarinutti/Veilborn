@@ -1,5 +1,5 @@
 // ---------- Client Veilborn ----------
-import { creatureSVG, creatureVisual } from './sprites.js?v=13';
+import { creatureSVG, creatureVisual } from './sprites.js?v=14';
 import { sfx, initAudioOnGesture, audioSettings } from './audio.js?v=1';
 
 const $ = (sel) => document.querySelector(sel);
