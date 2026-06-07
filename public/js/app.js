@@ -213,8 +213,10 @@ $$('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.datase
 // ============================================================
 const TYPE_EMOJI = { Feu: '🔥', Eau: '💧', Plante: '🌿', Foudre: '⚡', Roche: '🪨', Glace: '❄️', Ombre: '🌑', Lumiere: '✨', Mystique: '🔮', Acier: '⚙️', Poison: '☠️', Vent: '🌪️', Insecte: '🐛', Dragon: '🐉' };
 let dexMode = 'normal'; // 'normal' | 'shiny'
+let SPECIES_DATA = null; // { species, recipes, breedChart } — cache (utilise par dex ET repro)
+async function loadSpeciesData() { if (!SPECIES_DATA) SPECIES_DATA = await api('/species'); return SPECIES_DATA; }
 async function loadDex() {
-  const { species } = await api('/species');
+  const { species } = await loadSpeciesData();
   const shiny = dexMode === 'shiny';
   const discovered = new Set((shiny ? STATE?.discoveredShiny : STATE?.discovered) || []);
   const entries = Object.entries(species); // ordre du species.json (familles a la suite)
@@ -232,11 +234,12 @@ async function loadDex() {
     num++;
     const locked = !discovered.has(id);
     const cr = { species: id, speciesName: sp.name, color: sp.color, type: sp.type, rarity: sp.tier ?? sp.rarity, shape: sp.shape, hasArt: sp.hasArt, line: sp.line, variant: shiny ? 1 : 0 };
-    html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.tier ?? sp.rarity}">
+    html += `<div class="dexmon ${locked ? 'locked' : ''}" data-rarity="${sp.tier ?? sp.rarity}" ${locked ? '' : `data-dexid="${id}"`}>
       <div class="dexnum">N°${String(num).padStart(3, '0')}</div>
       <div class="avatar">${creatureVisual(cr, 52)}</div>
       <div class="name">${locked ? '???' : sp.name}</div>
       <div class="sub">${locked ? '—' : sp.type}</div>
+      ${locked ? '' : '<div class="dex-recipe-hint">💞 recette</div>'}
     </div>`;
   }
   html += '</div>';
@@ -244,8 +247,40 @@ async function loadDex() {
 }
 $('#dex').addEventListener('click', (e) => {
   const t = e.target.closest('[data-dexmode]');
-  if (t) { dexMode = t.dataset.dexmode; loadDex(); }
+  if (t) { dexMode = t.dataset.dexmode; loadDex(); return; }
+  const mon = e.target.closest('[data-dexid]');
+  if (mon) showRecipe(mon.dataset.dexid);
 });
+// Forme de base (stade 1) d'une lignee.
+function baseFormOf(id, map) {
+  const sp = map[id]; if (!sp) return id;
+  if ((sp.stage || 1) === 1) return id;
+  for (const [k, s] of Object.entries(map)) if (s.line === sp.line && (s.stage || 1) === 1) return k;
+  return id;
+}
+// Affiche la/les recette(s) de reproduction d'une espece (via sa forme de base).
+function showRecipe(id) {
+  const d = SPECIES_DATA; if (!d) return;
+  const sp = d.species[id];
+  const base = baseFormOf(id, d.species);
+  const isEvolved = base !== id;
+  const recipes = (d.recipes[base] || []);
+  const combos = recipes.length
+    ? recipes.map(([a, b]) => `<div class="recipe-combo">${a === b ? `2× <span class="rc-type">${a}</span>` : `<span class="rc-type">${a}</span> <b>+</b> <span class="rc-type">${b}</span>`}</div>`).join('')
+    : '<p class="hint">Pas de recette de reproduction — obtenable en boutique / exploration.</p>';
+  $('#recipe-title').innerHTML = `${creatureVisual({ species: id, color: sp.color, type: sp.type, rarity: sp.tier, shape: sp.shape, hasArt: sp.hasArt, line: sp.line }, 54)} <span>${sp.name}</span>`;
+  $('#recipe-body').innerHTML =
+    `<p class="hint">${isEvolved
+      ? `Obtenu en faisant <b>évoluer ${d.species[base].name}</b>. Pour avoir ${d.species[base].name}, reproduis :`
+      : `Reproduis deux Glumps de ces types (l'un de chaque) :`}</p>
+     <div class="recipe-list">${combos}</div>
+     <p class="hint" style="margin-top:10px;">Chaque couple donne <b>2-3 espèces possibles</b> (toujours les mêmes) — réessaie pour viser celle que tu veux.</p>`;
+  $('#recipe-modal').classList.remove('hidden');
+  $('#recipe-overlay').classList.remove('hidden');
+}
+function closeRecipe() { $('#recipe-modal').classList.add('hidden'); $('#recipe-overlay').classList.add('hidden'); }
+$('#recipe-ok')?.addEventListener('click', closeRecipe);
+$('#recipe-overlay')?.addEventListener('click', closeRecipe);
 
 // ============================================================
 //  Entree en jeu + boucle de rafraichissement
@@ -501,6 +536,22 @@ function renderIncubators() {
 }
 
 let breedSelA = null, breedSelB = null; // parents selectionnes dans la cellule "composer"
+// Apercu des 2-3 especes possibles d'un couple (selon les types), facon Dragon City.
+function breedPreviewHtml(typeA, typeB) {
+  const d = SPECIES_DATA;
+  if (!d) { loadSpeciesData().then(() => { if (!$('#view-breed').classList.contains('hidden')) renderBreedingCells(); }); return '<div class="breed-preview">…</div>'; }
+  const key = [typeA, typeB].sort().join('|');
+  const outcomes = d.breedChart[key] || [];
+  if (!outcomes.length) return '';
+  const disc = new Set(STATE?.discovered || []);
+  const cells = outcomes.map(id => {
+    const sp = d.species[id];
+    if (!disc.has(id)) return `<div class="bp-outcome unknown"><span class="bp-q">?</span><span>Nouveau !</span></div>`;
+    const cr = { species: id, color: sp.color, type: sp.type, rarity: sp.tier, shape: sp.shape, hasArt: sp.hasArt, line: sp.line };
+    return `<div class="bp-outcome" data-rarity="${sp.tier}">${creatureVisual(cr, 42)}<span>${sp.name}</span></div>`;
+  }).join('');
+  return `<div class="breed-preview"><div class="bp-lbl">Résultats possibles (${typeA}${typeA === typeB ? '' : ' + ' + typeB}) :</div><div class="bp-outcomes">${cells}</div></div>`;
+}
 function renderBreedingCells() {
   const max = STATE.user.breedingCells;
   // La cellule n'affiche que l'ACCOUPLEMENT. L'oeuf pondu part en eclosion (incubateurs).
@@ -535,6 +586,7 @@ function renderBreedingCells() {
         : `<div class="breed-parent slot" data-pick-parent="${side}"><div class="bp-add">+</div><span>Parent</span></div>`;
       const mid = (a && b) ? `<button class="btn primary" id="do-breed">❤ Reproduire</button>` : `<span class="heart">❤</span>`;
       html += `<div class="breed-cell composer">${slot(a, 'a')}<div class="breed-mid">${mid}</div>${slot(b, 'b')}</div>`;
+      if (a && b) html += breedPreviewHtml(a.type, b.type);
     } else {
       html += `<div class="breed-cell locked-cell"><span>Cellule libre</span></div>`;
     }

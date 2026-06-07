@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=47" />
+  <link rel="stylesheet" href="css/style.css?v=48" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -93,7 +93,7 @@
       <section id="view-breed" class="view hidden">
         <div class="panel">
           <h2>💞 Reproduction <span id="breeding-info" class="prairie-info"></span></h2>
-          <p class="hint">Choisis 2 parents → 💞 <b>accouplement</b> (ils sont occupés, ne farment pas) → 🥚 <b>l'œuf pond puis éclot</b> (2 phases). Bébé de rareté tirée au sort.</p>
+          <p class="hint">Choisis 2 parents : selon leurs <b>types</b>, le couple donne <b>2-3 espèces possibles</b> (toujours les mêmes, façon Dragon City) — affichées avant de lancer. Les <b>IV</b> sont hérités. 💞 accouplement → 🥚 éclosion (2 phases). Clique une espèce dans le 📖 Dex pour voir sa recette.</p>
           <p id="breed-msg" class="msg"></p>
           <div id="breeding-cells" class="breed-cells"></div>
         </div>
@@ -301,6 +301,14 @@
       <button id="reward-ok" class="btn primary">Récupérer</button>
     </div>
 
+    <!-- Modale recette de reproduction (depuis le Dex) -->
+    <div id="recipe-overlay" class="overlay hidden"></div>
+    <div id="recipe-modal" class="reward-modal hidden">
+      <h3 id="recipe-title">💞 Recette</h3>
+      <div id="recipe-body"></div>
+      <button id="recipe-ok" class="btn primary">Fermer</button>
+    </div>
+
     <!-- Panneau coulissant (drawer) -->
     <div id="drawer-overlay" class="overlay hidden"></div>
     <aside id="drawer" class="drawer hidden">
@@ -372,6 +380,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=63" type="module"></script>
+  <script src="js/app.js?v=64" type="module"></script>
 </body>
 </html>

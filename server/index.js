@@ -16,6 +16,7 @@ import {
   breedingSeconds, reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
   EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS,
+  BREED_RECIPES, BREED_CHART,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes, parseExpeditions, parseItems, exploringIds } from './state.js';
 import { withLock } from './lock.js';
@@ -1072,7 +1073,7 @@ app.get('/api/achievements', (req, res) => res.json({ achievements: ACHIEVEMENTS
 app.get('/api/species', (req, res) => {
   const out = {};
   for (const [id, sp] of Object.entries(SPECIES)) out[id] = { ...sp, hasArt: hasArt(id), tier: tierOf(id) };
-  res.json({ species: out });
+  res.json({ species: out, recipes: BREED_RECIPES, breedChart: BREED_CHART });
 });
 
 // ---------- Fichiers statiques ----------

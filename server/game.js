@@ -205,13 +205,54 @@ function rollTier() {
   return 1;                                         // Commun 72%
 }
 
-// --- Reproduction : deux adultes -> un oeuf qui donnera un BEBE (forme de base).
-// On ne donne JAMAIS une forme evoluee : juste un stade 1, dont la rarete
-// d'acquisition est tiree au sort (le joueur le fait evoluer ensuite).
+// ============================================================
+//  REPRODUCTION facon DRAGON CITY : un couple donne 2-3 especes de base
+//  POSSIBLES, toujours les memes (deterministe), selon le TYPE des parents.
+// ============================================================
+// Formes de base regroupees par TYPE.
+const BASE_BY_TYPE = {};
+for (const id of SPECIES_IDS) if ((SPECIES[id].stage || 1) === 1) (BASE_BY_TYPE[SPECIES[id].type] = BASE_BY_TYPE[SPECIES[id].type] || []).push(id);
+// PRNG deterministe (mulberry32 seede par une chaine) -> chart STABLE entre redemarrages.
+function seedFromStr(s) { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function pairKey(t1, t2) { return [t1, t2].sort().join('|'); }
+// Pour chaque paire de TYPES (non ordonnee) : 2-3 especes de base possibles, deterministes.
+export const BREED_CHART = {};
+const ALL_TYPES = Object.keys(BASE_BY_TYPE).sort();
+for (let i = 0; i < ALL_TYPES.length; i++) for (let j = i; j < ALL_TYPES.length; j++) {
+  const t1 = ALL_TYPES[i], t2 = ALL_TYPES[j], key = pairKey(t1, t2);
+  const pool = [...new Set([...(BASE_BY_TYPE[t1] || []), ...(BASE_BY_TYPE[t2] || [])])].sort();
+  const r = mulberry32(seedFromStr(key));
+  const avail = pool.slice(), picks = [], n = Math.min(3, avail.length);
+  for (let k = 0; k < n; k++) picks.push(avail.splice(Math.floor(r() * avail.length), 1)[0]);
+  BREED_CHART[key] = picks;
+}
+// Couverture : toute espece de base doit etre obtenable en repro (recette dex non vide).
+const _covered = new Set(Object.values(BREED_CHART).flat());
+for (const id of SPECIES_IDS) {
+  if ((SPECIES[id].stage || 1) !== 1 || _covered.has(id)) continue;
+  const k = pairKey(SPECIES[id].type, SPECIES[id].type);
+  BREED_CHART[k] = [...new Set([...(BREED_CHART[k] || []), id])];
+  _covered.add(id);
+}
+// Reverse : espece de base -> liste des paires de types qui la donnent (pour le dex).
+export const BREED_RECIPES = {};
+for (const [key, list] of Object.entries(BREED_CHART)) { const [a, b] = key.split('|'); for (const sp of list) (BREED_RECIPES[sp] = BREED_RECIPES[sp] || []).push([a, b]); }
+export function breedOutcomes(typeA, typeB) { return BREED_CHART[pairKey(typeA, typeB)] || []; }
+
+// --- Reproduction : deux adultes -> un BEBE de forme de base, tire parmi les
+// 2-3 possibilites du couple (selon les types). Plus l'espece est rare, moins
+// elle est probable. Les IV sont herites des parents (intervalle min..max).
 export function breed(parentA, parentB, { pityBonus = 0 } = {}) {
-  const tier = rollTier();
-  const pool = BASE_BY_TIER[tier].length ? BASE_BY_TIER[tier] : BASE_BY_TIER[1];
-  const species = pick(pool);
+  const ta = SPECIES[parentA.species]?.type, tb = SPECIES[parentB.species]?.type;
+  const outcomes = breedOutcomes(ta, tb);
+  let species;
+  if (outcomes.length) {
+    const w = outcomes.map(id => 1 / Math.pow(tierOf(id), 1.6)); // commun ~1, rare ~0.33, legendaire ~0.13
+    let r = Math.random() * w.reduce((s, x) => s + x, 0);
+    species = outcomes[outcomes.length - 1];
+    for (let k = 0; k < outcomes.length; k++) { r -= w[k]; if (r <= 0) { species = outcomes[k]; break; } }
+  } else species = pick(BASE_BY_TIER[1]); // securite (ne devrait pas arriver)
 
   // Heritage : l'enfant prend une valeur DANS l'intervalle des deux parents (min..max),
   // pas la moyenne. Ex : parents 27 et 31 -> enfant 27/28/29/30/31. Un parent qui a deja

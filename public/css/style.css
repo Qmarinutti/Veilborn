@@ -955,3 +955,24 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .bag-row .bag-info { flex: 1; display: flex; flex-direction: column; font-size: 14px; }
 .bag-row .bag-info small { color: var(--muted); font-size: 11px; }
 .bag-row .bag-none { color: var(--muted); font-size: 12px; }
+
+/* Recette de reproduction (dex) */
+.dexmon[data-dexid] { cursor: pointer; }
+.dexmon .dex-recipe-hint { font-size: 9px; color: var(--accent); margin-top: 2px; opacity: .8; }
+.dexmon[data-dexid]:hover { border-color: var(--accent); transform: translateY(-2px); }
+#recipe-modal { width: min(420px, 94vw); }
+#recipe-title { display: flex; align-items: center; justify-content: center; gap: 8px; }
+#recipe-title .sprite { width: 54px; height: 54px; }
+.recipe-list { display: flex; flex-direction: column; gap: 8px; margin: 6px 0; }
+.recipe-combo { padding: 10px 14px; background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 12px; font-weight: 700; }
+.recipe-combo .rc-type { color: var(--primary); }
+.recipe-combo b { color: var(--muted); margin: 0 4px; }
+
+/* Apercu des resultats de repro (Dragon City) */
+.breed-preview { background: var(--panel2); border: 1px dashed var(--line-strong); border-radius: 14px; padding: 10px 14px; margin: -4px 0 12px; }
+.breed-preview .bp-lbl { font-size: 12px; color: var(--muted); margin-bottom: 8px; text-align: center; }
+.breed-preview .bp-outcomes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.bp-outcome { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 600; width: 72px; text-align: center; }
+.bp-outcome .sprite { width: 42px; height: 42px; }
+.bp-outcome.unknown { color: var(--accent); justify-content: center; }
+.bp-outcome .bp-q { font-size: 30px; font-weight: 800; color: var(--accent); line-height: 1; }
