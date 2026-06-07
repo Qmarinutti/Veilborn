@@ -258,23 +258,46 @@ function baseFormOf(id, map) {
   for (const [k, s] of Object.entries(map)) if (s.line === sp.line && (s.stage || 1) === 1) return k;
   return id;
 }
-// Affiche la/les recette(s) de reproduction d'une espece (via sa forme de base).
+// Petite pastille "monstre" (sprite + nom) pour les recettes.
+function monChip(id) {
+  const s = SPECIES_DATA.species[id]; if (!s) return '';
+  return `<span class="rc-mon">${creatureVisual({ species: id, color: s.color, type: s.type, rarity: s.tier, shape: s.shape, hasArt: s.hasArt, line: s.line }, 34)}<b>${s.name}</b></span>`;
+}
+// Affiche la/les recette(s) de reproduction d'une espece, avec des EXEMPLES de monstres
+// concrets (de preference ceux que le joueur possede) plutot que juste les types.
 function showRecipe(id) {
   const d = SPECIES_DATA; if (!d) return;
   const sp = d.species[id];
   const base = baseFormOf(id, d.species);
   const isEvolved = base !== id;
   const recipes = (d.recipes[base] || []);
-  const combos = recipes.length
-    ? recipes.map(([a, b]) => `<div class="recipe-combo">${a === b ? `2× <span class="rc-type">${a}</span>` : `<span class="rc-type">${a}</span> <b>+</b> <span class="rc-type">${b}</span>`}</div>`).join('')
-    : '<p class="hint">Pas de recette de reproduction — obtenable en boutique / exploration.</p>';
+  const owned = new Set((STATE?.creatures || []).map(c => c.species));
+  const disc = new Set(STATE?.discovered || []);
+  // base species DECOUVERTES d'un type (les possedees d'abord), pour donner des exemples concrets
+  const repsOfType = (type, count) => {
+    const bases = Object.entries(d.species).filter(([k, s]) => s.type === type && (s.stage || 1) === 1 && disc.has(k)).map(([k]) => k);
+    bases.sort((x, y) => (owned.has(y) ? 1 : 0) - (owned.has(x) ? 1 : 0));
+    return bases.slice(0, count);
+  };
+  const baseName = d.species[base].name;
+  const combos = recipes.length ? recipes.map(([a, b]) => {
+    let left, right;
+    if (a === b) {
+      const r = repsOfType(a, 2);
+      left = r[0] ? monChip(r[0]) : `<span class="rc-type">un ${a}</span>`;
+      right = r[1] ? monChip(r[1]) : (r[0] ? monChip(r[0]) : `<span class="rc-type">un ${a}</span>`);
+    } else {
+      const r1 = repsOfType(a, 1)[0], r2 = repsOfType(b, 1)[0];
+      left = r1 ? monChip(r1) : `<span class="rc-type">un ${a}</span>`;
+      right = r2 ? monChip(r2) : `<span class="rc-type">un ${b}</span>`;
+    }
+    return `<div class="recipe-combo">${left}<b>+</b>${right}<span class="rc-arrow">→ ${baseName}</span></div>`;
+  }).join('') : '<p class="hint">Pas de recette de reproduction — obtenable en boutique / exploration.</p>';
   $('#recipe-title').innerHTML = `${creatureVisual({ species: id, color: sp.color, type: sp.type, rarity: sp.tier, shape: sp.shape, hasArt: sp.hasArt, line: sp.line }, 54)} <span>${sp.name}</span>`;
   $('#recipe-body').innerHTML =
-    `<p class="hint">${isEvolved
-      ? `Obtenu en faisant <b>évoluer ${d.species[base].name}</b>. Pour avoir ${d.species[base].name}, reproduis :`
-      : `Reproduis deux Glumps de ces types (l'un de chaque) :`}</p>
+    `<p class="hint">${isEvolved ? `Obtenu en faisant <b>évoluer ${baseName}</b>. Pour avoir ${baseName}, reproduis par exemple :` : `Reproduis par exemple :`}</p>
      <div class="recipe-list">${combos}</div>
-     <p class="hint" style="margin-top:10px;">Chaque couple donne <b>2-3 espèces possibles</b> (toujours les mêmes) — réessaie pour viser celle que tu veux.</p>`;
+     <p class="hint" style="margin-top:10px;">💡 <b>N'importe quel Glump des bons types</b> marche (pas seulement ces exemples). Chaque couple donne 2-3 espèces possibles — réessaie pour viser la bonne.</p>`;
   $('#recipe-modal').classList.remove('hidden');
   $('#recipe-overlay').classList.remove('hidden');
 }

@@ -976,3 +976,9 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .bp-outcome .sprite { width: 42px; height: 42px; }
 .bp-outcome.unknown { color: var(--accent); justify-content: center; }
 .bp-outcome .bp-q { font-size: 30px; font-weight: 800; color: var(--accent); line-height: 1; }
+
+/* Recette : exemples de monstres concrets */
+.recipe-combo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.rc-mon { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.rc-mon .sprite { width: 34px; height: 34px; }
+.recipe-combo .rc-arrow { color: var(--gold, #ffd23f); font-weight: 700; font-size: 12px; }
