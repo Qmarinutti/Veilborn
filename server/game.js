@@ -30,7 +30,8 @@ export const BALANCE = {
   // Revenu idle d'essence par seconde et par adulte EN PRAIRIE = rarete * ce facteur.
   essencePerRarityPerSec: 0.04, // double : early-game moins lent
   // XP gagnee par seconde par un Glump en prairie (sert a monter de niveau).
-  xpPerSec: 1,
+  // 2/s (avant 1) : lisse le grind de niveau, notamment le mur 80->100 du end-game.
+  xpPerSec: 2,
   // Super Bonbon (boutique) : donne de l'XP a un Glump contre de l'essence.
   candyCost: 60,
   candyXp: 120,
@@ -371,8 +372,8 @@ export const EXPLORE_TIERS = [
   { id: 'facile',     name: 'Facile',     count: 3, level: 10,  durationSec: 10 * 60,   res: 200,   items: 1, eggs: 1, eggChance: 0.6 },
   { id: 'normal',     name: 'Normal',     count: 4, level: 25,  durationSec: 45 * 60,   res: 1000,  items: 2, eggs: 1, eggChance: 1 },
   { id: 'difficile',  name: 'Difficile',  count: 4, level: 50,  durationSec: 2 * 3600,  res: 2800,  items: 3, eggs: 2, eggChance: 1 },
-  { id: 'hard',       name: 'Hard',       count: 2, level: 80,  durationSec: 5 * 3600,  res: 12000, items: 4, eggs: 2, eggChance: 1 },
-  { id: 'impossible', name: 'Impossible', count: 3, level: 100, durationSec: 12 * 3600, res: 40000, items: 6, eggs: 3, eggChance: 1 },
+  { id: 'hard',       name: 'Hard',       count: 2, level: 70,  durationSec: 5 * 3600,  res: 12000, items: 4, eggs: 2, eggChance: 1 },
+  { id: 'impossible', name: 'Impossible', count: 3, level: 90,  durationSec: 12 * 3600, res: 40000, items: 6, eggs: 3, eggChance: 1 },
 ];
 export const EXPLORE_TIER_BY_ID = Object.fromEntries(EXPLORE_TIERS.map(t => [t.id, t]));
 export const EXPLORE_ITEMS = ['candy', 'candy', 'potion', 'revive']; // pondere : un peu plus de bonbons
@@ -404,7 +405,21 @@ export function prairieSlotCost(currentSlots) {
 // Cout en essence pour faire evoluer vers une espece cible (selon sa rarete).
 export function evolveCost(targetSpeciesId) {
   const r = rarityOf(targetSpeciesId);
-  return Math.round(80 * Math.pow(r, 1.6));
+  // Sink d'essence modere (~2-2.5x l'ancien) : l'evolution est deja gardee par un palier de
+  // NIVEAU (16 puis 36), le cout en essence n'est qu'un complement, pas le verrou principal.
+  return Math.round(120 * Math.pow(r, 1.9));
+}
+
+// Cout en RESSOURCE pour une evolution de STADE 3 (forme finale) : il faut de la ressource du
+// biome correspondant au TYPE du Glump (Feu -> magma du Volcan, Eau -> ecume, etc.). C'est le
+// vrai debouche des 6 ressources speciales (avant : seulement les oeufs typés). Pousse a TOURNER
+// les biomes (le farm reste mono-biome actif). Les evolutions stade 2 restent gratuites en ressource.
+export function evolveResourceCost(targetSpeciesId) {
+  const sp = SPECIES[targetSpeciesId];
+  if (!sp || (sp.stage || 1) < 3) return null;
+  const b = BIOMES[BIOME_OF_TYPE[sp.type]];
+  if (!b || !b.resource) return null;
+  return { resource: b.resource, resName: b.resName, resEmoji: b.resEmoji, amount: 200 + 50 * (sp.rarity || 3) };
 }
 
 // Bonus de pitie shiny accumule (plafonne) a partir du compteur d'eclosions non-shiny.

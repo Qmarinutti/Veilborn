@@ -143,6 +143,9 @@ export async function initDb() {
     'ALTER TABLE users ADD COLUMN expeditions_json TEXT', // explorations en cours
     'ALTER TABLE users ADD COLUMN items_json TEXT',       // sac d'objets (candy/potion/revive)
     'ALTER TABLE creatures ADD COLUMN listed INTEGER NOT NULL DEFAULT 0', // 1 = en vente a l'Hotel des Ventes
+    // Paliers de recompense : dex chromatique (shiny) et trophees PvP (count/seuil le + haut reclame).
+    'ALTER TABLE users ADD COLUMN shiny_dex_claimed INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE users ADD COLUMN pvp_claimed INTEGER NOT NULL DEFAULT 0',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }

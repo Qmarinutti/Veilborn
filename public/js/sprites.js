@@ -177,7 +177,14 @@ function sparkles() {
   return star(18,22,6) + star(84,26,4.5) + star(82,74,5);
 }
 
+// Cache des SVG : le rendu est deterministe pour une meme espece/variant/taille.
+// Evite de regenerer un SVG complet (defs/gradients) a chaque rendu de carte ET a chaque
+// frappe dans la recherche de collection (gros gain quand le fallback SVG est utilise).
+const __svgCache = new Map();
 export function creatureSVG(creature, size = 80) {
+  const cacheKey = `${creature.species || ''}|${creature.variant === 1 ? 1 : 0}|${creature.rarity || 1}|${creature.color || ''}|${creature.shape || ''}|${creature.type || ''}|${size}`;
+  const hit = __svgCache.get(cacheKey);
+  if (hit) return hit;
   const u = ++UID;
   const color = creature.color || '#888';
   const type = creature.type || '';
@@ -223,7 +230,7 @@ export function creatureSVG(creature, size = 80) {
   const aura = `<ellipse cx="50" cy="52" rx="50" ry="48" fill="url(#aura${u})"/>`;
   const ring = shiny ? `<rect x="2.5" y="2.5" width="95" height="95" rx="16" fill="none" stroke="#ffd34d" stroke-width="3"/>` : '';
 
-  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" class="sprite">
+  const svg = `<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" class="sprite">
     ${defs}${ring}${aura}${shadow}
     ${backAccent(type, tier, P, glow)}
     ${tier >= 2 ? backSpikes(P.deep, P.outline) : ''}
@@ -234,4 +241,6 @@ export function creatureSVG(creature, size = 80) {
     ${badEyes(e.x, e.y, e.gap, e.r, glow, u)}
     ${shiny ? sparkles() : ''}
   </svg>`;
+  __svgCache.set(cacheKey, svg);
+  return svg;
 }

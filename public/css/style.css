@@ -187,14 +187,8 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 }
 .railbtn:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: 0 12px 26px rgba(108,140,255,.35); }
 
-/* ---------- Drawer ---------- */
+/* ---------- Modales flottantes (TOUJOURS centrees, jamais un panneau lateral) ---------- */
 .overlay { position: fixed; inset: 0; background: rgba(4,7,15,.55); backdrop-filter: blur(2px); z-index: 40; }
-.drawer {
-  position: fixed; top: 0; right: 0; bottom: 0; width: min(360px, 88vw); z-index: 50;
-  background: var(--panel-solid); border-left: 1px solid var(--line-strong);
-  box-shadow: -24px 0 70px rgba(0,0,0,.55); padding: 22px;
-  display: flex; flex-direction: column; gap: 16px;
-}
 .drawer-head { display: flex; align-items: center; justify-content: space-between; }
 .drawer-head h3 { margin: 0; font-size: 19px; }
 .drawer-body { overflow-y: auto; }
@@ -233,8 +227,6 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .incubator.ready .egg { animation: hatch .6s ease-in-out infinite; }
 @keyframes hatch { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 .countdown { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--warn); }
-.bar { width: 100%; height: 7px; background: rgba(0,0,0,.3); border-radius: 5px; overflow: hidden; }
-.bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 5px; transition: width .3s; }
 
 /* ---------- Breeding ---------- */
 .heart { color: #ff7a98; font-size: 22px; animation: beat 1.3s ease-in-out infinite; }
@@ -290,8 +282,6 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 /* Modale de combat */
 #battle-modal { width: min(440px, 94vw); }
 .battle-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin: 10px 0 6px; }
-.battle-team { display: flex; gap: 10px; justify-content: center; }
-.battle-vs { text-align: center; font-size: 22px; margin: 6px 0; opacity: .55; }
 .bf { width: 88px; text-align: center; transition: transform .12s; position: relative; }
 .bf-sprite { width: 66px; height: 66px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
 .bf-hpbar { height: 7px; background: rgba(0,0,0,.35); border-radius: 4px; overflow: hidden; margin-top: 4px; }
@@ -594,9 +584,6 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 #picker { overflow-y: auto; }
 
 /* ---------- Glumpdex ---------- */
-.dexline { margin-bottom: 24px; }
-.dexline:last-child { margin-bottom: 4px; }
-.dexline-title { font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 16px; color: var(--text); margin-bottom: 12px; }
 /* Selecteur Dex normal / chromatique */
 .dex-toggle { display: inline-flex; gap: 4px; background: rgba(0,0,0,.22); padding: 4px; border-radius: 12px; margin-bottom: 12px; }
 .dextab { padding: 8px 16px; background: transparent; border: none; color: var(--muted); border-radius: 9px; cursor: pointer; font-weight: 600; font-family: 'Fredoka', sans-serif; }
@@ -606,7 +593,6 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 /* Grille continue : tous les Glumps a la suite, qui reviennent a la ligne */
 .dexgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; }
 .dexgrid .dexmon { width: auto; }
-.dexchain { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dexmon {
   --rc: var(--r1);
   background: linear-gradient(180deg, var(--panel2), rgba(20,26,44,.7));
@@ -629,7 +615,6 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .dexmon .rarity-dots { color: var(--rc); font-size: 10px; letter-spacing: 1px; margin-bottom: 2px; }
 .dexmon .name { font-weight: 700; font-size: 12px; }
 .dexmon .sub { color: var(--muted); font-size: 10px; }
-.dexarrow { font-size: 18px; color: var(--muted); font-weight: 700; }
 /* Glump non debloque : silhouette noire facon Pokedex */
 .dexmon.locked { opacity: .9; }
 .dexmon.locked::before { background: var(--line); }
@@ -637,10 +622,6 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .dexmon.locked .sprite, .dexmon.locked .art { filter: brightness(0) opacity(.5); }
 .dexmon.locked .name { color: var(--muted); letter-spacing: 2px; }
 .dexmon.locked .rarity-dots { color: var(--muted); opacity: .4; }
-@media (max-width: 560px) {
-  .dexchain { flex-direction: column; }
-  .dexarrow { transform: rotate(90deg); }
-}
 
 /* ---------- Leaderboard ---------- */
 .board { width: 100%; border-collapse: collapse; }
@@ -846,7 +827,6 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .biome-active-bar .prairie-info { font-size: 14px; color: var(--text); font-weight: 500; }
 .biome-active-bar .prairie-info b { color: var(--text); }
 
-.biome-locked { text-align: center; padding: 30px 16px; color: var(--muted); font-size: 15px; }
 .slot.syn { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
 .slot { flex-direction: column; align-items: center; text-align: center; min-width: 96px; padding: 8px 8px 6px; position: relative; }
 .slot .mini { width: 46px; height: 46px; }

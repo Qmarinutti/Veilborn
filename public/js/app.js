@@ -1,9 +1,20 @@
 // ---------- Client Veilborn ----------
-import { creatureSVG, creatureVisual } from './sprites.js?v=15';
+import { creatureSVG, creatureVisual } from './sprites.js?v=16';
 import { sfx, initAudioOnGesture, audioSettings } from './audio.js?v=1';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
+
+// Echappement HTML : OBLIGATOIRE pour toute donnee joueur injectee en innerHTML
+// (pseudo, surnom, vendeur, nom d'adversaire...). Sinon XSS stocke chez les autres joueurs.
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+const cname = (c) => esc(c.nickname || c.speciesName);
+// Libelle du cout d'evolution : essence + (si stade 3) ressource du biome.
+const evoCostLabel = (c) => `✨${c.evolveCost}` + (c.evolveResource ? ` + ${c.evolveResource.amount} ${c.evolveResource.resEmoji}` : '');
 
 // Demarre l'audio (musique + sons) au 1er clic/touche.
 initAudioOnGesture();
@@ -199,11 +210,14 @@ function switchView(view) {
   $$('.view').forEach(v => v.classList.add('hidden'));
   const el = $('#view-' + view);
   if (el) el.classList.remove('hidden');
-  if (view === 'leaderboard') loadLeaderboard();
-  if (view === 'dex') loadDex();
-  if (view === 'arena') loadArena();
+  // Les chargements async sont enrobes : une erreur reseau ne doit pas produire un onglet vide
+  // muet ni une unhandled rejection (avant : appels sans catch).
+  const safe = (p) => Promise.resolve(p).catch((err) => flash(err?.message || 'Chargement impossible', 'err'));
+  if (view === 'leaderboard') safe(loadLeaderboard());
+  if (view === 'dex') safe(loadDex());
+  if (view === 'arena') safe(loadArena());
   if (view === 'explore') renderExplore();
-  if (view === 'market') loadMarket();
+  if (view === 'market') safe(loadMarket());
   if (view === 'prairie') startPrairie(); else stopPrairie();
 }
 $$('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
@@ -582,7 +596,7 @@ function renderBreedingCells() {
   $('#breeding-info').textContent = `${eggsList.length}/${max}`;
   const find = (id) => STATE.creatures.find(c => c.id === id);
   const parentBox = (c, extra = '') => c
-    ? `<div class="breed-parent ${extra}"><div class="bp-sprite">${creatureVisual(c, 60)}</div><span>${c.nickname || c.speciesName}</span></div>`
+    ? `<div class="breed-parent ${extra}"><div class="bp-sprite">${creatureVisual(c, 60)}</div><span>${cname(c)}</span></div>`
     : `<div class="breed-parent ${extra}"><div class="bp-sprite ghost">?</div></div>`;
 
   let html = '';
@@ -605,7 +619,7 @@ function renderBreedingCells() {
       composerPlaced = true;
       const a = breedSelA && find(breedSelA), b = breedSelB && find(breedSelB);
       const slot = (c, side) => c
-        ? `<div class="breed-parent slot" data-pick-parent="${side}"><div class="bp-sprite">${creatureVisual(c, 60)}</div><span>${c.nickname || c.speciesName}</span></div>`
+        ? `<div class="breed-parent slot" data-pick-parent="${side}"><div class="bp-sprite">${creatureVisual(c, 60)}</div><span>${cname(c)}</span></div>`
         : `<div class="breed-parent slot" data-pick-parent="${side}"><div class="bp-add">+</div><span>Parent</span></div>`;
       const mid = (a && b) ? `<button class="btn primary" id="do-breed">❤ Reproduire</button>` : `<span class="heart">❤</span>`;
       html += `<div class="breed-cell composer">${slot(a, 'a')}<div class="breed-mid">${mid}</div>${slot(b, 'b')}</div>`;
@@ -705,7 +719,7 @@ function cardHtml(c, selecting = false) {
   if (c.fainted) badges.push('<span class="badge ko">KO</span>');
   const evo = (c.stage === 'adult' && c.evolvesTo)
     ? (c.canEvolve
-        ? `<button class="btn small evo" data-evolve="${c.id}">⬆ Evoluer → ${c.evolvesToName} (✨${c.evolveCost})</button>`
+        ? `<button class="btn small evo" data-evolve="${c.id}">⬆ Evoluer → ${c.evolvesToName} (${evoCostLabel(c)})</button>`
         : `<button class="btn small evo" disabled>⬆ ${c.evolvesToName} · Niv ${c.evolveLevel}</button>`)
     : '';
   const xpPct = Math.min(100, Math.round(100 * (c.xpInto || 0) / (c.xpNext || 1)));
@@ -721,7 +735,7 @@ function cardHtml(c, selecting = false) {
     <button class="fav-btn ${c.favorite ? 'on' : ''}" data-fav="${c.id}" title="Favori (verrou)">${c.favorite ? '💚' : '🤍'}</button>
     ${avatar(c)}
     <div class="rarity-dots">${RARITY_DOTS(c.rarity)}</div>
-    <div class="name">${c.nickname || c.speciesName}</div>
+    <div class="name">${cname(c)}</div>
     <div class="sub">${c.type} · 💪${c.power} · val. ${c.value}</div>
     ${c.stage !== 'egg' ? ivMini(c) : ''}
     <div class="stats">
@@ -867,7 +881,7 @@ $('#detail-body').addEventListener('click', async (e) => {
   } else if (evoBtn) {
     const id = Number(evoBtn.dataset.evolve);
     const c = STATE.creatures.find(x => x.id === id);
-    if (c && !await confirmDialog(`Faire évoluer ${c.nickname || c.speciesName} en ${c.evolvesToName} pour ${c.evolveCost} essence ?`)) return;
+    if (c && !await confirmDialog(`Faire évoluer ${c.nickname || c.speciesName} en ${c.evolvesToName} pour ${evoCostLabel(c)} ?`)) return;
     try {
       const r = await api('/creature/evolve', { method: 'POST', body: { id } });
       await refresh();
@@ -941,7 +955,7 @@ $('#collection').addEventListener('click', async (e) => {
   }
   if (evo) {
     const c = STATE.creatures.find(x => x.id === Number(evo));
-    if (c && !await confirmDialog(`Faire evoluer ${c.nickname || c.speciesName} en ${c.evolvesToName} pour ${c.evolveCost} essence ?`)) return;
+    if (c && !await confirmDialog(`Faire evoluer ${c.nickname || c.speciesName} en ${c.evolvesToName} pour ${evoCostLabel(c)} ?`)) return;
     try {
       const r = await api('/creature/evolve', { method: 'POST', body: { id: Number(evo) } });
       await refresh();
@@ -969,11 +983,11 @@ async function loadLeaderboard() {
   $('#board-body').innerHTML = board.map((r, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td class="${r.id === me ? 'me' : ''}">${r.username}</td>
+      <td class="${r.id === me ? 'me' : ''}">${esc(r.username)}</td>
       <td>${r.collection.toLocaleString('fr-FR')}</td>
       <td>${r.best}</td>
       <td>${r.count}</td>
-      <td><span class="visit-link" data-visit="${r.id}" data-name="${r.username}">Visiter →</span></td>
+      <td><span class="visit-link" data-visit="${r.id}" data-name="${esc(r.username)}">Visiter →</span></td>
     </tr>`).join('') || '<tr><td colspan="6">Aucun eleveur.</td></tr>';
 }
 
@@ -1005,7 +1019,7 @@ function cardHtmlReadonly(c) {
     ${badges.join('')}
     ${avatar(c)}
     <div class="rarity-dots">${RARITY_DOTS(c.rarity)}</div>
-    <div class="name">${c.nickname || c.speciesName}</div>
+    <div class="name">${cname(c)}</div>
     <div class="sub">${c.type} · valeur ${c.value}</div>
     <div class="stats">
       <span><b>${c.stats.force}</b>FOR</span>
@@ -1091,7 +1105,7 @@ function renderPrairieSlots() {
       const syn = b.types.includes(c.type);
       html += `<div class="slot ${syn ? 'syn' : ''}" title="${syn ? 'Synergie +25% !' : c.type}">
         <div class="mini">${creatureVisual(c, 46)}</div>
-        <span class="slot-name">${syn ? '⭐ ' : ''}${c.nickname || c.speciesName}</span>
+        <span class="slot-name">${syn ? '⭐ ' : ''}${cname(c)}</span>
         <button class="slot-rm" data-prairie-rm="${c.id}" title="Retirer du farm">✕</button>
       </div>`;
     } else {
@@ -1185,7 +1199,7 @@ function pickCardHtml(c) {
   return `<div class="card ${c.fainted ? 'fainted' : ''}" data-pick="${c.id}" data-rarity="${c.rarity}">
     ${c.farming ? '<span class="pick-farm" title="Farme en prairie — il quittera le farm si tu l\'envoies">🗺️</span>' : ''}
     ${avatar(c)}
-    <div class="name">${c.nickname || c.speciesName}</div>
+    <div class="name">${cname(c)}</div>
     <div class="sub">${c.fainted ? '💀 KO' : c.type + ' · P' + c.power}</div>
     ${ivMini(c)}
     <div class="hpbar"><i style="width:${pct}%"></i></div>
@@ -1222,7 +1236,7 @@ function pickBiomeCardHtml(c) {
   const syn = b && b.types.includes(c.type);
   return `<div class="card" data-pick="${c.id}" data-rarity="${c.rarity}">
     ${avatar(c)}
-    <div class="name">${syn ? '⭐ ' : ''}${c.nickname || c.speciesName}</div>
+    <div class="name">${syn ? '⭐ ' : ''}${cname(c)}</div>
     <div class="sub">${c.type}${syn ? ' · +25% !' : ''}</div>
   </div>`;
 }
@@ -1277,7 +1291,7 @@ function buildMeadow() {
     el.className = 'critter' + (baby ? ' baby' : '');
     el.style.width = size + 'px';
     el.innerHTML = creatureVisual(c, size) +
-      `<span class="label">${c.variant ? '✨ ' : ''}${c.nickname || c.speciesName}</span>`;
+      `<span class="label">${c.variant ? '✨ ' : ''}${cname(c)}</span>`;
     el.addEventListener('click', () => {
       el.classList.add('show-label');
       setTimeout(() => el.classList.remove('show-label'), 1500);
@@ -1391,19 +1405,27 @@ async function loadProgress() {
       <div class="q-act">${action}</div>
     </div>`;
   }).join('');
-  // Paliers dex
-  $('#prog-dex').innerHTML = `<div class="dex-prog-head">${p.dex.discovered}/${p.dex.total} espèces découvertes</div>` +
-    p.dex.milestones.map(m => {
-      const reward = `✨${m.essence.toLocaleString('fr-FR')}${m.prairie ? ' +🌳' : ''}${m.cell ? ' +💞' : ''}`;
-      const state = m.claimed ? `<span class="q-claimed">✓</span>`
-        : m.claimable ? `<button class="btn small primary" data-claim-dex="${m.count}">Récupérer</button>`
-        : `<span class="q-prog">${p.dex.discovered}/${m.count}</span>`;
-      return `<div class="quest ${m.reached ? 'done' : ''}">
-        <div class="q-ic">${m.count >= p.dex.total ? '👑' : '📖'}</div>
-        <div class="q-main"><div class="q-text">${m.count} espèces — ${reward}</div></div>
-        <div class="q-act">${state}</div>
-      </div>`;
-    }).join('');
+  // Paliers : dex normal + dex chromatique + trophees PvP (helper commun)
+  const mileRow = (m, label, icon, claimAttr, cur, goal) => {
+    const reward = `✨${m.essence.toLocaleString('fr-FR')}${m.prairie ? ' +🌳' : ''}${m.cell ? ' +💞' : ''}`;
+    const state = m.claimed ? `<span class="q-claimed">✓</span>`
+      : m.claimable ? `<button class="btn small primary" ${claimAttr}>Récupérer</button>`
+      : `<span class="q-prog">${cur}/${goal}</span>`;
+    return `<div class="quest ${m.reached ? 'done' : ''}">
+      <div class="q-ic">${icon}</div>
+      <div class="q-main"><div class="q-text">${label} — ${reward}</div></div>
+      <div class="q-act">${state}</div>
+    </div>`;
+  };
+  const shiny = p.shinyDex || { discovered: 0, milestones: [] };
+  const pvpM = p.pvp || { trophies: 0, milestones: [] };
+  $('#prog-dex').innerHTML =
+    `<div class="dex-prog-head">📖 ${p.dex.discovered}/${p.dex.total} espèces découvertes</div>` +
+    p.dex.milestones.map(m => mileRow(m, `${m.count} espèces`, m.count >= p.dex.total ? '👑' : '📖', `data-claim-dex="${m.count}"`, p.dex.discovered, m.count)).join('') +
+    `<div class="dex-prog-head">✨ ${shiny.discovered} chromatique${shiny.discovered > 1 ? 's' : ''} découvert${shiny.discovered > 1 ? 's' : ''}</div>` +
+    shiny.milestones.map(m => mileRow(m, `${m.count} chromatique${m.count > 1 ? 's' : ''}`, '✨', `data-claim-shiny="${m.count}"`, shiny.discovered, m.count)).join('') +
+    `<div class="dex-prog-head">🏆 ${pvpM.trophies} trophées d'arène</div>` +
+    pvpM.milestones.map(m => mileRow(m, `${m.trophies} 🏆`, '🏆', `data-claim-pvp="${m.trophies}"`, pvpM.trophies, m.trophies)).join('');
   // Succes
   $('#prog-ach').innerHTML = p.achievements.map(a => `
     <div class="ach ${a.unlocked ? 'on' : ''}" title="${a.desc}">
@@ -1414,11 +1436,19 @@ async function loadProgress() {
 $('#drawer-progress')?.addEventListener('click', async (e) => {
   const cd = e.target.closest('[data-claim-daily]');
   const cx = e.target.closest('[data-claim-dex]');
+  const cs = e.target.closest('[data-claim-shiny]');
+  const cp = e.target.closest('[data-claim-pvp]');
   if (cd) {
     try { const r = await api('/daily/claim', { method: 'POST', body: { id: cd.dataset.claimDaily } }); flash(`Quête terminée : +${r.reward} ✨`); await refresh(); loadProgress(); }
     catch (err) { flash(err.message, 'err'); }
   } else if (cx) {
     try { const r = await api('/dex/claim', { method: 'POST', body: { count: Number(cx.dataset.claimDex) } }); flash(`Palier réclamé : +${r.essence} ✨ ${r.extra || ''}`); await refresh(); loadProgress(); }
+    catch (err) { flash(err.message, 'err'); }
+  } else if (cs) {
+    try { const r = await api('/shiny-dex/claim', { method: 'POST' }); flash(`Palier chromatique : +${r.essence} ✨ ${r.extra || ''}`); await refresh(); loadProgress(); }
+    catch (err) { flash(err.message, 'err'); }
+  } else if (cp) {
+    try { const r = await api('/pvp/claim', { method: 'POST' }); flash(`Palier d'arène : +${r.essence} ✨ ${r.extra || ''}`); await refresh(); loadProgress(); }
     catch (err) { flash(err.message, 'err'); }
   }
 });
@@ -1447,9 +1477,9 @@ async function loadSocial() {
     $('#friends-count').textContent = friends.length;
     $('#friends-list').innerHTML = friends.map(f => `
       <div class="friend-row">
-        <span class="friend-name">${f.username}</span>
-        <button class="btn small" data-trade-friend="${f.id}" data-name="${f.username}">🔄</button>
-        <button class="btn small" data-visit-friend="${f.id}" data-name="${f.username}">Visiter</button>
+        <span class="friend-name">${esc(f.username)}</span>
+        <button class="btn small" data-trade-friend="${f.id}" data-name="${esc(f.username)}">🔄</button>
+        <button class="btn small" data-visit-friend="${f.id}" data-name="${esc(f.username)}">Visiter</button>
         <button class="btn small" data-remove-friend="${f.id}">✕</button>
       </div>`).join('') || '<p class="hint">Aucun ami pour l\'instant. Ajoute un code !</p>';
     loadTrades();
@@ -1461,9 +1491,9 @@ async function loadTrades() {
     const { incoming, outgoing } = await api('/trade/list');
     const row = (t, dir) => {
       const c = t.creature;
-      const who = dir === 'in' ? t.fromName : t.toName;
+      const who = esc(dir === 'in' ? t.fromName : t.toName);
       const sprite = c ? creatureVisual(c, 40) : '❔';
-      const name = c ? (c.nickname || c.speciesName) : '???';
+      const name = c ? cname(c) : '???';
       const act = dir === 'in'
         ? `<button class="btn small primary" data-trade-accept="${t.id}">Accepter</button>
            <button class="btn small" data-trade-cancel="${t.id}">Refuser</button>`
@@ -1753,7 +1783,7 @@ function renderArenaTeam() {
   for (let i = 0; i < 3; i++) {
     const c = pvpTeam[i] && STATE.creatures.find(x => x.id === pvpTeam[i]);
     html += c
-      ? `<div class="pvp-slot filled" data-team-rm="${c.id}">${creatureVisual(c, 56)}<span>${c.nickname || c.speciesName}</span><small class="ps-type">${c.type}</small><b class="rm">✕</b></div>`
+      ? `<div class="pvp-slot filled" data-team-rm="${c.id}">${creatureVisual(c, 56)}<span>${cname(c)}</span><small class="ps-type">${c.type}</small><b class="rm">✕</b></div>`
       : `<div class="pvp-slot empty" data-team-add="1"><div class="add">+</div><span>Glump</span></div>`;
   }
   $('#pvp-team').innerHTML = html;
@@ -1785,7 +1815,7 @@ function fighterMini(c) {
   const mu = teamMatchup(c.type);
   return `<div class="fighter-mini" data-rarity="${c.rarity}">
     <div class="fm-sprite">${creatureVisual(c, 50)}</div>
-    <div class="fm-name">${c.name || c.speciesName}</div>
+    <div class="fm-name">${esc(c.name || c.speciesName)}</div>
     <div class="fm-lvl">Niv ${c.level} · P${c.power}</div>
     <div class="fm-type ${mu.cls}">${c.type}${mu.tag ? ' ' + mu.tag : ''}</div>
   </div>`;
@@ -1794,7 +1824,7 @@ function renderOpponent() {
   if (!pvpOpponent) return;
   $('#pvp-opponent').innerHTML = `
     <div class="opp-card">
-      <div class="opp-head"><b>${pvpOpponent.username}</b> · 🏆 ${pvpOpponent.trophies}</div>
+      <div class="opp-head"><b>${esc(pvpOpponent.username)}</b> · 🏆 ${pvpOpponent.trophies}</div>
       <div class="opp-team">${pvpOpponent.team.map(fighterMini).join('')}</div>
       <button id="pvp-fight" class="btn primary" style="width:100%;margin-top:10px;">⚔️ Combattre !</button>
     </div>`;
@@ -1819,7 +1849,7 @@ async function loadPvpRanking() {
     const { ranking } = await api('/pvp/ranking');
     const me = STATE?.user?.id;
     $('#pvp-ranking').innerHTML = ranking.map((r, i) => `
-      <div class="rank-row ${r.id === me ? 'me' : ''}"><span class="rank-pos">${i + 1}</span><span class="rank-name">${r.username}</span><span class="rank-tr">🏆 ${r.trophies}</span></div>`).join('') || '<p class="hint">Personne au classement.</p>';
+      <div class="rank-row ${r.id === me ? 'me' : ''}"><span class="rank-pos">${i + 1}</span><span class="rank-name">${esc(r.username)}</span><span class="rank-tr">🏆 ${r.trophies}</span></div>`).join('') || '<p class="hint">Personne au classement.</p>';
   } catch { $('#pvp-ranking').innerHTML = ''; }
 }
 
@@ -1829,14 +1859,14 @@ let bState = null, bBusy = false;
 
 function benchHtml(team, activeIdx) {
   return team.map((f, i) => i === activeIdx ? '' :
-    `<span class="bench-dot ${f.hp <= 0 ? 'ko' : ''}" title="${f.name} ${f.hp}/${f.maxHp}">${f.hp <= 0 ? '✖' : '●'}</span>`).join('');
+    `<span class="bench-dot ${f.hp <= 0 ? 'ko' : ''}" title="${esc(f.name)} ${f.hp}/${f.maxHp}">${f.hp <= 0 ? '✖' : '●'}</span>`).join('');
 }
 function bActiveHtml(f, id) {
   if (!f) return `<div class="b-fighter empty" id="${id}"></div>`;
   const pct = Math.round(100 * f.hp / (f.maxHp || 1));
   const st = f.status ? `<span class="bf-status">${STATUS_ICON[f.status] || ''}</span>` : '';
   return `<div class="b-fighter ${f.hp <= 0 ? 'ko' : ''}" id="${id}" data-rarity="${f.rarity}">
-    <div class="bf-head"><span class="bf-name">${f.name}</span><span class="bf-lvl">Niv ${f.level}</span>${st}</div>
+    <div class="bf-head"><span class="bf-name">${esc(f.name)}</span><span class="bf-lvl">Niv ${f.level}</span>${st}</div>
     <div class="bf-sprite">${creatureVisual(f, 96)}</div>
     <div class="bf-hpwrap"><div class="bf-hpbar"><i id="${id}-hp" style="width:${pct}%"></i></div>
       <span class="bf-hpval" id="${id}-val">${f.hp}/${f.maxHp}</span></div>
@@ -1932,6 +1962,7 @@ function animateEvents(events) {
       else if (ev.t === 'frozen') { logBattle(`${ev.name} est gelé ❄️ !`); }
       else if (ev.t === 'thaw') { logBattle(`${ev.name} dégèle !`); delay = 380; }
       else if (ev.t === 'cured') { logBattle(`${ev.name} récupère.`); delay = 360; }
+      else if (ev.t === 'timeout') { logBattle(`Combat trop long — victoire aux PV restants !`); delay = 600; }
       setTimeout(next, delay);
     };
     next();
@@ -1987,13 +2018,13 @@ function marketCardHtml(l, isMine) {
   const iv = c.genes ? `${c.genes.force}·${c.genes.vita}·${c.genes.speed}` : '';
   return `<div class="card market-card" data-rarity="${c.rarity}">
     ${avatar(c)}
-    <div class="name">${c.variant === 1 ? '✨ ' : ''}${c.nickname || c.speciesName}</div>
+    <div class="name">${c.variant === 1 ? '✨ ' : ''}${cname(c)}</div>
     <div class="sub">${c.type} · niv ${c.level} · P${c.power}</div>
     <div class="mk-iv ${perfect ? 'perfect' : ''}">IV ${iv}${perfect ? ' ⭐' : ''}</div>
     <div class="mk-price">✨ ${l.price.toLocaleString('fr-FR')}</div>
     ${isMine
       ? `<button class="btn small danger" data-mk-cancel="${l.id}">Retirer</button>`
-      : `<div class="mk-seller">par ${l.seller}</div><button class="btn small primary" data-mk-buy="${l.id}" data-name="${(c.nickname || c.speciesName).replace(/"/g, '')}" data-price="${l.price}">Acheter</button>`}
+      : `<div class="mk-seller">par ${esc(l.seller)}</div><button class="btn small primary" data-mk-buy="${l.id}" data-name="${cname(c)}" data-price="${l.price}">Acheter</button>`}
   </div>`;
 }
 function renderMarket() {

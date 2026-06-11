@@ -13,7 +13,7 @@ import {
   BALANCE, STARTER_IDS, SPECIES, SPECIES_COUNT, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
   levelFromXp, xpForLevel, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
-  breedingSeconds, reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, shinyPityBonus, tierOf,
+  breedingSeconds, reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, evolveResourceCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
   EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS,
   BREED_RECIPES, BREED_CHART,
@@ -24,7 +24,7 @@ import { hasArt } from './art.js';
 import { simulateBattle, startSession, playTurn } from './battle.js';
 import { moveButtons } from './moves.js';
 import {
-  ACHIEVEMENTS, DEX_MILESTONES, DAILY_POOL, parseAchSet, unlockAch,
+  ACHIEVEMENTS, DEX_MILESTONES, SHINY_DEX_MILESTONES, PVP_MILESTONES, DAILY_POOL, parseAchSet, unlockAch,
   getDaily, progressDaily, dailyView, todayStr, dexClaimedCount,
 } from './progress.js';
 
@@ -104,10 +104,22 @@ async function spend(userId, amount) {
 }
 
 // ---------- Auth ----------
+// Pseudo affiche chez les AUTRES joueurs (classement, marche, amis, PvP) -> on whiteliste les
+// caracteres pour fermer le XSS stocke a la source (defense serveur, en plus de l'echappement client).
+const USERNAME_RE = /^[\p{L}\p{N} _.\-]{3,20}$/u;
+// Nettoie un texte libre (surnom) : retire les caracteres dangereux pour du HTML (garde espaces/tirets).
+// L'echappement client reste la 2e ligne de defense.
+function cleanFreeText(s, max = 20) {
+  return String(s || '').replace(/[<>&"'`]/g, '').slice(0, max).trim();
+}
 app.post('/api/register', authThrottle, h(async (req, res) => {
-  const { username, password, starter } = req.body || {};
+  const { password, starter } = req.body || {};
+  const username = String(req.body?.username || '').trim();
   if (!username || !password || username.length < 3 || username.length > 20 || password.length < 4 || password.length > 100) {
     return res.status(400).json({ error: 'Pseudo (3-20 caracteres) et mot de passe (4-100) requis.' });
+  }
+  if (!USERNAME_RE.test(username)) {
+    return res.status(400).json({ error: 'Pseudo : lettres, chiffres, espace, tiret, point et _ uniquement.' });
   }
   if (!STARTER_IDS.includes(starter)) {
     return res.status(400).json({ error: 'Choisis ton Glump de depart.' });
@@ -519,21 +531,39 @@ app.post('/api/creature/evolve', requireAuth, h(async (req, res) => {
     return res.status(400).json({ error: `Niveau ${reqLevel} requis pour evoluer (actuel : ${level}).` });
   }
   const cost = evolveCost(target);
-  if (!(await spend(req.user.id, cost))) {
-    return res.status(400).json({ error: `Pas assez d'essence pour evoluer (besoin de ${cost}).` });
-  }
-
-  await run('UPDATE creatures SET species = ? WHERE id = ?', [target, id]);
+  const resCost = evolveResourceCost(target); // ressource du biome (stade 3 uniquement), sinon null
+  // Sous verrou : essence (atomique via spend) + ressource (JSON, relecture fraiche) ensemble.
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    let res2;
+    if (resCost) {
+      res2 = parseResources(user);
+      if ((res2[resCost.resource] || 0) < resCost.amount) {
+        return { status: 400, error: `Pas assez de ${resCost.resName} ${resCost.resEmoji} (besoin de ${resCost.amount}). Active le biome correspondant et farme/explore.` };
+      }
+    }
+    if (!(await spend(req.user.id, cost))) {
+      return { status: 400, error: `Pas assez d'essence pour evoluer (besoin de ${cost}).` };
+    }
+    if (resCost) {
+      res2[resCost.resource] -= resCost.amount;
+      await run('UPDATE users SET resources_json = ? WHERE id = ?', [JSON.stringify(res2), req.user.id]);
+    }
+    // UPDATE conditionnel sur owner (anti-action sur le Glump d'autrui) + adulte non evolue.
+    await run('UPDATE creatures SET species = ? WHERE id = ? AND owner_id = ?', [target, id, req.user.id]);
+    return { ok: true };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
   await progressDaily(req.user.id, 'evolve1', 1);
   const newAch = []; { const a = await unlockAch(req.user.id, 'first_evolve'); if (a) newAch.push(a); }
   const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
-  res.json({ ok: true, creature: publicCreature(row), fromName: SPECIES[c.species].name, cost, newAch });
+  res.json({ ok: true, creature: publicCreature(row), fromName: SPECIES[c.species].name, cost, resCost: resCost || null, newAch });
 }));
 
 // ---------- Renommer ----------
 app.post('/api/creature/rename', requireAuth, h(async (req, res) => {
   const { id, nickname } = req.body || {};
-  const name = String(nickname || '').slice(0, 20);
+  const name = cleanFreeText(nickname, 20);
   const c = await get('SELECT id FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
   await run('UPDATE creatures SET nickname = ? WHERE id = ?', [name || null, id]);
@@ -664,13 +694,22 @@ app.post('/api/pvp/start', requireAuth, h(async (req, res) => {
   purgeBattles();
   const { opponentId, team } = req.body || {};
   if (Number(opponentId) === req.user.id) return res.status(400).json({ error: 'Tu ne peux pas te battre contre toi-meme.' });
-  if (!Array.isArray(team) || team.length < 1 || team.length > BALANCE.pvpTeamSize) {
-    return res.status(400).json({ error: `Choisis 1 a ${BALANCE.pvpTeamSize} Glumps.` });
+  // Un seul combat actif par joueur : sinon on lance N combats en parallele contre le meme
+  // adversaire (snapshot fige) et on encaisse N fois la recompense -> farm d'essence illimite.
+  // On ABANDONNE (sans recompense) un eventuel combat en cours plutot que de bloquer : pas de
+  // lockout 15min si l'onglet a ete ferme, et l'exploit reste ferme (jamais 2 combats en vol).
+  for (const [bid, bb] of battles) {
+    if (bb.userId === req.user.id && !bb.state.over) battles.delete(bid);
+  }
+  // Dedup + normalisation des ids : sinon [5,5,5] engage 3 fois le meme Glump (triche).
+  const teamIds = [...new Set((Array.isArray(team) ? team : []).map(Number).filter(Number.isInteger))];
+  if (teamIds.length < 1 || teamIds.length > BALANCE.pvpTeamSize) {
+    return res.status(400).json({ error: `Choisis 1 a ${BALANCE.pvpTeamSize} Glumps differents.` });
   }
   const exploring = exploringIds(await reloadUser(req.user.id));
   const matingSet = new Set((await all("SELECT parent_a, parent_b FROM creatures WHERE owner_id = ? AND stage = 'mating'", [req.user.id])).flatMap(m => [m.parent_a, m.parent_b]));
   const mine = [];
-  for (const id of team) {
+  for (const id of teamIds) {
     const c = await get("SELECT * FROM creatures WHERE id = ? AND owner_id = ? AND stage = 'adult'", [id, req.user.id]);
     if (!c) return res.status(400).json({ error: 'Equipe invalide (adultes uniquement).' });
     if (c.listed === 1) return res.status(400).json({ error: 'Un de tes Glumps est en vente.' });
@@ -704,12 +743,12 @@ app.post('/api/pvp/move', requireAuth, h(async (req, res) => {
     if (b.settled) return res.status(400).json({ error: 'Combat deja termine.' });
     b.settled = true;
     const iWon = b.state.winner === 'a';
-    const user = await reloadUser(req.user.id);
-    let trophies = user.pvp_trophies, essence = 0;
     const xp = iWon ? 60 : 20;
-    if (iWon) { trophies += BALANCE.pvpWinTrophies; essence = BALANCE.pvpWinEssence; }
-    else { trophies = Math.max(0, trophies - BALANCE.pvpLoseTrophies); }
-    await run('UPDATE users SET pvp_trophies = ?, essence = essence + ? WHERE id = ?', [trophies, essence, req.user.id]);
+    // Ecriture RELATIVE atomique (jamais en absolu) : pas de lost-update sur les trophees.
+    const trophyDelta = iWon ? BALANCE.pvpWinTrophies : -BALANCE.pvpLoseTrophies;
+    const essence = iWon ? BALANCE.pvpWinEssence : 0;
+    await run('UPDATE users SET pvp_trophies = MAX(0, pvp_trophies + ?), essence = essence + ? WHERE id = ?', [trophyDelta, essence, req.user.id]);
+    const trophies = (await reloadUser(req.user.id)).pvp_trophies;
     // Persistance des PV de mon equipe (PV finaux ; 0 = KO) + XP.
     for (let i = 0; i < b.mineIds.length; i++) {
       await run('UPDATE creatures SET xp = xp + ?, hp = ? WHERE id = ?', [xp, b.state.A[i].hp, b.mineIds[i]]);
@@ -773,9 +812,25 @@ app.get('/api/progress', requireAuth, h(async (req, res) => {
     count: m.count, essence: m.essence, prairie: !!m.prairie, cell: !!m.cell, title: m.title || null,
     reached: discCount >= m.count, claimed: m.count <= claimedCount, claimable: discCount >= m.count && m.count > claimedCount,
   }));
+  // Paliers du dex CHROMATIQUE (shiny).
+  const shinyCount = (await get('SELECT COUNT(*) AS n FROM discoveries WHERE user_id = ? AND variant = 1', [req.user.id])).n;
+  const shinyClaimed = user.shiny_dex_claimed || 0;
+  const shinyMilestones = SHINY_DEX_MILESTONES.map((m) => ({
+    count: m.count, essence: m.essence, prairie: !!m.prairie, cell: !!m.cell, title: m.title || null,
+    reached: shinyCount >= m.count, claimed: m.count <= shinyClaimed, claimable: shinyCount >= m.count && m.count > shinyClaimed,
+  }));
+  // Paliers de TROPHEES PvP.
+  const trophies = user.pvp_trophies || 0;
+  const pvpClaimed = user.pvp_claimed || 0;
+  const pvpMilestones = PVP_MILESTONES.map((m) => ({
+    trophies: m.trophies, essence: m.essence, cell: !!m.cell, prairie: !!m.prairie, title: m.title || null,
+    reached: trophies >= m.trophies, claimed: m.trophies <= pvpClaimed, claimable: trophies >= m.trophies && m.trophies > pvpClaimed,
+  }));
   res.json({
     daily, achievements,
     dex: { discovered: discCount, total: SPECIES_COUNT, milestones },
+    shinyDex: { discovered: shinyCount, milestones: shinyMilestones },
+    pvp: { trophies, milestones: pvpMilestones },
     streak: user.login_streak || 0,
   });
 }));
@@ -816,6 +871,48 @@ app.post('/api/dex/claim', requireAuth, h(async (req, res) => {
     if (m.cell) { await run('UPDATE users SET breeding_cells = breeding_cells + 1 WHERE id = ?', [req.user.id]); extra = '+1 cellule de reproduction'; }
     await run('UPDATE users SET dex_claimed = ?, essence = essence + ? WHERE id = ?', [m.count, m.essence, req.user.id]);
     if (m.count >= SPECIES_COUNT) await unlockAch(req.user.id, 'dexmaster');
+    return { ok: true, essence: m.essence, extra, title: m.title || null };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// Reclamer un palier du Dex CHROMATIQUE (shiny) — dans l'ordre, verrouille.
+app.post('/api/shiny-dex/claim', requireAuth, h(async (req, res) => {
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const shinyCount = (await get('SELECT COUNT(*) AS n FROM discoveries WHERE user_id = ? AND variant = 1', [req.user.id])).n;
+    const claimed = user.shiny_dex_claimed || 0;
+    const m = SHINY_DEX_MILESTONES.find(x => x.count > claimed && shinyCount >= x.count);
+    if (!m) {
+      const next = SHINY_DEX_MILESTONES.find(x => x.count > claimed);
+      return { status: 400, error: next ? `Palier chromatique non atteint (${shinyCount}/${next.count}).` : 'Tous les paliers chromatiques sont reclames.' };
+    }
+    let extra = '';
+    if (m.prairie) { await run('UPDATE users SET prairie_slots = prairie_slots + 1 WHERE id = ?', [req.user.id]); extra = '+1 emplacement de farm'; }
+    if (m.cell) { await run('UPDATE users SET breeding_cells = breeding_cells + 1 WHERE id = ?', [req.user.id]); extra = '+1 cellule de reproduction'; }
+    await run('UPDATE users SET shiny_dex_claimed = ?, essence = essence + ? WHERE id = ?', [m.count, m.essence, req.user.id]);
+    return { ok: true, essence: m.essence, extra, title: m.title || null };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+// Reclamer un palier de TROPHEES PvP — reclamable une fois le seuil ATTEINT, reste acquis.
+app.post('/api/pvp/claim', requireAuth, h(async (req, res) => {
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const trophies = user.pvp_trophies || 0;
+    const claimed = user.pvp_claimed || 0;
+    const m = PVP_MILESTONES.find(x => x.trophies > claimed && trophies >= x.trophies);
+    if (!m) {
+      const next = PVP_MILESTONES.find(x => x.trophies > claimed);
+      return { status: 400, error: next ? `Palier non atteint (${trophies}/${next.trophies} 🏆).` : 'Tous les paliers de trophees sont reclames.' };
+    }
+    let extra = '';
+    if (m.prairie) { await run('UPDATE users SET prairie_slots = prairie_slots + 1 WHERE id = ?', [req.user.id]); extra = '+1 emplacement de farm'; }
+    if (m.cell) { await run('UPDATE users SET breeding_cells = breeding_cells + 1 WHERE id = ?', [req.user.id]); extra = '+1 cellule de reproduction'; }
+    await run('UPDATE users SET pvp_claimed = ?, essence = essence + ? WHERE id = ?', [m.trophies, m.essence, req.user.id]);
     return { ok: true, essence: m.essence, extra, title: m.title || null };
   });
   if (out.error) return res.status(out.status).json({ error: out.error });

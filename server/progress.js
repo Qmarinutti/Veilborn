@@ -24,14 +24,19 @@ export function parseAchSet(user) {
   try { return new Set(JSON.parse(user.ach_json || '[]')); } catch { return new Set(); }
 }
 // Debloque un succes. Renvoie l'objet succes si nouvellement debloque, sinon null.
+// ATOMIQUE + IDEMPOTENT : un seul UPDATE conditionnel, pas de read-modify-write (donc pas de
+// lost-update, et SURTOUT pas besoin de verrou -> appelable depuis l'interieur d'un withLock).
+// json_insert(..., '$[#]', ?) ajoute en fin de tableau JSON ; le NOT EXISTS garantit l'unicite.
+// rowsAffected = 1 seulement si le succes etait absent -> on ne le signale qu'une fois.
+export const ACH_INSERT_SQL =
+  `UPDATE users SET ach_json = json_insert(COALESCE(ach_json, '[]'), '$[#]', ?)
+   WHERE id = ? AND NOT EXISTS (
+     SELECT 1 FROM json_each(COALESCE(ach_json, '[]')) WHERE value = ?
+   )`;
 export async function unlockAch(userId, achId) {
   if (!ACH_IDS.has(achId)) return null;
-  const u = await get('SELECT ach_json FROM users WHERE id = ?', [userId]);
-  let set; try { set = new Set(JSON.parse(u.ach_json || '[]')); } catch { set = new Set(); }
-  if (set.has(achId)) return null;
-  set.add(achId);
-  await run('UPDATE users SET ach_json = ? WHERE id = ?', [JSON.stringify([...set]), userId]);
-  return ACHIEVEMENTS.find(a => a.id === achId) || null;
+  const r = await run(ACH_INSERT_SQL, [achId, userId, achId]);
+  return r.rowsAffected ? (ACHIEVEMENTS.find(a => a.id === achId) || null) : null;
 }
 
 // ---------- Paliers du Glumpdex ----------
@@ -55,6 +60,27 @@ export function dexClaimedCount(user) {
   if (v > 0 && v < 10) v = OLD_DEX_COUNTS[Math.min(v, OLD_DEX_COUNTS.length) - 1];
   return v;
 }
+
+// ---------- Paliers du Dex CHROMATIQUE (shiny) ----------
+// Recompense enfin le shiny-hunting (pity jusqu'a 5%) qui n'avait aucun palier dedie.
+// dex_claimed-like : on stocke le COUNT du dernier palier shiny reclame.
+export const SHINY_DEX_MILESTONES = [
+  { count: 1,  essence: 1500 },
+  { count: 5,  essence: 6000 },
+  { count: 15, essence: 18000, cell: true },     // +1 cellule de reproduction
+  { count: 30, essence: 45000, prairie: true },  // +1 emplacement de farm
+  { count: 60, essence: 120000, title: 'Chasseur de Chromatiques' },
+];
+
+// ---------- Paliers de TROPHEES PvP ----------
+// Les trophees ne debloquaient rien : on ajoute des paliers (reclamables une fois le seuil
+// ATTEINT, et qui restent acquis meme si les trophees redescendent). pvp_claimed = seuil max reclame.
+export const PVP_MILESTONES = [
+  { trophies: 1200, essence: 3000 },
+  { trophies: 1500, essence: 10000 },
+  { trophies: 2000, essence: 30000, cell: true },
+  { trophies: 2500, essence: 75000, title: 'Champion de l\'Arene' },
+];
 
 // ---------- Quetes quotidiennes ----------
 export const DAILY_POOL = [

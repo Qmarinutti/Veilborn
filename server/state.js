@@ -6,13 +6,13 @@ import { withLock } from './lock.js';
 import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
   evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
-  tierOf, TIER_NAMES, breedingCellCost, maxHpOf, evolveCost,
+  tierOf, TIER_NAMES, breedingCellCost, maxHpOf, evolveCost, evolveResourceCost,
   incubationSeconds, breedingSeconds, maturationSeconds,
   reproductionSeconds, breedHatchSeconds,
   BIOMES, BIOME_LIST, RESOURCES, SYNERGY_BONUS, isSynergy,
   EXPLORE_ZONES, EXPLORE_TIERS,
 } from './game.js';
-import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet } from './progress.js';
+import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet, ACH_INSERT_SQL } from './progress.js';
 const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
 
 // Multiplicateur de gain d'essence selon le niveau (+5% par niveau).
@@ -182,7 +182,11 @@ export async function getPlayerState(user) {
   tryAch('shiny', discoveredShiny.length >= 1);
   tryAch('level50', maxLevel >= 50);
   tryAch('rich', fresh.essence >= 50000);
-  if (achSet.size !== achBefore) W.push({ sql: 'UPDATE users SET ach_json = ? WHERE id = ?', args: [JSON.stringify([...achSet]), user.id] });
+  // Ecriture ATOMIQUE par succes (json_insert conditionnel) au lieu d'un write absolu du tableau :
+  // sinon /state pourrait effacer un succes debloque en concurrence par une autre route (lost-update).
+  for (const a of newAchievements) {
+    W.push({ sql: ACH_INSERT_SQL, args: [a.id, user.id, a.id] });
+  }
 
   // --- Ecriture groupee : TOUT le idle en UN SEUL aller-retour ---
   if (W.length) await batch(W, 'write');
@@ -367,6 +371,7 @@ export function publicCreature(c, now = Date.now(), activeBiome = null) {
     out.evolvesToName = SPECIES[evo].name;
     out.evolveLevel = evolveLevelOf(c.species);
     out.evolveCost = evolveCost(evo);
+    out.evolveResource = evolveResourceCost(evo); // {resource,resName,resEmoji,amount} si stade 3, sinon null
     out.canEvolve = out.level >= out.evolveLevel;
   }
   return out;

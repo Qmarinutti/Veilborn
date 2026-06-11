@@ -4,21 +4,24 @@
 
 // Chaque type est "fort" (x1.6) contre ceux listes. L'inverse donne une
 // resistance (x0.7). Sinon x1.
+// Table reequilibree : chaque type a 2-3 forces (avant : Feu/Roche en avaient 4, Dragon 1).
+// Plus aucune paire mutuellement super-efficace (avant Ombre<->Lumiere s'annulaient).
+// Dragon et Mystique ne sont plus des types-poubelles ; Lumiere a desormais une faiblesse (Vent).
 export const STRONG = {
-  Feu:      ['Plante', 'Glace', 'Insecte', 'Acier'],
+  Feu:      ['Plante', 'Glace', 'Acier'],
   Eau:      ['Feu', 'Roche'],
   Plante:   ['Eau', 'Roche'],
   Foudre:   ['Eau', 'Vent'],
-  Roche:    ['Feu', 'Glace', 'Insecte', 'Vent'],
-  Glace:    ['Plante', 'Vent', 'Dragon'],
-  Ombre:    ['Mystique', 'Lumiere'],
-  Lumiere:  ['Ombre', 'Mystique'],
-  Mystique: ['Poison', 'Insecte'],
-  Acier:    ['Roche', 'Glace', 'Insecte'],
-  Poison:   ['Plante', 'Eau'],
-  Vent:     ['Plante', 'Insecte'],
-  Insecte:  ['Plante', 'Mystique', 'Ombre'],
-  Dragon:   ['Dragon'],
+  Roche:    ['Feu', 'Insecte', 'Vent'],
+  Glace:    ['Plante', 'Dragon', 'Vent'],
+  Ombre:    ['Mystique', 'Poison'],
+  Lumiere:  ['Ombre', 'Insecte'],
+  Mystique: ['Poison', 'Foudre'],
+  Acier:    ['Roche', 'Glace'],
+  Poison:   ['Eau', 'Insecte'],
+  Vent:     ['Insecte', 'Lumiere'],
+  Insecte:  ['Plante', 'Mystique'],
+  Dragon:   ['Dragon', 'Mystique'],
 };
 
 export function typeMult(att, def) {
@@ -51,6 +54,7 @@ export function startSession(rawA, rawB) {
 }
 
 const aliveIdx = (team) => team.findIndex(f => f.hp > 0);
+const MAX_TURNS = 60; // plafond de tours du combat interactif (anti non-terminaison)
 
 // IA adverse : choisit une attaque selon la situation.
 function aiPick(self, foe) {
@@ -129,7 +133,9 @@ function tickStatus(f, events, side) {
     f.hp = Math.max(0, f.hp - dot);
     events.push({ t: 'dot', side, name: f.name, status: f.status, dmg: dot, hp: f.hp, ko: f.hp === 0 });
   }
-  if (f.statusTurns > 0 && --f.statusTurns === 0 && f.status !== 'freeze') {
+  // Le gel decremente aussi sa duree (avant : statusTurns inerte pour freeze -> gel infini, seul
+  // le RNG de degel 34% le levait = statut le plus oppressant du jeu). Maintenant borne a 3 tours.
+  if (f.statusTurns > 0 && --f.statusTurns === 0) {
     events.push({ t: 'cured', side, name: f.name });
     f.status = null;
   }
@@ -171,6 +177,13 @@ export function playTurn(state, myMoveId) {
   if (!aAlive || !bAlive) {
     state.over = true;
     state.winner = !bAlive ? 'a' : 'b';
+  } else if (state.turn >= MAX_TURNS) {
+    // Garde-fou anti combat non-terminant (ex. 2 Glumps qui se soignent) : on tranche aux PV restants.
+    state.over = true;
+    const aHp = state.A.reduce((s, f) => s + f.hp, 0);
+    const bHp = state.B.reduce((s, f) => s + f.hp, 0);
+    state.winner = aHp >= bHp ? 'a' : 'b';
+    events.push({ t: 'timeout', winner: state.winner });
   }
   return { events, over: state.over, winner: state.winner };
 }
