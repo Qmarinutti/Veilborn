@@ -1731,6 +1731,19 @@ $$('.railbtn').forEach(b => b.addEventListener('click', () => {
   else if (b.dataset.drawer === 'shop') openShop();
   else openDrawer(b.dataset.drawer);
 }));
+
+// ---------- Menu mobile (bouton ☰ -> modale centree reprenant les entrees du rail) ----------
+function openMenu() { $('#menu-modal').classList.remove('hidden'); $('#menu-overlay').classList.remove('hidden'); }
+function closeMenu() { $('#menu-modal').classList.add('hidden'); $('#menu-overlay').classList.add('hidden'); }
+$('#menu-toggle')?.addEventListener('click', openMenu);
+$('#menu-close')?.addEventListener('click', closeMenu);
+$('#menu-overlay')?.addEventListener('click', closeMenu);
+$$('.menu-item').forEach(b => b.addEventListener('click', () => {
+  closeMenu();
+  if (b.dataset.view) switchView(b.dataset.view);
+  else if (b.dataset.drawer === 'shop') openShop();
+  else if (b.dataset.drawer) openDrawer(b.dataset.drawer);
+}));
 $('#drawer-close').addEventListener('click', closeDrawer);
 $('#drawer-overlay').addEventListener('click', closeDrawer);
 

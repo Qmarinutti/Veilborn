@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=53" />
+  <link rel="stylesheet" href="css/style.css?v=54" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -47,6 +47,7 @@
         <span class="essence">✨ <b id="essence">0</b></span>
         <span class="rate" id="rate">+0/s</span>
       </div>
+      <button id="menu-toggle" class="menu-toggle" aria-label="Ouvrir le menu" title="Menu">☰</button>
       <div class="resbar" id="resbar"></div>
       <div class="account">
         <span id="who"></span>
@@ -204,6 +205,21 @@
       <button class="railbtn" data-drawer="bag" title="Sac (objets)">🎒</button>
       <button class="railbtn" data-drawer="settings" title="Reglages">⚙️</button>
       <button class="railbtn" data-drawer="social" title="Social / Amis">👥</button>
+    </div>
+
+    <!-- Menu (mobile) : ouvert par le bouton ☰, modale CENTREE listant les entrees du rail -->
+    <div id="menu-overlay" class="overlay hidden"></div>
+    <div id="menu-modal" class="center-modal hidden">
+      <div class="drawer-head"><h3>☰ Menu</h3><button id="menu-close" class="btn small">✕</button></div>
+      <div class="menu-grid">
+        <button class="menu-item" data-view="dex"><span class="mi-ic">📖</span><span>Glumpdex</span></button>
+        <button class="menu-item" data-view="leaderboard"><span class="mi-ic">🏆</span><span>Classement</span></button>
+        <button class="menu-item" data-drawer="progress"><span class="mi-ic">🏅</span><span>Progression</span></button>
+        <button class="menu-item" data-drawer="shop"><span class="mi-ic">🛒</span><span>Boutique</span></button>
+        <button class="menu-item" data-drawer="bag"><span class="mi-ic">🎒</span><span>Sac</span></button>
+        <button class="menu-item" data-drawer="settings"><span class="mi-ic">⚙️</span><span>Réglages</span></button>
+        <button class="menu-item" data-drawer="social"><span class="mi-ic">👥</span><span>Social</span></button>
+      </div>
     </div>
 
     <!-- Barre de navigation du bas (avec symboles) -->
@@ -380,6 +396,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=69" type="module"></script>
+  <script src="js/app.js?v=70" type="module"></script>
 </body>
 </html>

@@ -187,6 +187,24 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 }
 .railbtn:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: 0 12px 26px rgba(108,140,255,.35); }
 
+/* Bouton menu (hamburger) : cache sur desktop (le rail lateral le remplace), visible sur mobile */
+.menu-toggle {
+  display: none; width: 42px; height: 40px; flex: none; margin-left: 4px;
+  align-items: center; justify-content: center; font-size: 22px; line-height: 1;
+  background: var(--panel2); color: var(--text); border: 1px solid var(--line-strong);
+  border-radius: 12px; cursor: pointer; font-family: inherit;
+}
+.menu-toggle:hover { border-color: var(--primary); }
+#menu-modal { width: min(360px, 94vw); }
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.menu-item {
+  display: flex; align-items: center; gap: 10px; padding: 14px 12px;
+  background: var(--panel2); color: var(--text); border: 1px solid var(--line-strong);
+  border-radius: 14px; cursor: pointer; font-weight: 600; font-size: 15px; font-family: inherit; text-align: left;
+}
+.menu-item:hover { border-color: var(--primary); transform: translateY(-2px); }
+.menu-item .mi-ic { font-size: 22px; line-height: 1; }
+
 /* ---------- Modales flottantes (TOUJOURS centrees, jamais un panneau lateral) ---------- */
 .overlay { position: fixed; inset: 0; background: rgba(4,7,15,.55); backdrop-filter: blur(2px); z-index: 40; }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; }
@@ -986,21 +1004,12 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
   .resbar::-webkit-scrollbar { display: none; }
   .resbar .res { font-size: 13px; padding: 4px 9px; }
 
-  /* --- Contenu : laisser la place aux DEUX barres fixes du bas (rail + onglets) --- */
-  main { padding: 14px 12px calc(132px + env(safe-area-inset-bottom, 0px)); }
+  /* --- Contenu : laisser la place a la SEULE barre fixe du bas (onglets) --- */
+  main { padding: 14px 12px calc(78px + env(safe-area-inset-bottom, 0px)); }
 
-  /* --- Rail : FINI la colonne flottante qui cache le contenu.
-         Devient une bande horizontale qui defile, posee juste au-dessus des onglets. --- */
-  .siderail {
-    position: fixed; left: 0; right: 0; top: auto; transform: none;
-    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-    flex-direction: row; gap: 8px; padding: 7px 10px;
-    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-    background: rgba(14,19,33,.92); backdrop-filter: blur(14px);
-    border-top: 1px solid var(--line); z-index: 29;
-  }
-  .siderail::-webkit-scrollbar { display: none; }
-  .railbtn { width: 42px; height: 42px; min-width: 42px; font-size: 19px; border-radius: 12px; box-shadow: none; }
+  /* --- Rail lateral remplace par le bouton ☰ (hamburger) dans la topbar --- */
+  .siderail { display: none; }
+  .menu-toggle { display: inline-flex; }
 
   /* --- Barre d'onglets : boutons confortables, defile horizontalement si trop etroit --- */
   .bottomnav {
