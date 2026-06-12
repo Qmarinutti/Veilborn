@@ -26,7 +26,7 @@ import { moveButtons } from './moves.js';
 import {
   ACHIEVEMENTS, DEX_MILESTONES, SHINY_DEX_MILESTONES, PVP_MILESTONES, DAILY_POOL, parseAchSet, unlockAch,
   getDaily, progressDaily, dailyView, todayStr, dexClaimedCount,
-  TITLES, availableTitles, titleName,
+  TITLES, availableTitles, titleName, titleNameById,
 } from './progress.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
