@@ -190,6 +190,41 @@ export async function getPlayerState(user) {
   tryAch('shiny', discoveredShiny.length >= 1);
   tryAch('level50', maxLevel >= 50);
   tryAch('rich', fresh.essence >= 50000);
+  // --- Succes etendus (tout est calcule depuis l'etat courant) ---
+  const ownedC = rows.filter(r => r.stage !== 'egg');
+  const typeSet = new Set(ownedC.map(r => SPECIES[r.species]?.type).filter(Boolean));
+  const stage3 = ownedC.filter(r => (SPECIES[r.species]?.stage || 1) === 3).length;
+  const bredCount = rows.filter(r => r.from_breeding === 1).length;
+  const typeCounts = {};
+  for (const r of ownedC) { const t = SPECIES[r.species]?.type; if (t) typeCounts[t] = (typeCounts[t] || 0) + 1; }
+  const maxOneType = Math.max(0, ...Object.values(typeCounts));
+  const ownedBiomesN = parseBiomes(fresh).length;
+  const trophies = fresh.pvp_trophies ?? 1000;
+  tryAch('collector100', discovered.length >= 100);
+  tryAch('collector200', discovered.length >= 200);
+  tryAch('coll50', ownedC.length >= 50);
+  tryAch('coll100', ownedC.length >= 100);
+  tryAch('shiny5', discoveredShiny.length >= 5);
+  tryAch('shiny15', discoveredShiny.length >= 15);
+  tryAch('shiny30', discoveredShiny.length >= 30);
+  tryAch('level25', maxLevel >= 25);
+  tryAch('level75', maxLevel >= 75);
+  tryAch('level_max', maxLevel >= 100);
+  tryAch('rich2', fresh.essence >= 250000);
+  tryAch('millionaire', fresh.essence >= 1000000);
+  tryAch('typemaster', typeSet.size >= 14);
+  tryAch('mono10', maxOneType >= 10);
+  tryAch('perfect_iv', ownedC.some(r => r.gene_force >= 31 && r.gene_vita >= 31 && r.gene_speed >= 31));
+  tryAch('evolved', stage3 >= 1);
+  tryAch('evolved10', stage3 >= 10);
+  tryAch('breeder50', bredCount >= 50);
+  tryAch('breeder100', bredCount >= 100);
+  tryAch('epic_owner', ownedC.some(r => tierOf(r.species) === 3));
+  tryAch('legend_owner', ownedC.some(r => tierOf(r.species) === 4));
+  tryAch('pvp1500', trophies >= 1500);
+  tryAch('pvp2000', trophies >= 2000);
+  tryAch('biome_all', ownedBiomesN >= BIOME_LIST.length);
+  tryAch('farm12', (fresh.prairie_slots || 0) >= 12);
   // Ecriture ATOMIQUE par succes (json_insert conditionnel) au lieu d'un write absolu du tableau :
   // sinon /state pourrait effacer un succes debloque en concurrence par une autre route (lost-update).
   for (const a of newAchievements) {
