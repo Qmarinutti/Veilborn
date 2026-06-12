@@ -36,8 +36,12 @@ export const BALANCE = {
   // 2/s (avant 1) : lisse le grind de niveau, notamment le mur 80->100 du end-game.
   xpPerSec: 2,
   // Super Bonbon (boutique) : donne de l'XP a un Glump contre de l'essence.
-  candyCost: 60,
-  candyXp: 120,
+  // Super Bonbon : donne directement +1 NIVEAU (prix fixe). Dans la boutique il est CHER (un peu moins
+  // que le cout au niveau de monter un perso de 70 a 100, ~3500-4950/niv -> le bonbon devient le bon
+  // choix pour le end-game). Le bonbon du SAC (loot d'explo) donne aussi +1 niveau, gratuit.
+  candyCost: 3000,
+  // Taux essence/XP du bouton "monter de niveau" (independant du bonbon).
+  essencePerXp: 0.5,
   // Soins (boutique) : Potion = PV au max ; Rappel = ranime un Glump KO a la moitie.
   potionCost: 80,
   reviveCost: 150,

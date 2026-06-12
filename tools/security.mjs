@@ -86,20 +86,18 @@ section('4. Essence ne peut pas devenir negative (spam bonbon)');
   const st = (await C('/api/state')).data;
   const adult0 = st.creatures.find(c => c.stage === 'adult');
   const id = adult0.id;
-  const xp0 = adult0.xp;
-  // 50 bonbons simultanes ; le max depend de l'essence reelle au depart (60/bonbon).
+  // 50 bonbons simultanes (1 bonbon = 1 niveau = candyCost essence). Max = ce que l'essence permet.
   const ess0 = st.user.essence;
-  const maxCandy = Math.floor(ess0 / 60);
-  const results = await Promise.all(Array.from({ length: 50 }, () => C('/api/creature/candy', { method: 'POST', body: { id } })));
+  const candyCost = 3000;
+  const maxCandy = Math.floor(ess0 / candyCost);
+  const results = await Promise.all(Array.from({ length: 50 }, () => C('/api/creature/candy', { method: 'POST', body: { id, count: 1 } })));
   const okCount = results.filter(r => r.status === 200).length;
-  const candyXp = results.find(r => r.status === 200)?.data?.xp || 0;
   const st1 = (await C('/api/state')).data;
-  const xpGained = st1.creatures.find(c => c.id === id).xp - xp0;
-  console.log(`  essence depart=${ess0}, bonbons acceptes=${okCount}, XP gagnee=${xpGained}, essence finale=${st1.user.essence}`);
+  console.log(`  essence depart=${ess0}, bonbons acceptes=${okCount}, essence finale=${st1.user.essence}`);
   ok(st1.user.essence >= 0, 'essence jamais negative (' + st1.user.essence + ')');
   ok(okCount <= maxCandy, `pas plus de bonbons que l'essence ne le permet (${okCount} <= ${maxCandy})`);
-  // PREUVE anti-desync : chaque bonbon accepte = exactement une depense (XP couplee a la depense, pas de phantom)
-  ok(xpGained === okCount * candyXp, `couplage XP<->depense exact : ${xpGained} XP = ${okCount} bonbons x ${candyXp}`);
+  // PREUVE anti-desync : chaque bonbon accepte = exactement une depense de candyCost (pas de phantom).
+  ok(ess0 - st1.user.essence === okCount * candyCost, `couplage essence<->bonbons : ${ess0 - st1.user.essence} = ${okCount} x ${candyCost}`);
 }
 
 // ---------------------------------------------------------------

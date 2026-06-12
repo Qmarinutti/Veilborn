@@ -400,7 +400,7 @@ app.get('/api/shop', (req, res) => res.json({
   typeEggCost: TYPE_EGG_COST,        // oeuf typé, en ressource du biome
   biomeOfType: BIOME_OF_TYPE,        // element -> biome (donc -> ressource)
   biomes: BIOME_LIST.map(b => ({ id: b.id, name: b.name, emoji: b.emoji, types: b.types, resource: b.resource, resName: b.resName, resEmoji: b.resEmoji, cost: b.cost })),
-  candy: { cost: BALANCE.candyCost, xp: BALANCE.candyXp },
+  candy: { cost: BALANCE.candyCost, levels: 1 }, // 1 bonbon = +1 niveau
   potion: { cost: BALANCE.potionCost },
   revive: { cost: BALANCE.reviveCost },
 }));
@@ -579,24 +579,32 @@ app.post('/api/prairie/buy', requireAuth, h(async (req, res) => {
 }));
 
 // ---------- Super Bonbon : donne de l'XP a un Glump (paye en essence) ----------
+// Super Bonbon ACHETE (essence) : +N niveaux (1 bonbon = 1 niveau = candyCost). Quantite au choix.
 app.post('/api/creature/candy', requireAuth, h(async (req, res) => {
   const { id } = req.body || {};
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
   if (!c) return res.status(404).json({ error: 'Glump introuvable.' });
-  if (c.stage === 'egg') return res.status(400).json({ error: 'Un oeuf ne peut pas gagner d\'XP.' });
-  if (!(await spend(req.user.id, BALANCE.candyCost))) {
-    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${BALANCE.candyCost}).` });
+  if (c.stage === 'egg') return res.status(400).json({ error: 'Un oeuf ne peut pas gagner de niveau.' });
+  const cur = levelFromXp(c.xp || 0);
+  if (cur >= 100) return res.status(400).json({ error: 'Niveau maximum (100) atteint.' });
+  const want = Math.max(1, Math.floor(Number(req.body?.count) || 1));
+  const count = Math.min(want, 100 - cur); // borne par le niveau max
+  const cost = count * BALANCE.candyCost;
+  if (!(await spend(req.user.id, cost))) {
+    return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost} pour ${count} niveau${count > 1 ? 'x' : ''}).` });
   }
-  await run('UPDATE creatures SET xp = xp + ? WHERE id = ?', [BALANCE.candyXp, id]);
-  await progressDaily(req.user.id, 'candy3', 1);
+  const target = cur + count;
+  const xpToAdd = Math.max(0, xpForLevel(target) - (c.xp || 0));
+  await run('UPDATE creatures SET xp = xp + ? WHERE id = ?', [xpToAdd, id]);
+  await progressDaily(req.user.id, 'candy3', count);
   const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
   const newAch = [];
-  if (levelFromXp(row.xp) >= 50) { const a = await unlockAch(req.user.id, 'level50'); if (a) newAch.push(a); }
-  res.json({ ok: true, creature: publicCreature(row), cost: BALANCE.candyCost, xp: BALANCE.candyXp, newAch });
+  if (target >= 50) { const a = await unlockAch(req.user.id, 'level50'); if (a) newAch.push(a); }
+  res.json({ ok: true, creature: publicCreature(row), cost, levels: count, level: target, newAch });
 }));
 
 // ---------- Montee de niveau directe : +1 / +5 / +10 niveaux, payee en essence ----------
-const ESSENCE_PER_XP = BALANCE.candyCost / BALANCE.candyXp; // meme taux que le bonbon (0.5)
+const ESSENCE_PER_XP = BALANCE.essencePerXp; // taux essence/XP du bouton "monter de niveau"
 const MAX_LEVEL = 100;
 app.post('/api/creature/levelup', requireAuth, h(async (req, res) => {
   const { id, levels } = req.body || {};
@@ -1319,12 +1327,30 @@ async function useItem(req, res, kind, apply) {
   if (out.error) return res.status(out.status).json({ error: out.error });
   res.json(out);
 }
-app.post('/api/item/candy', requireAuth, h((req, res) => useItem(req, res, 'candy', async () => {
-  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [req.body.id, req.user.id]);
-  if (!c || c.stage === 'egg') return { status: 400, error: 'Glump invalide.' };
-  await run('UPDATE creatures SET xp = xp + ? WHERE id = ?', [BALANCE.candyXp, req.body.id]);
-  return { xp: BALANCE.candyXp };
-})));
+// Super Bonbon du SAC : +N niveaux (consomme N bonbons ; max = bonbons possedes ET niveau 100).
+app.post('/api/item/candy', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    const items = parseItems(user);
+    if ((items.candy || 0) <= 0) return { status: 400, error: "Tu n'as pas de Super Bonbon." };
+    const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+    if (!c || c.stage === 'egg' || c.stage === 'mating') return { status: 400, error: 'Glump invalide.' };
+    const cur = levelFromXp(c.xp || 0);
+    if (cur >= 100) return { status: 400, error: 'Niveau maximum (100) atteint.' };
+    const want = Math.max(1, Math.floor(Number(req.body?.count) || 1));
+    const count = Math.min(want, items.candy, 100 - cur);
+    const target = cur + count;
+    const xpToAdd = Math.max(0, xpForLevel(target) - (c.xp || 0));
+    await run('UPDATE creatures SET xp = xp + ? WHERE id = ?', [xpToAdd, id]);
+    items.candy -= count;
+    await run('UPDATE users SET items_json = ? WHERE id = ?', [JSON.stringify(items), req.user.id]);
+    return { ok: true, levels: count, level: target };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  await progressDaily(req.user.id, 'candy3', out.levels); // hors verrou
+  res.json(out);
+}));
 app.post('/api/item/potion', requireAuth, h((req, res) => useItem(req, res, 'potion', async () => {
   const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [req.body.id, req.user.id]);
   if (!c) return { status: 404, error: 'Glump introuvable.' };

@@ -1450,10 +1450,35 @@ function openDrawer(type) {
 }
 
 // ---------- Sac : objets possedes (loot explo / achat), utilisables ----------
+const CANDY_COST = 3000; // essence/niveau en boutique (le serveur reste autoritatif)
+// Demande une quantite (1..max). Renvoie 0 si annule.
+async function chooseQty(msg, max) {
+  const s = await promptDialog(msg, String(max), 'ex : ' + max);
+  if (s == null) return 0;
+  const n = Math.floor(Number(s));
+  if (!Number.isInteger(n) || n < 1) return 0;
+  return Math.min(n, max);
+}
+// Super Bonbon du SAC : choisir le Glump (hors niveau 100) puis la quantite (max = sac).
+function useCandyFromBag() {
+  const pool = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating' && (c.level || 1) < 100);
+  if (!pool.length) { flash('Aucun Glump à monter (tous niveau 100 ?).', 'err'); return; }
+  const bag = STATE.user.items?.candy || 0;
+  openPicker(`Super Bonbon à… (tu en as ${bag})`, pool, pickCardHtml, async (id) => {
+    closePicker();
+    const c = STATE.creatures.find(x => x.id === id);
+    const max = Math.min(bag, 100 - (c?.level || 1));
+    if (max <= 0) { flash('Niveau maximum atteint.', 'err'); return; }
+    const n = await chooseQty(`Combien de Super Bonbons utiliser ? (max ${max})`, max);
+    if (!n) return;
+    try { const r = await api('/item/candy', { method: 'POST', body: { id, count: n } }); await refresh(); flash(`+${r.levels} niveau${r.levels > 1 ? 'x' : ''} 🍬 → niv ${r.level}`); renderBag(); }
+    catch (err) { flash(err.message, 'err'); }
+  });
+}
 function useBagItem(k) {
+  if (k === 'candy') { useCandyFromBag(); return; }
   let pool, title;
-  if (k === 'candy') { pool = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating'); title = 'Super Bonbon à…'; }
-  else if (k === 'potion') { pool = STATE.creatures.filter(c => c.stage === 'adult' && !c.fainted && c.hp < c.maxHp); title = 'Soigner quel Glump ?'; }
+  if (k === 'potion') { pool = STATE.creatures.filter(c => c.stage === 'adult' && !c.fainted && c.hp < c.maxHp); title = 'Soigner quel Glump ?'; }
   else { pool = STATE.creatures.filter(c => c.fainted); title = 'Ranimer quel Glump ?'; }
   if (!pool.length) { flash('Aucun Glump concerné.', 'err'); return; }
   openPicker(title, pool, pickCardHtml, async (id) => {
@@ -1461,7 +1486,7 @@ function useBagItem(k) {
     catch (err) { flash(err.message, 'err'); }
   });
 }
-const BAG_SUB = { candy: '+XP à un Glump (le monte de niveau)', potion: 'Restaure tous les PV', revive: 'Ranime un Glump KO (50% PV)' };
+const BAG_SUB = { candy: '+1 niveau à un Glump (choisis la quantité)', potion: 'Restaure tous les PV', revive: 'Ranime un Glump KO (50% PV)' };
 function renderBag() {
   const it = STATE?.user?.items || { candy: 0, potion: 0, revive: 0 };
   const total = (it.candy || 0) + (it.potion || 0) + (it.revive || 0);
@@ -1737,7 +1762,7 @@ function renderShopTerrain() {
 function renderShopItem() {
   const c = shopData.candy || {}, po = shopData.potion || {}, rv = shopData.revive || {};
   const it = STATE?.user?.items || { candy: 0, potion: 0, revive: 0 };
-  const subs = { candy: `+${c.xp} XP à un Glump`, potion: 'Restaure tous les PV', revive: 'Ranime un Glump KO (50% PV)' };
+  const subs = { candy: '+1 niveau à un Glump (✨/niveau, choisis la quantité)', potion: 'Restaure tous les PV', revive: 'Ranime un Glump KO (50% PV)' };
   const costs = { candy: c.cost, potion: po.cost, revive: rv.cost };
   const buyId = { candy: 'buy-candy', potion: 'buy-potion', revive: 'buy-revive' };
   const row = (k) => {
@@ -1780,9 +1805,17 @@ $('#shop-modal').addEventListener('click', async (e) => {
   const useItem = e.target.closest('[data-use-item]');
   if (useItem) { useBagItem(useItem.dataset.useItem); return; }
   if (e.target.closest('#buy-candy')) {
-    const glumps = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating');
-    openPicker('Donner un Super Bonbon à…', glumps, pickCardHtml, async (id) => {
-      try { const r = await api('/creature/candy', { method: 'POST', body: { id } }); closePicker(); await refresh(); flash(`+${r.xp} XP 🍬`); processNewAch(r); }
+    const glumps = STATE.creatures.filter(c => c.stage !== 'egg' && c.stage !== 'mating' && (c.level || 1) < 100);
+    if (!glumps.length) { flash('Aucun Glump à monter (tous niveau 100 ?).', 'err'); return; }
+    openPicker(`Super Bonbon (${CANDY_COST} ✨/niveau) à…`, glumps, pickCardHtml, async (id) => {
+      closePicker();
+      const c = STATE.creatures.find(x => x.id === id);
+      const affordable = Math.floor((STATE.user.essence || 0) / CANDY_COST);
+      const max = Math.min(affordable, 100 - (c?.level || 1));
+      if (max <= 0) { flash("Pas assez d'essence (ou niveau max).", 'err'); return; }
+      const n = await chooseQty(`Combien de niveaux acheter ? (${CANDY_COST} ✨/niv, max ${max})`, max);
+      if (!n) return;
+      try { const r = await api('/creature/candy', { method: 'POST', body: { id, count: n } }); await refresh(); flash(`+${r.levels} niveau${r.levels > 1 ? 'x' : ''} 🍬 (-${r.cost} ✨) → niv ${r.level}`); processNewAch(r); }
       catch (err) { flash(err.message, "err"); }
     });
     return;
