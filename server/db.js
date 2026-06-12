@@ -224,6 +224,12 @@ export async function initDb() {
       user_id     INTEGER NOT NULL,
       PRIMARY KEY (msg_id, user_id)
     );
+
+    -- Index pour la montee en charge (requetes chaudes : comptes par stade, dex, classement, guildes).
+    CREATE INDEX IF NOT EXISTS idx_creatures_owner_stage ON creatures(owner_id, stage);
+    CREATE INDEX IF NOT EXISTS idx_discoveries_user_variant ON discoveries(user_id, variant);
+    CREATE INDEX IF NOT EXISTS idx_users_trophies ON users(pvp_trophies);
+    CREATE INDEX IF NOT EXISTS idx_users_guild ON users(guild_id);
   `);
 
   // Nettoyage des sessions trop vieilles (>30 jours) pour eviter l'accumulation.

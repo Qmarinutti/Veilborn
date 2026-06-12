@@ -700,9 +700,11 @@ app.post('/api/creature/rename', requireAuth, h(async (req, res) => {
 // ---------- Classement (multijoueur) — calcule puis cache 30s ----------
 let lbCache = { at: 0, board: [] };
 async function computeLeaderboard() {
-  // 1 seule requete : on agrege en JS (la valeur depend de stats/genes/niveau).
+  // 1 seule requete (agregee en JS car la valeur depend des genes/niveau, non calculable en SQL).
+  // On ne SELECT que les colonnes utiles a creatureValue -> moins de donnees transferees a l'echelle.
   const rows = await all(
-    "SELECT u.id AS uid, u.username AS username, u.title AS title, c.* FROM users u " +
+    "SELECT u.id AS uid, u.username AS username, u.title AS title, " +
+    "c.species, c.gene_force, c.gene_vita, c.gene_speed, c.xp, c.variant FROM users u " +
     "LEFT JOIN creatures c ON c.owner_id = u.id AND c.stage NOT IN ('egg', 'mating')");
   const byUser = new Map();
   for (const r of rows) {
@@ -715,9 +717,12 @@ async function computeLeaderboard() {
   }
   return [...byUser.values()].sort((a, b) => b.collection - a.collection).slice(0, 50);
 }
+// Le classement scanne TOUTES les creatures (cout en O(total)). Il n'a pas besoin d'etre temps reel :
+// cache 5 min -> le scan coûteux ne tourne qu'une fois par 5 min quel que soit le nombre de joueurs.
+const LB_CACHE_MS = 5 * 60 * 1000;
 app.get('/api/leaderboard', h(async (req, res) => {
   const now = Date.now();
-  if (now - lbCache.at > 30000) lbCache = { at: now, board: await computeLeaderboard() };
+  if (now - lbCache.at > LB_CACHE_MS) lbCache = { at: now, board: await computeLeaderboard() };
   res.json({ board: lbCache.board });
 }));
 
