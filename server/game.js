@@ -328,7 +328,7 @@ export function breed(parentA, parentB, { pityBonus = 0 } = {}) {
 
   const parentShiny = parentA.variant === 1 || parentB.variant === 1;
   const base = parentShiny ? BALANCE.shinyChanceWithShinyParent : BALANCE.shinyChance;
-  const variant = Math.random() < (base + pityBonus) ? 1 : 0;
+  const variant = Math.random() < (base + pityBonus) * eventMul('shiny') ? 1 : 0; // bonus event chromatique
 
   // Chromatique = genes garantis (2x31 + 1>=15), sinon heritage des parents.
   const genes = variant === 1 ? shinyGenes() : {
@@ -341,7 +341,7 @@ export function breed(parentA, parentB, { pityBonus = 0 } = {}) {
 
 // Cree une creature "sauvage" aleatoire (starters, recompenses...).
 export function wildCreature(speciesId, { adult = false, pityBonus = 0 } = {}) {
-  const variant = Math.random() < (BALANCE.shinyChance + pityBonus) ? 1 : 0;
+  const variant = Math.random() < (BALANCE.shinyChance + pityBonus) * eventMul('shiny') ? 1 : 0;
   const genes = variant === 1 ? shinyGenes() : {
     gene_force: randomGene(), gene_vita: randomGene(), gene_speed: randomGene(),
   };
@@ -455,6 +455,29 @@ export function currentSeason(d = new Date()) { return d.toISOString().slice(0, 
 export function seasonSoftReset(trophies) {
   const base = BALANCE.pvpStartTrophies;
   return Math.round(base + Math.max(0, (trophies || base) - base) / 3);
+}
+
+// =====================================================================
+//  EVENEMENTS tournants : 1 actif a la fois, DETERMINISTE selon la date (aucune admin requise).
+//  Rotation tous les EVENT_DAYS jours. Chaque event applique un multiplicateur sur un gain.
+// =====================================================================
+export const EVENTS = [
+  { id: 'essence2', name: "Pluie d'essence",        icon: '✨', desc: "Le farm d'essence rapporte DOUBLE.",        mul: { essence: 2 } },
+  { id: 'xp2',      name: 'Entrainement intensif',  icon: '💪', desc: "L'XP gagnee au farm est DOUBLEE.",          mul: { xp: 2 } },
+  { id: 'res2',     name: 'Filon abondant',         icon: '⛏️', desc: 'Les ressources de biome rapportent DOUBLE.', mul: { resource: 2 } },
+  { id: 'shiny3',   name: 'Eclat chromatique',      icon: '🌈', desc: 'Chance de Glump chromatique x3.',           mul: { shiny: 3 } },
+  { id: 'explo2',   name: 'Expedition fructueuse',  icon: '🧭', desc: "Les recompenses d'exploration sont DOUBLEES.", mul: { explore: 2 } },
+];
+const EVENT_DAYS = 2;
+export function activeEvent(now = Date.now()) {
+  const day = Math.floor(now / 86400000);
+  const period = Math.floor(day / EVENT_DAYS);
+  const ev = EVENTS[period % EVENTS.length];
+  const endsAt = (period + 1) * EVENT_DAYS * 86400000; // fin du creneau (ms epoch)
+  return { id: ev.id, name: ev.name, icon: ev.icon, desc: ev.desc, mul: ev.mul, endsAt };
+}
+export function eventMul(key, now = Date.now()) {
+  return activeEvent(now).mul[key] || 1;
 }
 
 // Zones d'exploration : une par biome special (hors Plaine).

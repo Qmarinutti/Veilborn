@@ -450,6 +450,7 @@ function renderAll() {
   // Toujours : topbar (essence/ressources) + pastilles de notif (peu coûteux).
   $('#rate').textContent = '+' + (STATE.essencePerSec * 60).toFixed(1) + '/min';
   renderResbar();
+  renderEventBanner();
   updateNavBadges();
   // On ne reconstruit QUE la vue visible (avant : tout etait re-rendu a chaque poll, meme hors ecran).
   const v = activeView();
@@ -834,6 +835,21 @@ function updateCountdowns() {
     const rem = Math.max(0, ready - now);
     bar.style.width = Math.max(0, Math.min(100, 100 * (1 - rem / total))) + '%';
   });
+  // Minuteur de l'evenement en cours.
+  const evt = document.querySelector('#event-banner [data-event-end]');
+  if (evt) {
+    const rem = Number(evt.dataset.eventEnd) - now;
+    evt.textContent = rem > 0 ? '⏳ ' + fmtDur(Math.ceil(rem / 1000)) : '…';
+  }
+}
+// Banniere de l'evenement tournant en cours (effet + minuteur).
+function renderEventBanner() {
+  const ev = STATE && STATE.event;
+  const el = $('#event-banner');
+  if (!el) return;
+  if (!ev) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.innerHTML = `<span class="ev-ic">${ev.icon}</span><span class="ev-txt"><b>${ev.name}</b> — ${ev.desc}</span><span class="ev-timer" data-event-end="${ev.endsAt}"></span>`;
 }
 
 function fmt(ms) {

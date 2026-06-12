@@ -15,7 +15,7 @@ import {
   levelFromXp, xpForLevel, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
   reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, evolveResourceCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
-  EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS,
+  EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS, eventMul,
   BREED_RECIPES, BREED_CHART,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes, parseExpeditions, parseItems, exploringIds } from './state.js';
@@ -1203,7 +1203,7 @@ app.post('/api/explore/collect', requireAuth, h(async (req, res) => {
     const t = EXPLORE_TIER_BY_ID[ex.tier];
     // Recompenses : ESSENCE (le materiau de biome se farme dans les biomes, plus en explo)
     //  + objets + oeufs typés (limites par les incubateurs libres).
-    const essReward = t.res; // l'ancien gain de ressource devient de l'essence (monnaie)
+    const essReward = Math.round(t.res * eventMul('explore')); // essence (x2 pendant l'event Expedition)
     const items = parseItems(user);
     const gotItems = {};
     for (let i = 0; i < t.items; i++) { const it = EXPLORE_ITEMS[Math.floor(Math.random() * EXPLORE_ITEMS.length)]; items[it]++; gotItems[it] = (gotItems[it] || 0) + 1; }

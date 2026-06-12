@@ -12,6 +12,7 @@ import {
   BIOMES, BIOME_LIST, RESOURCES, SYNERGY_BONUS, isSynergy,
   EXPLORE_ZONES, EXPLORE_TIERS,
   leagueOf, currentSeason, seasonSoftReset,
+  activeEvent, eventMul,
 } from './game.js';
 import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet, ACH_INSERT_SQL } from './progress.js';
 const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
@@ -148,7 +149,9 @@ export async function getPlayerState(user) {
     const capMs = BALANCE.offlineCapHours * HOUR_MS;
     if (elapsed > capMs) elapsed = capMs;
     const secs = elapsed / 1000;
-    const xpGain = Math.round(BALANCE.xpPerSec * secs);
+    // Multiplicateurs d'EVENEMENT en cours (essence / xp / ressource).
+    const evEss = eventMul('essence', now), evXp = eventMul('xp', now), evRes = eventMul('resource', now);
+    const xpGain = Math.round(BALANCE.xpPerSec * secs * evXp);
     // Migration vers le biome actif (tous les farmeurs produisent SA ressource).
     for (const c of rows) if (c.biome != null && c.biome !== activeBiome) c.biome = activeBiome;
     for (const c of rows) {
@@ -156,11 +159,11 @@ export async function getPlayerState(user) {
       const b = BIOMES[c.biome]; if (!b) continue;
       const amt = farmRate(c.species, c.xp, c.biome) * secs;
       if (b.resource === 'essence') {
-        essenceGain += amt;
+        essenceGain += amt * evEss;
       } else {
-        // Biome special : 80% materiau, 20% essence.
-        const essShare = amt * BALANCE.biomeEssenceShare;
-        const resShare = amt - essShare;
+        // Biome special : 90% materiau, 10% essence (chacun avec son bonus d'event).
+        const essShare = amt * BALANCE.biomeEssenceShare * evEss;
+        const resShare = amt * (1 - BALANCE.biomeEssenceShare) * evRes;
         res[b.resource] = (res[b.resource] || 0) + resShare;
         resGain[b.resource] = (resGain[b.resource] || 0) + resShare;
         essenceGain += essShare;
@@ -303,12 +306,13 @@ export async function getPlayerState(user) {
       biomeUsed[c.biome] = (biomeUsed[c.biome] || 0) + 1;
       const b = BIOMES[c.biome];
       const rate = farmRate(c.species, c.xp, c.biome);
+      // Inclut les bonus d'event (essence/ressource) pour que le compteur live colle au gain reel.
+      const evEss2 = eventMul('essence', now), evRes2 = eventMul('resource', now);
       if (b.resource === 'essence') {
-        ratePerRes.essence += rate;
+        ratePerRes.essence += rate * evEss2;
       } else {
-        // Reflete le split 80/20 : 80% sur la ressource du biome, 20% en essence.
-        ratePerRes[b.resource] += rate * (1 - BALANCE.biomeEssenceShare);
-        ratePerRes.essence += rate * BALANCE.biomeEssenceShare;
+        ratePerRes[b.resource] += rate * (1 - BALANCE.biomeEssenceShare) * evRes2;
+        ratePerRes.essence += rate * BALANCE.biomeEssenceShare * evEss2;
       }
     }
   }
@@ -353,6 +357,7 @@ export async function getPlayerState(user) {
     discoveredShiny,
     loginBonus,
     pvpSeasonReward: seasonReward, // > 0 le 1er /state d'une nouvelle saison
+    event: activeEvent(now), // evenement en cours { id, name, icon, desc, mul, endsAt }
     newAchievements,
     serverTime: now,
   };
