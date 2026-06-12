@@ -1139,3 +1139,9 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 
 /* ---------- Probabilites (loot-box) ---------- */
 .odds-note { background: rgba(255,255,255,.04); border-left: 3px solid var(--accent); border-radius: 8px; padding: 8px 12px; font-size: 12px; }
+
+/* ---------- Reveal "Bravo" a l'eclosion ---------- */
+.hatch-reveal { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.hatch-reveal .hr-name { font-size: 20px; font-weight: 700; margin-top: 8px; }
+.hatch-reveal .hr-sub { color: var(--muted); margin: 4px 0 6px; }
+.breed-cell.ready, .incubator.ready { box-shadow: 0 0 0 2px var(--good) inset, 0 8px 24px rgba(81,216,138,.25); }

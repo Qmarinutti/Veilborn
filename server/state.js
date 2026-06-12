@@ -95,20 +95,10 @@ export async function getPlayerState(user) {
 
   // --- Tick creatures : transitions de stade (memoire + writes batchees) ---
   // Comme avant, UNE transition par tick par creature (les timers redemarrent a `now`).
-  let hatched = 0;
-  for (const c of rows) { // accouplement termine -> l'oeuf commence son eclosion
-    if (c.stage === 'mating' && c.hatch_at != null && c.hatch_at <= now) {
-      c.stage = 'egg'; c.hatch_at = now + breedHatchSeconds(c.species) * 1000;
-      W.push({ sql: "UPDATE creatures SET stage='egg', hatch_at=? WHERE id=?", args: [c.hatch_at, c.id] });
-    }
-  }
-  for (const c of rows) { // eclosion : oeuf -> bebe
-    if (c.stage === 'egg' && c.hatch_at != null && c.hatch_at <= now) {
-      c.stage = 'baby'; c.mature_at = now + maturationMsFor(c.species); c.hatch_at = null;
-      W.push({ sql: "UPDATE creatures SET stage='baby', hatch_at=NULL, mature_at=? WHERE id=?", args: [c.mature_at, c.id] });
-      hatched++;
-    }
-  }
+  // NOTE : accouplement->oeuf et oeuf->bebe ne sont PLUS automatiques. Le joueur doit RECUPERER
+  // l'oeuf (fin d'accouplement) puis le FAIRE ECLORE (fin d'incubation) -> endpoints /breeding/collect
+  // et /egg/hatch (avec reveal). Seule la maturation bebe->adulte reste automatique.
+  const hatched = 0;
   for (const c of rows) { // bebe -> adulte
     if (c.stage === 'baby' && c.mature_at != null && c.mature_at <= now) {
       c.stage = 'adult'; c.mature_at = null;
@@ -212,7 +202,8 @@ export async function getPlayerState(user) {
 
   // Decouvertes : on n'ECRIT que les NOUVELLES paires (regime stable -> 0 ecriture).
   const discSet = new Set(discRows.map(d => d.species + ':' + d.variant));
-  const ownedPairs = [...new Set(rows.map(r => r.species + ':' + (r.variant || 0)))];
+  // Decouverte SEULEMENT a l'eclosion : un oeuf/accouplement ne revele plus l'espece dans le Dex.
+  const ownedPairs = [...new Set(rows.filter(r => r.stage === 'baby' || r.stage === 'adult').map(r => r.species + ':' + (r.variant || 0)))];
   for (const pair of ownedPairs.filter(p => !discSet.has(p))) {
     const i = pair.lastIndexOf(':');
     W.push({ sql: 'INSERT OR IGNORE INTO discoveries (user_id, species, variant) VALUES (?, ?, ?)', args: [user.id, pair.slice(0, i), Number(pair.slice(i + 1))] });

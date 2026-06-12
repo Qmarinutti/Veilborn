@@ -13,7 +13,7 @@ import {
   BALANCE, STARTER_IDS, SPECIES, SPECIES_COUNT, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
   levelFromXp, xpForLevel, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
-  reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, evolveResourceCost, shinyPityBonus, tierOf,
+  reproductionSeconds, breedHatchSeconds, maturationSeconds, breedingCellCost, evolveCost, evolveResourceCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
   EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS, eventMul, guildTarget, guildFarmBonus,
   BREED_RECIPES, BREED_CHART,
@@ -458,6 +458,37 @@ app.post('/api/egg/accelerate', requireAuth, h(async (req, res) => {
   if (!(await spend(req.user.id, cost))) return res.status(400).json({ error: `Pas assez d'essence (besoin de ${cost}).` });
   await run('UPDATE creatures SET hatch_at = ? WHERE id = ?', [Date.now(), id]);
   res.json({ ok: true, cost });
+}));
+
+// Faire ECLORE un oeuf pret (manuel) : oeuf -> bebe + reveal de l'espece. C'est ICI que l'espece
+// est DECOUVERTE (le Dex ne la revele plus pendant l'incubation).
+app.post('/api/egg/hatch', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Oeuf introuvable.' });
+  if (c.stage !== 'egg') return res.status(400).json({ error: "Ce n'est pas un oeuf." });
+  if ((c.hatch_at || 0) > Date.now()) return res.status(400).json({ error: "L'oeuf n'est pas encore pret a eclore." });
+  const matureAt = Date.now() + maturationSeconds(c.species) * 1000;
+  await run("UPDATE creatures SET stage='baby', hatch_at=NULL, mature_at=? WHERE id=? AND owner_id=?", [matureAt, id, req.user.id]);
+  // Decouverte enregistree A L'ECLOSION.
+  await run('INSERT OR IGNORE INTO discoveries (user_id, species, variant) VALUES (?, ?, ?)', [req.user.id, c.species, c.variant || 0]);
+  await progressDaily(req.user.id, 'hatch2', 1);
+  const newAch = []; { const a = await unlockAch(req.user.id, 'first_hatch'); if (a) newAch.push(a); }
+  const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
+  res.json({ ok: true, creature: publicCreature(row), newAch }); // le client montre le reveal "Bravo"
+}));
+
+// RECUPERER l'oeuf d'une reproduction terminee (manuel) : accouplement -> oeuf en incubation.
+app.post('/api/breeding/collect', requireAuth, h(async (req, res) => {
+  const { id } = req.body || {};
+  const c = await get('SELECT * FROM creatures WHERE id = ? AND owner_id = ?', [id, req.user.id]);
+  if (!c) return res.status(404).json({ error: 'Introuvable.' });
+  if (c.stage !== 'mating') return res.status(400).json({ error: "Cette repro n'est pas en accouplement." });
+  if ((c.hatch_at || 0) > Date.now()) return res.status(400).json({ error: "L'accouplement n'est pas termine." });
+  const hatchAt = Date.now() + breedHatchSeconds(c.species) * 1000;
+  await run("UPDATE creatures SET stage='egg', hatch_at=? WHERE id=? AND owner_id=?", [hatchAt, id, req.user.id]);
+  const row = await get('SELECT * FROM creatures WHERE id = ?', [id]);
+  res.json({ ok: true, egg: publicCreature(row) });
 }));
 
 // ---------- Biomes : 1 biome ACTIF, tes farmeurs y produisent sa ressource ----------

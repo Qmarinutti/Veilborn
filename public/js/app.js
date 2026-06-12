@@ -591,6 +591,25 @@ function closeReward() { $('#reward-modal').classList.add('hidden'); $('#reward-
 $('#reward-ok')?.addEventListener('click', closeReward);
 $('#reward-overlay')?.addEventListener('click', closeReward);
 
+// Reveal "Bravo" a l'eclosion d'un oeuf (montre le monstre obtenu).
+function showHatchReveal(c) {
+  if (!c) return;
+  $('#reward-title').innerHTML = '🎉 Bravo !';
+  $('#reward-list').innerHTML = `<div class="hatch-reveal">${creatureVisual(c, 120)}
+    <div class="hr-name">${c.variant ? '✨ ' : ''}${esc(c.speciesName)}</div>
+    <div class="hr-sub">${esc(c.type)} · ${RARITY_DOTS(c.rarity)}</div>
+    <p class="hint">Un nouveau Glump a éclos !</p></div>`;
+  $('#reward-modal').classList.remove('hidden');
+  $('#reward-overlay').classList.remove('hidden');
+}
+// Faire eclore un oeuf pret (clic sur l'incubateur) -> reveal.
+$('#incubators').addEventListener('click', async (e) => {
+  const h = e.target.closest('[data-hatch]');
+  if (!h) return;
+  try { const r = await api('/egg/hatch', { method: 'POST', body: { id: Number(h.dataset.hatch) } }); await refresh(); showHatchReveal(r.creature); processNewAch(r); }
+  catch (err) { flash(err.message, 'err'); }
+});
+
 const RARITY_DOTS = (r) => '★'.repeat(r) + '☆'.repeat(5 - r);
 
 function avatar(c) {
@@ -609,13 +628,16 @@ function matingParentIds() {
 
 function eggCellHtml(egg, mystery) {
   const ready = egg.remainingMs <= 0;
-  const label = mystery && !ready ? '???' : `${egg.speciesName} ${RARITY_DOTS(egg.rarity)}`;
+  // Tant que pas eclos, on garde le mystere (l'espece se revele A L'ECLOSION pour un oeuf de repro).
+  const label = ready ? 'Prêt à éclore !' : (mystery ? '???' : `${egg.speciesName} ${RARITY_DOTS(egg.rarity)}`);
   const bred = egg.fromBreeding ? '<div class="egg-bred" title="Issu de reproduction">💞</div>' : '';
   return `<div class="incubator ${ready ? 'ready' : ''} ${egg.fromBreeding ? 'is-bred' : ''}" data-egg="${egg.id}">
     ${bred}<div class="egg">${ready ? '🐣' : '🥚'}</div>
     <div class="sub">${label}</div>
-    <div class="countdown" data-ready="${egg.readyAt}">${ready ? 'Eclot !' : ''}</div>
-    <div class="egg-prog"><i data-egg-bar="${egg.id}" data-total="${egg.totalMs || 0}"></i></div>
+    ${ready
+      ? `<button class="btn small primary" data-hatch="${egg.id}">🐣 Faire éclore</button>`
+      : `<div class="countdown" data-ready="${egg.readyAt}"></div>
+         <div class="egg-prog"><i data-egg-bar="${egg.id}" data-total="${egg.totalMs || 0}"></i></div>`}
   </div>`;
 }
 
@@ -669,14 +691,17 @@ function renderBreedingCells() {
   for (let i = 0; i < max; i++) {
     const egg = eggsList[i];
     if (egg) {
-      // cellule occupee : 2 phases distinctes (accouplement puis eclosion)
-      const phase = egg.mating
-        ? `<div class="breed-phase mating">💞 Reproduction</div><div class="breed-egg">💞</div>`
-        : `<div class="breed-phase">🥚 Éclosion</div><div class="breed-egg">🥚</div>`;
-      html += `<div class="breed-cell ${egg.mating ? 'is-mating' : ''}">
+      // cellule occupee : accouplement en cours. Quand termine -> bouton "Récupérer l'œuf".
+      const matingReady = egg.remainingMs <= 0;
+      const mid = matingReady
+        ? `<div class="breed-phase mating">🥚 Œuf prêt !</div><div class="breed-egg">🥚</div>
+           <button class="btn small primary" data-collect="${egg.id}">Récupérer l'œuf</button>`
+        : `<div class="breed-phase mating">💞 Reproduction</div><div class="breed-egg">💞</div>
+           <div class="countdown" data-ready="${egg.readyAt}"></div>
+           <div class="egg-prog"><i data-egg-bar="${egg.id}" data-total="${egg.totalMs || 0}"></i></div>`;
+      html += `<div class="breed-cell is-mating ${matingReady ? 'ready' : ''}">
         ${parentBox(find(egg.parentA))}
-        <div class="breed-mid">${phase}<div class="countdown" data-ready="${egg.readyAt}"></div>
-          <div class="egg-prog"><i data-egg-bar="${egg.id}" data-total="${egg.totalMs || 0}"></i></div></div>
+        <div class="breed-mid">${mid}</div>
         ${parentBox(find(egg.parentB))}
       </div>`;
     } else if (!composerPlaced) {
@@ -708,6 +733,12 @@ $('#breeding-cells').addEventListener('click', async (e) => {
   const slot = e.target.closest('[data-pick-parent]');
   const doBreed = e.target.closest('#do-breed');
   const buyCell = e.target.closest('[data-buy-cell]');
+  const collect = e.target.closest('[data-collect]');
+  if (collect) {
+    try { const r = await api('/breeding/collect', { method: 'POST', body: { id: Number(collect.dataset.collect) } }); flash("Œuf récupéré ! Il éclot dans l'onglet Oeufs 🥚."); await refresh(); }
+    catch (err) { flash(err.message, 'err'); }
+    return;
+  }
   if (buyCell) {
     if (!await confirmDialog(`Débloquer une cellule de reproduction pour ${STATE.user.nextCellCost.toLocaleString('fr-FR')} essence ?`)) return;
     try { const r = await api('/breeding/buy-cell', { method: 'POST' }); flash(`Cellule débloquée (-${r.cost} ✨)`); await refresh(); }
@@ -824,7 +855,7 @@ function updateCountdowns() {
   $$('.countdown[data-ready]').forEach(el => {
     const ready = Number(el.dataset.ready);
     const rem = ready - now;
-    if (rem <= 0) { el.textContent = 'Eclot !'; el.closest('.incubator')?.classList.add('ready'); }
+    if (rem <= 0) { el.textContent = '🐣 Prêt !'; el.closest('.incubator')?.classList.add('ready'); }
     else el.textContent = fmt(rem);
   });
   // barres de progression des oeufs (la duree totale vient du serveur : data-total)
