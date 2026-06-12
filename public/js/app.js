@@ -1118,18 +1118,18 @@ function renderPrairieSlots() {
 // Selecteur generique CENTRE avec tri/filtre.
 // Simple : openPicker(titre, items, renderFn, onPick(id)).
 // Multi  : openTeamPicker(titre, items, renderFn, count, onConfirm(ids)).
-let pickerState = { items: [], render: null, onPick: null, sort: 'level', type: '', multi: false, count: 0, selected: new Set(), onConfirm: null };
+let pickerState = { items: [], render: null, onPick: null, sort: 'level', type: '', q: '', multi: false, count: 0, selected: new Set(), onConfirm: null };
 function openPicker(title, items, render, onPick) {
-  pickerState = { items: items.slice(), render, onPick, sort: 'level', type: '', multi: false, count: 0, selected: new Set(), onConfirm: null };
+  pickerState = { items: items.slice(), render, onPick, sort: 'level', type: '', q: '', multi: false, count: 0, selected: new Set(), onConfirm: null };
   setupPicker(title, items);
 }
 function openTeamPicker(title, items, render, count, onConfirm) {
-  pickerState = { items: items.slice(), render, onPick: null, sort: 'level', type: '', multi: true, count, selected: new Set(), onConfirm };
+  pickerState = { items: items.slice(), render, onPick: null, sort: 'level', type: '', q: '', multi: true, count, selected: new Set(), onConfirm };
   setupPicker(title, items);
 }
 // Multi "jusqu'a N" : selectionne de 1 a maxCount Glumps (ex: remplir des emplacements de farm).
 function openMultiPicker(title, items, render, maxCount, onConfirm) {
-  pickerState = { items: items.slice(), render, onPick: null, sort: 'level', type: '', multi: true, max: true, count: maxCount, selected: new Set(), onConfirm };
+  pickerState = { items: items.slice(), render, onPick: null, sort: 'level', type: '', q: '', multi: true, max: true, count: maxCount, selected: new Set(), onConfirm };
   setupPicker(title, items);
 }
 function setupPicker(title, items) {
@@ -1137,6 +1137,9 @@ function setupPicker(title, items) {
   const types = [...new Set(items.map(c => c.type).filter(Boolean))].sort();
   $('#picker-type').innerHTML = '<option value="">Tous éléments</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
   $('#picker-type').value = '';
+  // Reset de la recherche a chaque ouverture (on ne montre la barre que s'il y a de quoi chercher).
+  const search = $('#picker-search');
+  if (search) { search.value = ''; search.classList.toggle('hidden', items.length <= 4); }
   $$('.psort').forEach(b => b.classList.toggle('active', b.dataset.psort === 'level'));
   $('#picker-foot').classList.toggle('hidden', !pickerState.multi);
   updatePickerCount();
@@ -1158,6 +1161,14 @@ function updatePickerCount() {
 function renderPickerList() {
   let items = pickerState.items.slice();
   if (pickerState.type) items = items.filter(c => c.type === pickerState.type);
+  // Recherche par nom/surnom/type (insensible a la casse).
+  if (pickerState.q) {
+    const q = pickerState.q;
+    items = items.filter(c =>
+      (c.nickname || '').toLowerCase().includes(q) ||
+      (c.speciesName || '').toLowerCase().includes(q) ||
+      (c.type || '').toLowerCase().includes(q));
+  }
   const cmp = {
     level: (a, b) => (b.level || 0) - (a.level || 0) || (b.power || 0) - (a.power || 0),
     rarity: (a, b) => (b.rarity || 0) - (a.rarity || 0) || (b.power || 0) - (a.power || 0),
@@ -1181,6 +1192,7 @@ $('#picker-sort').addEventListener('click', (e) => {
   renderPickerList();
 });
 $('#picker-type').addEventListener('change', (e) => { pickerState.type = e.target.value; renderPickerList(); });
+$('#picker-search')?.addEventListener('input', (e) => { pickerState.q = e.target.value.toLowerCase().trim(); renderPickerList(); });
 function closePicker() {
   $('#picker').classList.add('hidden');
   $('#picker-overlay').classList.add('hidden');
