@@ -766,7 +766,13 @@ app.post('/api/pvp/start', requireAuth, h(async (req, res) => {
   // On ABANDONNE (sans recompense) un eventuel combat en cours plutot que de bloquer : pas de
   // lockout 15min si l'onglet a ete ferme, et l'exploit reste ferme (jamais 2 combats en vol).
   for (const [bid, bb] of battles) {
-    if (bb.userId === req.user.id && !bb.state.over) battles.delete(bid);
+    if (bb.userId === req.user.id && !bb.state.over) {
+      battles.delete(bid);
+      // Anti-fuite : abandonner un combat ENGAGE (>=1 tour joue) coute des trophees (= une defaite).
+      if (bb.state.turn > 0 && !bb.settled) {
+        await run('UPDATE users SET pvp_trophies = MAX(0, pvp_trophies - ?) WHERE id = ?', [BALANCE.pvpLoseTrophies, req.user.id]);
+      }
+    }
   }
   // Dedup + normalisation des ids : sinon [5,5,5] engage 3 fois le meme Glump (triche).
   const teamIds = [...new Set((Array.isArray(team) ? team : []).map(Number).filter(Number.isInteger))];
@@ -815,6 +821,8 @@ app.post('/api/pvp/move', requireAuth, h(async (req, res) => {
     const trophyDelta = iWon ? BALANCE.pvpWinTrophies : -BALANCE.pvpLoseTrophies;
     const essence = iWon ? BALANCE.pvpWinEssence : 0;
     await run('UPDATE users SET pvp_trophies = MAX(0, pvp_trophies + ?), essence = essence + ? WHERE id = ?', [trophyDelta, essence, req.user.id]);
+    // Suit le PIC de trophees de la saison (sert a la recompense de fin de saison).
+    await run('UPDATE users SET pvp_peak = MAX(COALESCE(pvp_peak, 0), pvp_trophies) WHERE id = ?', [req.user.id]);
     const trophies = (await reloadUser(req.user.id)).pvp_trophies;
     // Persistance des PV de mon equipe (PV finaux ; 0 = KO) + XP.
     for (let i = 0; i < b.mineIds.length; i++) {

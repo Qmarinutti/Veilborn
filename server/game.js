@@ -434,6 +434,29 @@ export const EXPLORE_TIERS = [
 export const EXPLORE_TIER_BY_ID = Object.fromEntries(EXPLORE_TIERS.map(t => [t.id, t]));
 export const EXPLORE_ITEMS = ['candy', 'candy', 'potion', 'revive']; // pondere : un peu plus de bonbons
 
+// =====================================================================
+//  SAISONS PvP : ligues (fonction des trophees) + reset doux + recompenses de fin de saison.
+// =====================================================================
+export const PVP_LEAGUES = [
+  { id: 'bronze',  name: 'Bronze',  icon: '🥉', min: 0,    reward: 1000 },
+  { id: 'argent',  name: 'Argent',  icon: '🥈', min: 1200, reward: 4000 },
+  { id: 'or',      name: 'Or',      icon: '🥇', min: 1500, reward: 12000 },
+  { id: 'platine', name: 'Platine', icon: '💠', min: 2000, reward: 35000 },
+  { id: 'diamant', name: 'Diamant', icon: '💎', min: 2500, reward: 90000 },
+];
+export function leagueOf(trophies) {
+  let l = PVP_LEAGUES[0];
+  for (const x of PVP_LEAGUES) if ((trophies || 0) >= x.min) l = x;
+  return l;
+}
+// Saison courante = mois calendaire (YYYY-MM).
+export function currentSeason(d = new Date()) { return d.toISOString().slice(0, 7); }
+// Reset doux a la nouvelle saison : on tire les trophees vers la base en gardant 1/3 de l'avance.
+export function seasonSoftReset(trophies) {
+  const base = BALANCE.pvpStartTrophies;
+  return Math.round(base + Math.max(0, (trophies || base) - base) / 3);
+}
+
 // Zones d'exploration : une par biome special (hors Plaine).
 // Les types ACCEPTES sont tous ceux du biome (ex. Foret = Plante OU Insecte) ; le compte
 // requis est le TOTAL parmi ces types (3 Glumps Plante/Insecte au total, pas 3 d'un seul).

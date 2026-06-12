@@ -87,15 +87,17 @@ section('4. Essence ne peut pas devenir negative (spam bonbon)');
   const adult0 = st.creatures.find(c => c.stage === 'adult');
   const id = adult0.id;
   const xp0 = adult0.xp;
-  // 50 bonbons simultanes ; le joueur n'a que 300 essence (60/bonbon -> 5 max)
+  // 50 bonbons simultanes ; le max depend de l'essence reelle au depart (60/bonbon).
+  const ess0 = st.user.essence;
+  const maxCandy = Math.floor(ess0 / 60);
   const results = await Promise.all(Array.from({ length: 50 }, () => C('/api/creature/candy', { method: 'POST', body: { id } })));
   const okCount = results.filter(r => r.status === 200).length;
   const candyXp = results.find(r => r.status === 200)?.data?.xp || 0;
   const st1 = (await C('/api/state')).data;
   const xpGained = st1.creatures.find(c => c.id === id).xp - xp0;
-  console.log(`  bonbons acceptes=${okCount}, XP gagnee=${xpGained}, essence finale=${st1.user.essence}`);
+  console.log(`  essence depart=${ess0}, bonbons acceptes=${okCount}, XP gagnee=${xpGained}, essence finale=${st1.user.essence}`);
   ok(st1.user.essence >= 0, 'essence jamais negative (' + st1.user.essence + ')');
-  ok(okCount <= 5, 'pas plus de bonbons que l\'essence ne le permet (' + okCount + ' <= 5)');
+  ok(okCount <= maxCandy, `pas plus de bonbons que l'essence ne le permet (${okCount} <= ${maxCandy})`);
   // PREUVE anti-desync : chaque bonbon accepte = exactement une depense (XP couplee a la depense, pas de phantom)
   ok(xpGained === okCount * candyXp, `couplage XP<->depense exact : ${xpGained} XP = ${okCount} bonbons x ${candyXp}`);
 }

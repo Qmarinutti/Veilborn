@@ -150,6 +150,9 @@ export async function initDb() {
     'ALTER TABLE users ADD COLUMN email TEXT',
     'ALTER TABLE users ADD COLUMN recovery_hash TEXT',
     'ALTER TABLE users ADD COLUMN recovery_salt TEXT',
+    // Saisons PvP : saison traitee (YYYY-MM) + pic de trophees de la saison en cours.
+    'ALTER TABLE users ADD COLUMN pvp_season TEXT',
+    'ALTER TABLE users ADD COLUMN pvp_peak INTEGER',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }

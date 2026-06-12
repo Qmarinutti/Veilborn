@@ -403,6 +403,7 @@ async function refresh() {
     renderAll();
     // Bonus de connexion quotidien (une fois par jour) + succes nouvellement debloques.
     if (STATE.loginBonus > 0) flash(`Bonus du jour : +${STATE.loginBonus} ✨ (serie ${STATE.user.loginStreak} 🔥)`);
+    if (STATE.pvpSeasonReward > 0) flash(`🏆 Nouvelle saison ! Récompense : +${STATE.pvpSeasonReward.toLocaleString('fr-FR')} ✨`);
     for (const a of (STATE.newAchievements || [])) achievementToast(a);
   } catch (err) {
     // session expiree -> retour login. On stoppe TOUT (sinon la boucle RAF continue et l'essence
@@ -1918,7 +1919,10 @@ function savePvpTeam() { try { localStorage.setItem('veilborn_pvp', JSON.stringi
 function loadPvpTeam() { try { return JSON.parse(localStorage.getItem('veilborn_pvp') || '[]'); } catch { return []; } }
 
 async function loadArena() {
-  $('#pvp-trophies').textContent = `🏆 ${STATE.user.pvpTrophies}`;
+  const lg = STATE.user.league;
+  $('#pvp-trophies').innerHTML = lg
+    ? `<span class="pvp-league lg-${lg.id}" title="Ligue ${lg.name} — récompense de fin de saison selon ton pic">${lg.icon} ${lg.name}</span> · 🏆 ${STATE.user.pvpTrophies}`
+    : `🏆 ${STATE.user.pvpTrophies}`;
   if (!pvpTeam.length) pvpTeam = loadPvpTeam(); // restaure l'equipe sauvegardee
   const busyArena = matingParentIds();
   pvpTeam = pvpTeam.filter(id => STATE.creatures.some(c => c.id === id && c.stage === 'adult' && !c.fainted && !c.exploring && !busyArena.has(c.id)));

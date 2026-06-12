@@ -11,6 +11,7 @@ import {
   reproductionSeconds, breedHatchSeconds,
   BIOMES, BIOME_LIST, RESOURCES, SYNERGY_BONUS, isSynergy,
   EXPLORE_ZONES, EXPLORE_TIERS,
+  leagueOf, currentSeason, seasonSoftReset,
 } from './game.js';
 import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet, ACH_INSERT_SQL } from './progress.js';
 const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
@@ -117,6 +118,22 @@ export async function getPlayerState(user) {
     // Credit ATOMIQUE conditionnel : seul le 1er /state du jour credite le bonus
     // (deux /state concurrents passeraient tous deux le test en memoire -> double bonus).
     W.push({ sql: 'UPDATE users SET login_streak=?, last_login_day=?, essence=essence+? WHERE id=? AND (last_login_day IS NULL OR last_login_day <> ?)', args: [loginStreak, today, loginBonus, user.id, today] });
+  }
+
+  // --- Transition de saison PvP (1x/mois) : recompense de fin de saison + reset doux ---
+  let seasonReward = 0;
+  const season = currentSeason();
+  if (user.pvp_season && user.pvp_season !== season) {
+    const peak = user.pvp_peak ?? user.pvp_trophies ?? 1000;
+    seasonReward = leagueOf(peak).reward;
+    const reset = seasonSoftReset(user.pvp_trophies ?? 1000);
+    // Atomique conditionnel : un seul /state traite la bascule de saison.
+    W.push({ sql: 'UPDATE users SET pvp_season=?, pvp_peak=?, pvp_trophies=?, essence=essence+? WHERE id=? AND (pvp_season IS NULL OR pvp_season <> ?)',
+      args: [season, reset, reset, seasonReward, user.id, season] });
+    user.pvp_trophies = reset; essence += seasonReward; // affichage
+  } else if (!user.pvp_season) {
+    // 1re fois : on initialise la saison (sans reset ni recompense).
+    W.push({ sql: 'UPDATE users SET pvp_season=?, pvp_peak=COALESCE(pvp_peak, pvp_trophies) WHERE id=? AND pvp_season IS NULL', args: [season, user.id] });
   }
 
   // --- Tick farming : 1 biome actif, gains de ressource + XP (en memoire) ---
@@ -320,6 +337,7 @@ export async function getPlayerState(user) {
       breedingUsed,
       nextCellCost: fresh.breeding_cells < BALANCE.breedingMaxCells ? breedingCellCost(fresh.breeding_cells) : null,
       pvpTrophies: fresh.pvp_trophies ?? 1000,
+      league: leagueOf(fresh.pvp_trophies ?? 1000), // { id, name, icon, min, reward }
       loginStreak: fresh.login_streak || 0,
       items, // sac : { candy, potion, revive }
       email: fresh.email || null,
@@ -334,6 +352,7 @@ export async function getPlayerState(user) {
     discovered,
     discoveredShiny,
     loginBonus,
+    pvpSeasonReward: seasonReward, // > 0 le 1er /state d'une nouvelle saison
     newAchievements,
     serverTime: now,
   };

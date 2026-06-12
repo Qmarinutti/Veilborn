@@ -1068,3 +1068,12 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .cal-day.got { opacity: .85; border-color: var(--good); }
 .cal-day.got .cal-check { position: absolute; top: 2px; right: 4px; color: var(--good); font-weight: 800; font-size: 11px; }
 .cal-day.today { border-color: var(--gold, #ffd23f); box-shadow: 0 0 0 1px var(--gold, #ffd23f) inset; }
+
+/* ---------- Ligues PvP ---------- */
+.pvp-league { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: 13px;
+  background: rgba(255,255,255,.06); border: 1px solid var(--line-strong); }
+.pvp-league.lg-bronze { color: #cd7f32; border-color: #cd7f32; }
+.pvp-league.lg-argent { color: #c0c8d4; border-color: #c0c8d4; }
+.pvp-league.lg-or { color: var(--gold, #ffd23f); border-color: var(--gold, #ffd23f); }
+.pvp-league.lg-platine { color: #6fe0d2; border-color: #6fe0d2; }
+.pvp-league.lg-diamant { color: #7fb8ff; border-color: #7fb8ff; box-shadow: 0 0 10px rgba(127,184,255,.4); }
