@@ -676,6 +676,31 @@ function breedPreviewHtml(typeA, typeB) {
   }).join('');
   return `<div class="breed-preview"><div class="bp-lbl">Résultats possibles (${typeA}${typeA === typeB ? '' : ' + ' + typeB}) :</div><div class="bp-outcomes">${cells}</div></div>`;
 }
+// Apercu des IV (genes) que l'enfant peut heriter. Cote serveur, chaque gene de l'enfant est tire
+// uniformement dans [min(parents), max(parents)] avec 12% de chance de +1 (mutation). On affiche donc
+// la FOURCHETTE honnete lo..hi possible, par stat, avec les valeurs des deux parents.
+function breedIvPreviewHtml(a, b) {
+  if (!a.genes || !b.genes) return '';
+  const keys = ['force', 'vita', 'speed'];
+  const row = (key) => {
+    const ga = a.genes[key], gb = b.genes[key];
+    const lo = Math.min(ga, gb);
+    const hi = Math.min(31, Math.max(ga, gb) + 1); // +1 mutation possible
+    const loPct = Math.round(100 * lo / 31), w = Math.max(3, Math.round(100 * hi / 31) - loPct);
+    const gold = hi >= 31 ? ' gold' : '';
+    const rng = lo === hi ? `${lo}` : `${lo}–${hi}`;
+    return `<div class="iv-row prev">
+      <span class="iv-label">${STAT_LABEL[key]}</span>
+      <div class="iv-bar range"><i style="margin-left:${loPct}%;width:${w}%"></i></div>
+      <span class="iv-val${gold}">${rng}<small>/31</small></span>
+      <span class="iv-stat parents">${ga}<i>·</i>${gb}</span></div>`;
+  };
+  return `<div class="breed-preview iv-forecast">
+    <div class="bp-lbl">IV possibles de l'enfant <span class="parents-key">(${cname(a)} · ${cname(b)})</span></div>
+    ${keys.map(row).join('')}
+    <div class="iv-hint">L'enfant hérite entre le min et le max des parents (+1 mutation possible). Reproduis tes meilleurs IV pour viser le 31·31·31 ✨</div>
+  </div>`;
+}
 function renderBreedingCells() {
   const max = STATE.user.breedingCells;
   // La cellule n'affiche que l'ACCOUPLEMENT. L'oeuf pondu part en eclosion (incubateurs).
@@ -713,7 +738,7 @@ function renderBreedingCells() {
         : `<div class="breed-parent slot" data-pick-parent="${side}"><div class="bp-add">+</div><span>Parent</span></div>`;
       const mid = (a && b) ? `<button class="btn primary" id="do-breed">❤ Reproduire</button>` : `<span class="heart">❤</span>`;
       html += `<div class="breed-cell composer">${slot(a, 'a')}<div class="breed-mid">${mid}</div>${slot(b, 'b')}</div>`;
-      if (a && b) html += breedPreviewHtml(a.type, b.type);
+      if (a && b) { html += breedPreviewHtml(a.type, b.type); html += breedIvPreviewHtml(a, b); }
     } else {
       html += `<div class="breed-cell locked-cell"><span>Cellule libre</span></div>`;
     }
