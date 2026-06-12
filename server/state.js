@@ -285,6 +285,8 @@ export async function getPlayerState(user) {
       pvpTrophies: fresh.pvp_trophies ?? 1000,
       loginStreak: fresh.login_streak || 0,
       items, // sac : { candy, potion, revive }
+      email: fresh.email || null,
+      hasRecovery: !!fresh.recovery_hash, // a-t-il un code de recuperation ?
     },
     essencePerSec: Number(ratePerRes.essence.toFixed(3)),
     resourcePerSec: Object.fromEntries(RESOURCES.filter(r => r !== 'essence').map(r => [r, Number(ratePerRes[r].toFixed(3))])),

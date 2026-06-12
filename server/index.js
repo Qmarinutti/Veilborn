@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { get, all, run, insert, initDb, usingTurso, dbUrl, hasToken } from './db.js';
 import {
   hashPassword, verifyPassword, createSession, destroySession,
-  userFromRequest, requireAuth, tokenFromRequest,
+  userFromRequest, requireAuth, tokenFromRequest, genRecoveryCode, canonRecovery,
 } from './auth.js';
 import {
   BALANCE, STARTER_IDS, SPECIES, SPECIES_COUNT, wildCreature, breed,
@@ -112,14 +112,19 @@ const USERNAME_RE = /^[\p{L}\p{N} _.\-]{3,20}$/u;
 function cleanFreeText(s, max = 20) {
   return String(s || '').replace(/[<>&"'`]/g, '').slice(0, max).trim();
 }
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 app.post('/api/register', authThrottle, h(async (req, res) => {
   const { password, starter } = req.body || {};
   const username = String(req.body?.username || '').trim();
+  const email = String(req.body?.email || '').trim().slice(0, 120);
   if (!username || !password || username.length < 3 || username.length > 20 || password.length < 4 || password.length > 100) {
     return res.status(400).json({ error: 'Pseudo (3-20 caracteres) et mot de passe (4-100) requis.' });
   }
   if (!USERNAME_RE.test(username)) {
     return res.status(400).json({ error: 'Pseudo : lettres, chiffres, espace, tiret, point et _ uniquement.' });
+  }
+  if (email && !EMAIL_RE.test(email)) {
+    return res.status(400).json({ error: 'Adresse email invalide.' });
   }
   if (!STARTER_IDS.includes(starter)) {
     return res.status(400).json({ error: 'Choisis ton Glump de depart.' });
@@ -128,10 +133,13 @@ app.post('/api/register', authThrottle, h(async (req, res) => {
   if (exists) return res.status(409).json({ error: 'Ce pseudo est deja pris.' });
 
   const { hash, salt } = await hashPassword(password);
+  // Code de recuperation (montre une fois au joueur) : seul son hash est stocke.
+  const recoveryCode = genRecoveryCode();
+  const rec = await hashPassword(canonRecovery(recoveryCode));
   const now = Date.now();
   const userId = await insert(
-    'INSERT INTO users (username, pass_hash, pass_salt, essence, incubator_slots, friend_code, last_tick, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [username, hash, salt, BALANCE.startEssence, BALANCE.startSlots, genFriendCode(), now, now]);
+    'INSERT INTO users (username, email, pass_hash, pass_salt, recovery_hash, recovery_salt, essence, incubator_slots, friend_code, last_tick, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [username, email || null, hash, salt, rec.hash, rec.salt, BALANCE.startEssence, BALANCE.startSlots, genFriendCode(), now, now]);
 
   // Le joueur commence avec le starter choisi (adulte), place dans la Plaine pour farmer.
   await insertCreature(userId, wildCreature(starter, { adult: true }));
@@ -139,7 +147,7 @@ app.post('/api/register', authThrottle, h(async (req, res) => {
 
   const token = await createSession(userId);
   setCookie(res, token);
-  res.json({ ok: true });
+  res.json({ ok: true, recoveryCode }); // le client le montre UNE fois
 }));
 
 app.post('/api/login', authThrottle, h(async (req, res) => {
@@ -150,6 +158,60 @@ app.post('/api/login', authThrottle, h(async (req, res) => {
   }
   const token = await createSession(user.id);
   setCookie(res, token);
+  res.json({ ok: true });
+}));
+
+// Reinitialiser le mot de passe avec le CODE DE RECUPERATION (aucun email serveur necessaire).
+app.post('/api/reset-password', authThrottle, h(async (req, res) => {
+  const username = String(req.body?.username || '').trim();
+  const { recoveryCode, newPassword } = req.body || {};
+  if (!username || !recoveryCode || !newPassword || newPassword.length < 4 || newPassword.length > 100) {
+    return res.status(400).json({ error: 'Pseudo, code de recuperation et nouveau mot de passe (4-100) requis.' });
+  }
+  const user = await get('SELECT * FROM users WHERE username = ?', [username]);
+  // Reponse generique : ne pas reveler si le compte existe.
+  if (!user || !user.recovery_hash || !(await verifyPassword(canonRecovery(recoveryCode), user.recovery_salt, user.recovery_hash))) {
+    return res.status(401).json({ error: 'Pseudo ou code de recuperation incorrect.' });
+  }
+  const { hash, salt } = await hashPassword(newPassword);
+  // Nouveau code (l'ancien ne marche plus) + deconnexion de toutes les sessions.
+  const newCode = genRecoveryCode();
+  const rec = await hashPassword(canonRecovery(newCode));
+  await run('UPDATE users SET pass_hash = ?, pass_salt = ?, recovery_hash = ?, recovery_salt = ? WHERE id = ?',
+    [hash, salt, rec.hash, rec.salt, user.id]);
+  await run('DELETE FROM sessions WHERE user_id = ?', [user.id]);
+  res.json({ ok: true, recoveryCode: newCode });
+}));
+
+// Changer son mot de passe (connecte) : exige le mot de passe actuel.
+app.post('/api/change-password', requireAuth, h(async (req, res) => {
+  const { oldPassword, newPassword } = req.body || {};
+  if (!newPassword || newPassword.length < 4 || newPassword.length > 100) {
+    return res.status(400).json({ error: 'Nouveau mot de passe (4-100) requis.' });
+  }
+  const user = await get('SELECT pass_hash, pass_salt FROM users WHERE id = ?', [req.user.id]);
+  if (!(await verifyPassword(oldPassword || '', user.pass_salt, user.pass_hash))) {
+    return res.status(401).json({ error: 'Mot de passe actuel incorrect.' });
+  }
+  const { hash, salt } = await hashPassword(newPassword);
+  await run('UPDATE users SET pass_hash = ?, pass_salt = ? WHERE id = ?', [hash, salt, req.user.id]);
+  res.json({ ok: true });
+}));
+
+// (Re)generer un code de recuperation (connecte). Sert aux comptes existants (sans code) et a en
+// obtenir un neuf. On ne renvoie le code qu'ici, une fois.
+app.post('/api/recovery/regenerate', requireAuth, h(async (req, res) => {
+  const code = genRecoveryCode();
+  const rec = await hashPassword(canonRecovery(code));
+  await run('UPDATE users SET recovery_hash = ?, recovery_salt = ? WHERE id = ?', [rec.hash, rec.salt, req.user.id]);
+  res.json({ ok: true, recoveryCode: code });
+}));
+
+// Definir/mettre a jour son email (connecte, optionnel).
+app.post('/api/account/email', requireAuth, h(async (req, res) => {
+  const email = String(req.body?.email || '').trim().slice(0, 120);
+  if (email && !EMAIL_RE.test(email)) return res.status(400).json({ error: 'Adresse email invalide.' });
+  await run('UPDATE users SET email = ? WHERE id = ?', [email || null, req.user.id]);
   res.json({ ok: true });
 }));
 

@@ -20,6 +20,23 @@ export async function verifyPassword(password, salt, expectedHash) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+// Code de RECUPERATION : 3 groupes de 4 caracteres, alphabet sans caracteres ambigus (ni O/0/I/1).
+// Montre une seule fois au joueur ; on n'en stocke que le HASH (comme le mot de passe).
+const RECOVERY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+export function genRecoveryCode() {
+  const bytes = randomBytes(12);
+  let s = '';
+  for (let i = 0; i < 12; i++) {
+    if (i > 0 && i % 4 === 0) s += '-';
+    s += RECOVERY_ALPHABET[bytes[i] % RECOVERY_ALPHABET.length];
+  }
+  return s; // ex : ABCD-EF23-4KLM
+}
+// Forme canonique (pour comparer) : majuscules, sans tirets/espaces.
+export function canonRecovery(code) {
+  return String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 export async function createSession(userId) {
   const token = randomBytes(32).toString('hex');
   await run('INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)',

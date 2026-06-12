@@ -146,6 +146,10 @@ export async function initDb() {
     // Paliers de recompense : dex chromatique (shiny) et trophees PvP (count/seuil le + haut reclame).
     'ALTER TABLE users ADD COLUMN shiny_dex_claimed INTEGER NOT NULL DEFAULT 0',
     'ALTER TABLE users ADD COLUMN pvp_claimed INTEGER NOT NULL DEFAULT 0',
+    // Compte : email optionnel + code de RECUPERATION (hash, pour reinitialiser le mot de passe sans email serveur).
+    'ALTER TABLE users ADD COLUMN email TEXT',
+    'ALTER TABLE users ADD COLUMN recovery_hash TEXT',
+    'ALTER TABLE users ADD COLUMN recovery_salt TEXT',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }

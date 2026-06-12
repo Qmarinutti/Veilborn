@@ -139,8 +139,56 @@ $$('.tab').forEach(t => t.addEventListener('click', () => {
   authMode = t.dataset.auth;
   $$('.tab').forEach(x => x.classList.toggle('active', x === t));
   $('#auth-submit').textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
+  $('#email').classList.toggle('hidden', authMode !== 'register'); // email optionnel a l'inscription
   $('#auth-error').textContent = '';
 }));
+
+// ---------- Modale du code de recuperation (inscription / regeneration / reset) ----------
+function showRecovery(code, onClose) {
+  $('#recovery-code').textContent = code;
+  $('#recovery-modal').classList.remove('hidden');
+  $('#recovery-overlay').classList.remove('hidden');
+  $('#recovery-ok').onclick = () => {
+    $('#recovery-modal').classList.add('hidden');
+    $('#recovery-overlay').classList.add('hidden');
+    if (onClose) onClose();
+  };
+}
+$('#recovery-copy')?.addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('#recovery-code').textContent); flash('Code copié ✓'); }
+  catch { flash('Copie impossible — note-le à la main', 'err'); }
+});
+
+// ---------- Mot de passe oublie : bascule vers le formulaire de reset ----------
+$('#forgot-link')?.addEventListener('click', () => {
+  $('#auth-form').classList.add('hidden');
+  $('#forgot-link').classList.add('hidden');
+  $('#reset-form').classList.remove('hidden');
+  $('#auth-error').textContent = '';
+});
+$('#reset-back')?.addEventListener('click', () => {
+  $('#reset-form').classList.add('hidden');
+  $('#auth-form').classList.remove('hidden');
+  $('#forgot-link').classList.remove('hidden');
+});
+$('#reset-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('#auth-error').textContent = '';
+  const username = $('#reset-username').value.trim();
+  const recoveryCode = $('#reset-code').value.trim();
+  const newPassword = $('#reset-newpass').value;
+  try {
+    const r = await api('/reset-password', { method: 'POST', body: { username, recoveryCode, newPassword } });
+    // Nouveau mot de passe OK -> on montre le NOUVEAU code, puis retour connexion.
+    showRecovery(r.recoveryCode, () => {
+      $('#reset-form').classList.add('hidden');
+      $('#auth-form').classList.remove('hidden');
+      $('#forgot-link').classList.remove('hidden');
+      $('#reset-form').reset();
+      flash('Mot de passe réinitialisé — connecte-toi.');
+    });
+  } catch (err) { $('#auth-error').textContent = err.message; }
+});
 
 let pendingSignup = null;
 
@@ -156,7 +204,7 @@ $('#auth-form').addEventListener('submit', async (e) => {
     if (username.length < 3 || password.length < 4) {
       $('#auth-error').textContent = 'Pseudo (>=3) et mot de passe (>=4) requis.'; return;
     }
-    pendingSignup = { username, password };
+    pendingSignup = { username, password, email: $('#email').value.trim() };
     await showStarterChoice();
   }
 });
@@ -181,10 +229,12 @@ $('#starter-choices').addEventListener('click', async (e) => {
   const card = e.target.closest('[data-starter]');
   if (!card || !pendingSignup) return;
   try {
-    await api('/register', { method: 'POST', body: { ...pendingSignup, starter: card.dataset.starter } });
+    const r = await api('/register', { method: 'POST', body: { ...pendingSignup, starter: card.dataset.starter } });
     $('#starter-screen').classList.add('hidden');
     pendingSignup = null;
-    await enterGame();
+    // Montre le code de recuperation UNE fois, puis on entre en jeu.
+    if (r.recoveryCode) showRecovery(r.recoveryCode, () => enterGame());
+    else await enterGame();
   } catch (err) { $('#starter-error').textContent = err.message; }
 });
 $('#starter-back').addEventListener('click', () => {
@@ -1638,7 +1688,7 @@ function renderShopEgg() {
 }
 function renderShopTerrain() {
   const owned = new Set((STATE?.biomes || []).filter(b => b.owned).map(b => b.id));
-  $('#shop-terrain').innerHTML = `<p class="hint">Achète un biome pour y <b>farmer sa ressource</b> et acheter ses œufs typés. Un Glump du bon type y gagne <b>+25%</b> de production.</p>` +
+  $('#shop-terrain').innerHTML = `<p class="hint">Achète un biome pour y <b>farmer sa ressource</b> (qui sert à faire <b>évoluer en forme finale</b> et à acheter les œufs typés). Un Glump du bon type y gagne <b>+25%</b> de production.</p>` +
     (shopData.biomes || []).filter(b => b.id !== 'plaine').map(b => {
       const own = owned.has(b.id);
       return `<div class="shop-item">
@@ -1793,9 +1843,11 @@ const TUTO = [
   { icon: '📦', title: 'Collection', text: "Voici tous tes Glumps. Clique sur l'un d'eux pour sa fiche (IV, stats, nature, PV). Tu peux les renommer, les relacher, ou les faire evoluer une fois le niveau requis atteint.", view: 'box', color: '#34e1c4' },
   { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs a la fois.", view: 'eggs', color: '#ffb347' },
   { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare. Debloque des cellules pour reproduire en parallele.", view: 'breed', color: '#ff7bd5' },
-  { icon: '🗺️', title: 'Biomes', text: "Tu as UN biome actif à la fois : choisis lequel (parmi ceux achetés) et tes Glumps au farm produisent sa ressource — Plaine→essence ✨, Volcan→magma 🌋, Océan→écume 🌊… Un Glump du BON type gagne +25% ! Les ressources servent à acheter les œufs typés. Terrains à acheter en boutique.", view: 'prairie', color: '#51d88a' },
+  { icon: '🗺️', title: 'Biomes', text: "Tu as UN biome actif à la fois : tes Glumps au farm y produisent sa ressource. La Plaine donne 100% d'essence ✨ (la monnaie). Un biome spécial (Volcan→magma 🌋, Océan→écume 🌊…) donne 90% de sa ressource + 10% d'essence. Un Glump du BON type gagne +25% ! Les ressources servent à FAIRE ÉVOLUER tes Glumps en forme finale (stade 3) et à acheter des œufs typés. Achète des terrains en boutique 🛒.", view: 'prairie', color: '#51d88a' },
+  { icon: '🧭', title: 'Exploration', text: "Envoie une équipe de Glumps explorer une zone : ils reviennent (même hors-ligne) avec de l'ESSENCE ✨, des objets (bonbons/potions) et des œufs typés. Plus la difficulté est haute (selon le niveau de tes Glumps), plus c'est long et payant. Ils sont occupés pendant l'expédition.", view: 'explore', color: '#3fc7c0' },
   { icon: '📖', title: 'Glumpdex', text: "Les 300 Glumps numerotes, a la suite. Ceux que tu n'as pas encore eus sont en silhouette. Dex normal et dex chromatique ✨ separes. Objectif : tous les decouvrir !", view: 'dex', color: '#9a6cff' },
-  { icon: '⚔️', title: 'Arene (PvP)', text: "Forme une equipe (3 Glumps) et combat au tour par tour : choisis tes attaques ! Frappe sure, deflagration risquee, ou inflige un statut (brulure, gel, poison, paralysie). Les types comptent. Un Glump KO le reste — Rappel + Potion en boutique.", view: 'arena', color: '#ff6b7d' },
+  { icon: '⚔️', title: 'Arene (PvP)', text: "Forme une equipe (3 Glumps) et combat au tour par tour : choisis tes attaques ! Frappe sure, deflagration risquee, ou inflige un statut (brulure, gel, poison, paralysie). Les types comptent (Eau bat Feu…) et les Glumps rares/évolués sont plus forts. Un Glump KO le reste — Rappel + Potion en boutique.", view: 'arena', color: '#ff6b7d' },
+  { icon: '🏛️', title: 'Marché', text: "L'Hôtel des Ventes : achète et vends des Glumps entre joueurs, en essence ✨. Les Glumps rares (gènes parfaits, chromatiques ✨) valent cher ! Une taxe de 5% est prélevée à chaque vente.", view: 'market', color: '#c0a050' },
   { icon: '👥', title: 'Rang & Social', text: "Compare la valeur de ta collection au classement (onglet Rang), ajoute des amis avec ton code ami (panneau Social 👥) et visite leurs elevages.", view: 'leaderboard', color: '#ffd34d' },
   { icon: '🚀', title: "C'est parti !", text: "L'essence monte toute seule tant que tu as des Glumps en prairie. Reviens faire eclore, reproduire, evoluer et combattre. Tu peux revoir ce tuto, couper les sons ou la musique dans Reglages ⚙️.", view: 'box', color: '#6c8cff' },
 ];
@@ -1825,6 +1877,21 @@ $('#tuto-prev').addEventListener('click', () => { if (tutoStep > 0) { tutoStep--
 $('#tuto-skip').addEventListener('click', hideTuto);
 $('#tuto-overlay').addEventListener('click', hideTuto);
 $('#replay-tuto').addEventListener('click', () => { closeDrawer(); showTuto(0); });
+
+// ---------- Securite du compte (reglages) ----------
+$('#set-change-pass')?.addEventListener('click', async () => {
+  const oldPassword = await promptDialog('Mot de passe actuel :', '', '');
+  if (oldPassword == null) return;
+  const newPassword = await promptDialog('Nouveau mot de passe (4-100) :', '', '');
+  if (newPassword == null) return;
+  try { await api('/change-password', { method: 'POST', body: { oldPassword, newPassword } }); flash('Mot de passe changé ✓'); }
+  catch (err) { flash(err.message, 'err'); }
+});
+$('#set-recovery')?.addEventListener('click', async () => {
+  if (!await confirmDialog("Régénérer ton code de récupération ? L'ancien ne marchera plus.")) return;
+  try { const r = await api('/recovery/regenerate', { method: 'POST' }); closeDrawer(); showRecovery(r.recoveryCode); }
+  catch (err) { flash(err.message, 'err'); }
+});
 
 // ============================================================
 //  Arene (PvP)

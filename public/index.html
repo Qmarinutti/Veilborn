@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=55" />
+  <link rel="stylesheet" href="css/style.css?v=56" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -21,11 +21,31 @@
       </div>
       <form id="auth-form">
         <input id="username" type="text" placeholder="Pseudo" autocomplete="username" />
+        <input id="email" type="email" placeholder="Email (optionnel)" autocomplete="email" class="hidden" />
         <input id="password" type="password" placeholder="Mot de passe" autocomplete="current-password" />
         <button type="submit" id="auth-submit" class="btn primary">Se connecter</button>
       </form>
+      <p id="forgot-link" class="auth-link">Mot de passe oublié ?</p>
+      <form id="reset-form" class="hidden">
+        <p class="hint">Entre ton pseudo et ton <b>code de récupération</b> (donné à l'inscription) pour définir un nouveau mot de passe.</p>
+        <input id="reset-username" type="text" placeholder="Pseudo" autocomplete="username" />
+        <input id="reset-code" type="text" placeholder="Code de récupération (XXXX-XXXX-XXXX)" autocomplete="off" />
+        <input id="reset-newpass" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" />
+        <button type="submit" class="btn primary">Réinitialiser</button>
+        <p id="reset-back" class="auth-link">← Retour à la connexion</p>
+      </form>
       <p id="auth-error" class="error"></p>
     </div>
+  </div>
+
+  <!-- Modale : affiche le code de recuperation (a l'inscription / regeneration) -->
+  <div id="recovery-overlay" class="overlay hidden"></div>
+  <div id="recovery-modal" class="center-modal hidden">
+    <div class="drawer-head"><h3>🔑 Code de récupération</h3></div>
+    <p class="hint">Note ce code en lieu sûr (capture d'écran, gestionnaire de mots de passe…). C'est le <b>seul moyen</b> de réinitialiser ton mot de passe si tu l'oublies. Il ne sera <b>plus jamais affiché</b>.</p>
+    <div id="recovery-code" class="recovery-code">————</div>
+    <button id="recovery-copy" class="btn small">📋 Copier le code</button>
+    <button id="recovery-ok" class="btn primary">J'ai noté, continuer</button>
   </div>
 
   <!-- Ecran de choix du starter (a l'inscription) -->
@@ -356,6 +376,11 @@
             <span>🎵 Musique</span>
             <button id="toggle-music" class="toggle" role="switch"><span class="knob"></span></button>
           </div>
+          <div class="set-sec">
+            <h4 class="set-h">🔒 Sécurité du compte</h4>
+            <button id="set-change-pass" class="btn small">Changer le mot de passe</button>
+            <button id="set-recovery" class="btn small">🔑 Régénérer mon code de récupération</button>
+          </div>
           <button id="replay-tuto" class="btn">❓ Revoir le tutoriel</button>
           <button id="logout" class="btn">Se deconnecter</button>
         </div>
@@ -396,6 +421,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=71" type="module"></script>
+  <script src="js/app.js?v=72" type="module"></script>
 </body>
 </html>
