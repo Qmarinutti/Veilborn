@@ -309,6 +309,7 @@ export function publicCreature(c, now = Date.now(), activeBiome = null) {
     id: c.id,
     species: c.species,
     speciesName: sp?.name ?? c.species,
+    desc: sp?.desc ?? '',
     type: sp?.type ?? '?',
     color: sp?.color ?? '#888',
     shape: sp?.shape ?? 'blob',

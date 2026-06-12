@@ -360,7 +360,8 @@ function showRecipe(id) {
   }).join('') : '<p class="hint">Pas de recette de reproduction — obtenable en boutique / exploration.</p>';
   $('#recipe-title').innerHTML = `${creatureVisual({ species: id, color: sp.color, type: sp.type, rarity: sp.tier, shape: sp.shape, hasArt: sp.hasArt, line: sp.line }, 54)} <span>${sp.name}</span>`;
   $('#recipe-body').innerHTML =
-    `<p class="hint">${isEvolved ? `Obtenu en faisant <b>évoluer ${baseName}</b>. Pour avoir ${baseName}, reproduis par exemple :` : `Reproduis par exemple :`}</p>
+    `${sp.desc ? `<p class="recipe-desc">${sp.desc}</p>` : ''}
+     <p class="hint">${isEvolved ? `Obtenu en faisant <b>évoluer ${baseName}</b>. Pour avoir ${baseName}, reproduis par exemple :` : `Reproduis par exemple :`}</p>
      <div class="recipe-list">${combos}</div>
      <p class="hint" style="margin-top:10px;">💡 <b>N'importe quel Glump des bons types</b> marche (pas seulement ces exemples). Chaque couple donne 2-3 espèces possibles — réessaie pour viser la bonne.</p>`;
   $('#recipe-modal').classList.remove('hidden');
@@ -898,6 +899,7 @@ function renderDetail(id) {
       <div class="detail-tags">${c.type} · ${RARITY_DOTS(c.rarity)} · ${stageTxt}</div>
       ${c.variant ? '<div class="badge shiny" style="position:static;display:inline-block;margin-top:6px;">CHROMATIQUE ✨</div>' : ''}
     </div>
+    ${c.desc ? `<div class="detail-desc">${c.desc}</div>` : ''}
     <div class="detail-block"><div class="detail-lbl">Niveau ${c.level}</div>
       <div class="xpbar"><i style="width:${xpPct}%"></i></div>
       <div class="detail-sub">${c.xpInto}/${c.xpNext} XP — ${c.inPrairie ? "gagne aussi de l'XP en farmant 🗺️" : 'place-le dans un biome pour aussi gagner de l\'XP'}</div>

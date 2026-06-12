@@ -1052,3 +1052,9 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 #recovery-modal .btn { margin-top: 8px; width: 100%; }
 .set-sec { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 .set-h { margin: 0 0 2px; font-size: 14px; color: var(--muted); }
+
+/* ---------- Lore (description des Glumps) ---------- */
+.detail-desc { font-size: 13px; color: var(--text); line-height: 1.5; font-style: italic;
+  background: rgba(255,255,255,.04); border-left: 3px solid var(--primary); border-radius: 8px;
+  padding: 10px 12px; margin: 0 0 12px; }
+.recipe-desc { font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.5; text-align: center; margin: 0 0 10px; }

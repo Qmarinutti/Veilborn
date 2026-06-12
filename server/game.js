@@ -70,6 +70,9 @@ export const BALANCE = {
 // Une entree peut ne donner que name/type/rarity : le reste a des valeurs par defaut.
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RAW_SPECIES = JSON.parse(readFileSync(join(__dirname, 'species.json'), 'utf8'));
+// Descriptions (lore FR) par espece, extraites de tools/descriptions.txt -> server/descriptions.json.
+let DESCRIPTIONS = {};
+try { DESCRIPTIONS = JSON.parse(readFileSync(join(__dirname, 'descriptions.json'), 'utf8')); } catch {}
 
 export const SPECIES = {};
 for (const [id, sp] of Object.entries(RAW_SPECIES)) {
@@ -85,6 +88,7 @@ for (const [id, sp] of Object.entries(RAW_SPECIES)) {
     line: sp.line ?? null,
     stage: sp.stage ?? 1,
     evolvesTo: sp.evolvesTo ?? null,
+    desc: DESCRIPTIONS[id] || '',
   };
 }
 
