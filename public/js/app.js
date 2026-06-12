@@ -1443,6 +1443,8 @@ function openDrawer(type) {
   if (type === 'settings') { syncAudioToggles(); renderTitleSelect(); }
   if (type === 'progress') loadProgress();
   if (type === 'bag') renderBag();
+  if (type === 'guild') { loadGuild(); clearInterval(guildChatTimer); guildChatTimer = setInterval(loadGuildChat, 3000); }
+  else { clearInterval(guildChatTimer); guildChatTimer = null; }
   $('#drawer').classList.remove('hidden');
   $('#drawer-overlay').classList.remove('hidden');
 }
@@ -1823,7 +1825,72 @@ $$('.shop-tab').forEach(t => t.addEventListener('click', () => switchShopTab(t.d
 function closeDrawer() {
   $('#drawer').classList.add('hidden');
   $('#drawer-overlay').classList.add('hidden');
+  clearInterval(guildChatTimer); guildChatTimer = null; // stoppe le poll du chat
 }
+
+// ============================================================
+//  Guildes + chat (par polling)
+// ============================================================
+let guildChatTimer = null;
+async function loadGuild() {
+  let g;
+  try { g = (await api('/guild')).guild; } catch { return; }
+  const body = $('#guild-body');
+  if (!body) return;
+  if (!g) {
+    let list = [];
+    try { list = (await api('/guild/list')).guilds; } catch {}
+    body.innerHTML = `
+      <p class="hint">Rejoins une guilde pour discuter et progresser avec d'autres joueurs.</p>
+      <div class="guild-create">
+        <input id="guild-name" type="text" placeholder="Nom de ta guilde" maxlength="24" />
+        <button id="guild-create-btn" class="btn primary">Créer (5000 ✨)</button>
+      </div>
+      <h4 class="prog-h">Guildes existantes</h4>
+      <div class="guild-list">${list.length ? list.map(x => `
+        <div class="guild-row"><span class="guild-name">${esc(x.name)}</span><span class="guild-cnt">${x.members}/30</span>
+        <button class="btn small primary" data-join-guild="${x.id}">Rejoindre</button></div>`).join('') : '<p class="hint">Aucune guilde — crée la première !</p>'}</div>`;
+    return;
+  }
+  body.innerHTML = `
+    <div class="guild-head"><h3>🏰 ${esc(g.name)}</h3><button id="guild-leave-btn" class="btn small">Quitter</button></div>
+    <div class="guild-members">${g.members.map(m => `<span class="gmember ${m.isLeader ? 'leader' : ''}">${m.isLeader ? '👑 ' : ''}${esc(m.username)}${m.title ? ` <small>${esc(m.title)}</small>` : ''} · 🏆${m.trophies}</span>`).join('')}</div>
+    <div id="guild-chat" class="guild-chat"></div>
+    <div class="guild-chat-bar"><input id="guild-msg" type="text" placeholder="Message…" maxlength="200" /><button id="guild-send" class="btn small primary">Envoyer</button></div>`;
+  await loadGuildChat();
+}
+async function loadGuildChat() {
+  const box = $('#guild-chat');
+  if (!box) return;
+  let msgs = [];
+  try { msgs = (await api('/guild/chat')).messages; } catch { return; }
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
+  box.innerHTML = msgs.map(m => `<div class="gmsg"><b>${esc(m.username)}</b> ${esc(m.text)}</div>`).join('') || '<p class="hint">Pas encore de message. Dis bonjour !</p>';
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+async function sendGuildMsg() {
+  const inp = $('#guild-msg'); if (!inp) return;
+  const text = inp.value.trim(); if (!text) return;
+  inp.value = '';
+  try { await api('/guild/chat', { method: 'POST', body: { text } }); await loadGuildChat(); }
+  catch (err) { flash(err.message, 'err'); }
+}
+$('#guild-body')?.addEventListener('click', async (e) => {
+  if (e.target.closest('#guild-create-btn')) {
+    const name = $('#guild-name').value.trim();
+    if (!await confirmDialog('Créer cette guilde pour 5000 ✨ ?')) return;
+    try { await api('/guild/create', { method: 'POST', body: { name } }); await refresh(); loadGuild(); }
+    catch (err) { flash(err.message, 'err'); }
+  } else if (e.target.closest('[data-join-guild]')) {
+    try { await api('/guild/join', { method: 'POST', body: { guildId: Number(e.target.closest('[data-join-guild]').dataset.joinGuild) } }); loadGuild(); }
+    catch (err) { flash(err.message, 'err'); }
+  } else if (e.target.closest('#guild-leave-btn')) {
+    if (!await confirmDialog('Quitter ta guilde ?')) return;
+    try { await api('/guild/leave', { method: 'POST' }); loadGuild(); }
+    catch (err) { flash(err.message, 'err'); }
+  } else if (e.target.closest('#guild-send')) { sendGuildMsg(); }
+});
+$('#guild-body')?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.id === 'guild-msg') { e.preventDefault(); sendGuildMsg(); } });
 $$('.railbtn').forEach(b => b.addEventListener('click', () => {
   if (b.dataset.view) switchView(b.dataset.view);   // bouton de vue (ex: Classement) dans le rail
   else if (b.dataset.drawer === 'shop') openShop();

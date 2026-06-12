@@ -155,6 +155,8 @@ export async function initDb() {
     'ALTER TABLE users ADD COLUMN pvp_peak INTEGER',
     // Cosmetique : titre selectionne (affiche a cote du pseudo), debloque par les succes.
     'ALTER TABLE users ADD COLUMN title TEXT',
+    // Guilde du joueur (NULL si aucune).
+    'ALTER TABLE users ADD COLUMN guild_id INTEGER',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }
@@ -189,6 +191,25 @@ export async function initDb() {
     );
     CREATE INDEX IF NOT EXISTS idx_listings_active ON listings(status, created_at);
     CREATE INDEX IF NOT EXISTS idx_listings_seller ON listings(seller_id, status);
+  `);
+
+  // Guildes + chat de guilde (par polling).
+  await db.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS guilds (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      name        TEXT NOT NULL,
+      leader_id   INTEGER NOT NULL,
+      created_at  INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS guild_messages (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id    INTEGER NOT NULL,
+      user_id     INTEGER NOT NULL,
+      username    TEXT NOT NULL,
+      text        TEXT NOT NULL,
+      created_at  INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_gmsg_guild ON guild_messages(guild_id, id);
   `);
 
   // Nettoyage des sessions trop vieilles (>30 jours) pour eviter l'accumulation.

@@ -1094,3 +1094,24 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
   background: rgba(255,210,63,.12); padding: 1px 7px; border-radius: 999px; font-weight: 600; vertical-align: middle; }
 #set-title { width: 100%; padding: 9px 12px; border-radius: 10px; background: var(--panel2);
   color: var(--text); border: 1px solid var(--line-strong); font-family: inherit; font-size: 14px; }
+
+/* ---------- Guildes + chat ---------- */
+.guild-create { display: flex; gap: 8px; margin-bottom: 14px; }
+.guild-create input { flex: 1; padding: 9px 12px; border-radius: 10px; background: var(--panel2);
+  color: var(--text); border: 1px solid var(--line-strong); font-family: inherit; }
+.guild-list { display: flex; flex-direction: column; gap: 8px; }
+.guild-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px;
+  background: var(--panel2); border: 1px solid var(--line-strong); }
+.guild-row .guild-name { flex: 1; font-weight: 600; }
+.guild-row .guild-cnt { color: var(--muted); font-size: 12px; }
+.guild-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.guild-head h3 { margin: 0; }
+.guild-members { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.gmember { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line-strong); }
+.gmember.leader { border-color: var(--gold, #ffd23f); }
+.gmember small { color: var(--gold, #ffd23f); }
+.guild-chat { height: 260px; overflow-y: auto; background: rgba(0,0,0,.25); border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.gmsg { font-size: 13px; line-height: 1.4; word-break: break-word; }
+.gmsg b { color: var(--primary); margin-right: 4px; }
+.guild-chat-bar { display: flex; gap: 8px; margin-top: 8px; }
+.guild-chat-bar input { flex: 1; padding: 9px 12px; border-radius: 10px; background: var(--panel2); color: var(--text); border: 1px solid var(--line-strong); font-family: inherit; }

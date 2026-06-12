@@ -1284,6 +1284,97 @@ app.post('/api/item/revive', requireAuth, h((req, res) => useItem(req, res, 'rev
 // Liste des succes (definitions) pour le client.
 app.get('/api/achievements', (req, res) => res.json({ achievements: ACHIEVEMENTS }));
 
+// ============================================================
+//  GUILDES + chat (par polling)
+// ============================================================
+const GUILD_COST = 5000;   // cout de creation (essence)
+const GUILD_MAX = 30;      // membres max
+const GUILD_NAME_RE = /^[\p{L}\p{N} _.\-]{3,24}$/u;
+const lastChat = new Map(); // userId -> ts (anti-spam chat)
+
+app.post('/api/guild/create', requireAuth, h(async (req, res) => {
+  const name = String(req.body?.name || '').trim();
+  if (!GUILD_NAME_RE.test(name)) return res.status(400).json({ error: 'Nom : 3-24 caracteres (lettres, chiffres, espace, tiret).' });
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    if (user.guild_id) return { status: 400, error: 'Tu es deja dans une guilde.' };
+    if (!(await spend(req.user.id, GUILD_COST))) return { status: 400, error: `Pas assez d'essence (besoin de ${GUILD_COST}).` };
+    const gid = await insert('INSERT INTO guilds (name, leader_id, created_at) VALUES (?, ?, ?)', [name, req.user.id, Date.now()]);
+    await run('UPDATE users SET guild_id = ? WHERE id = ?', [gid, req.user.id]);
+    return { ok: true, guildId: gid };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+app.post('/api/guild/join', requireAuth, h(async (req, res) => {
+  const gid = Number(req.body?.guildId);
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    if (user.guild_id) return { status: 400, error: 'Tu es deja dans une guilde.' };
+    const g = await get('SELECT id FROM guilds WHERE id = ?', [gid]);
+    if (!g) return { status: 404, error: 'Guilde introuvable.' };
+    const count = (await get('SELECT COUNT(*) AS n FROM users WHERE guild_id = ?', [gid])).n;
+    if (count >= GUILD_MAX) return { status: 400, error: 'Cette guilde est pleine.' };
+    await run('UPDATE users SET guild_id = ? WHERE id = ?', [gid, req.user.id]);
+    return { ok: true };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  res.json(out);
+}));
+
+app.post('/api/guild/leave', requireAuth, h(async (req, res) => {
+  const user = await reloadUser(req.user.id);
+  if (!user.guild_id) return res.status(400).json({ error: "Tu n'es dans aucune guilde." });
+  const gid = user.guild_id;
+  await run('UPDATE users SET guild_id = NULL WHERE id = ?', [req.user.id]);
+  const g = await get('SELECT leader_id FROM guilds WHERE id = ?', [gid]);
+  if (g && g.leader_id === req.user.id) {
+    // Le chef part : on transfere au plus ancien membre restant, sinon on dissout.
+    const next = await get('SELECT id FROM users WHERE guild_id = ? ORDER BY id LIMIT 1', [gid]);
+    if (next) await run('UPDATE guilds SET leader_id = ? WHERE id = ?', [next.id, gid]);
+    else { await run('DELETE FROM guilds WHERE id = ?', [gid]); await run('DELETE FROM guild_messages WHERE guild_id = ?', [gid]); }
+  }
+  res.json({ ok: true });
+}));
+
+app.get('/api/guild', requireAuth, h(async (req, res) => {
+  const user = await reloadUser(req.user.id);
+  if (!user.guild_id) return res.json({ guild: null });
+  const g = await get('SELECT * FROM guilds WHERE id = ?', [user.guild_id]);
+  if (!g) { await run('UPDATE users SET guild_id = NULL WHERE id = ?', [req.user.id]); return res.json({ guild: null }); }
+  const members = await all('SELECT id, username, title, pvp_trophies FROM users WHERE guild_id = ? ORDER BY pvp_trophies DESC', [user.guild_id]);
+  res.json({ guild: { id: g.id, name: g.name, leaderId: g.leader_id,
+    members: members.map(m => ({ id: m.id, username: m.username, title: titleNameById(m.title), trophies: m.pvp_trophies, isLeader: m.id === g.leader_id })) } });
+}));
+
+app.get('/api/guild/list', requireAuth, h(async (req, res) => {
+  const rows = await all('SELECT g.id, g.name, g.leader_id, COUNT(u.id) AS members FROM guilds g LEFT JOIN users u ON u.guild_id = g.id GROUP BY g.id ORDER BY members DESC LIMIT 50');
+  res.json({ guilds: rows });
+}));
+
+app.get('/api/guild/chat', requireAuth, h(async (req, res) => {
+  const user = await reloadUser(req.user.id);
+  if (!user.guild_id) return res.json({ messages: [] });
+  const msgs = await all('SELECT id, user_id, username, text, created_at FROM guild_messages WHERE guild_id = ? ORDER BY id DESC LIMIT 40', [user.guild_id]);
+  res.json({ messages: msgs.reverse() });
+}));
+
+app.post('/api/guild/chat', requireAuth, h(async (req, res) => {
+  const user = await reloadUser(req.user.id);
+  if (!user.guild_id) return res.status(400).json({ error: "Tu n'es dans aucune guilde." });
+  const text = cleanFreeText(req.body?.text, 200); // strip HTML + max 200
+  if (!text) return res.status(400).json({ error: 'Message vide.' });
+  const now = Date.now();
+  if (now - (lastChat.get(req.user.id) || 0) < 1500) return res.status(429).json({ error: 'Doucement !' });
+  lastChat.set(req.user.id, now);
+  await run('INSERT INTO guild_messages (guild_id, user_id, username, text, created_at) VALUES (?, ?, ?, ?, ?)',
+    [user.guild_id, req.user.id, user.username, text, now]);
+  // Purge : garde ~100 derniers messages par guilde.
+  await run('DELETE FROM guild_messages WHERE guild_id = ? AND id <= (SELECT MAX(id) - 100 FROM guild_messages WHERE guild_id = ?)', [user.guild_id, user.guild_id]);
+  res.json({ ok: true });
+}));
+
 // ---------- Donnees statiques de jeu ----------
 app.get('/api/species', (req, res) => {
   const out = {};
