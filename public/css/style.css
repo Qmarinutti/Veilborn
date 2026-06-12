@@ -1088,3 +1088,9 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .event-banner .ev-txt b { color: var(--gold, #ffd23f); }
 .event-banner .ev-timer { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 @media (max-width: 560px) { .event-banner { font-size: 12px; padding: 6px 12px; } }
+
+/* ---------- Titre cosmetique du joueur ---------- */
+.player-title { display: inline-block; margin-left: 6px; font-size: 11px; color: var(--gold, #ffd23f);
+  background: rgba(255,210,63,.12); padding: 1px 7px; border-radius: 999px; font-weight: 600; vertical-align: middle; }
+#set-title { width: 100%; padding: 9px 12px; border-radius: 10px; background: var(--panel2);
+  color: var(--text); border: 1px solid var(--line-strong); font-family: inherit; font-size: 14px; }

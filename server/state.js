@@ -14,7 +14,7 @@ import {
   leagueOf, currentSeason, seasonSoftReset,
   activeEvent, eventMul,
 } from './game.js';
-import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet, ACH_INSERT_SQL } from './progress.js';
+import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet, ACH_INSERT_SQL, availableTitles, titleNameById } from './progress.js';
 const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
 
 // Multiplicateur de gain d'essence selon le niveau (+5% par niveau).
@@ -342,6 +342,9 @@ export async function getPlayerState(user) {
       nextCellCost: fresh.breeding_cells < BALANCE.breedingMaxCells ? breedingCellCost(fresh.breeding_cells) : null,
       pvpTrophies: fresh.pvp_trophies ?? 1000,
       league: leagueOf(fresh.pvp_trophies ?? 1000), // { id, name, icon, min, reward }
+      title: titleNameById(fresh.title),   // titre affiche (nom) ou null
+      titleId: fresh.title || '',          // id du titre selectionne
+      titles: availableTitles(achSet),     // titres debloques (pour le selecteur des reglages)
       loginStreak: fresh.login_streak || 0,
       items, // sac : { candy, potion, revive }
       email: fresh.email || null,

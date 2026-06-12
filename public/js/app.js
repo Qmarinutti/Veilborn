@@ -1065,7 +1065,7 @@ async function loadLeaderboard() {
   $('#board-body').innerHTML = board.map((r, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td class="${r.id === me ? 'me' : ''}">${esc(r.username)}</td>
+      <td class="${r.id === me ? 'me' : ''}">${esc(r.username)}${r.title ? `<span class="player-title">${esc(r.title)}</span>` : ''}</td>
       <td>${r.collection.toLocaleString('fr-FR')}</td>
       <td>${r.best}</td>
       <td>${r.count}</td>
@@ -1440,7 +1440,7 @@ function openDrawer(type) {
   const sec = $('#drawer-' + type);
   if (sec) sec.classList.remove('hidden');
   if (type === 'social') loadSocial();
-  if (type === 'settings') syncAudioToggles();
+  if (type === 'settings') { syncAudioToggles(); renderTitleSelect(); }
   if (type === 'progress') loadProgress();
   if (type === 'bag') renderBag();
   $('#drawer').classList.remove('hidden');
@@ -1912,6 +1912,19 @@ $('#tuto-overlay').addEventListener('click', hideTuto);
 $('#replay-tuto').addEventListener('click', () => { closeDrawer(); showTuto(0); });
 
 // ---------- Securite du compte (reglages) ----------
+// Selecteur de titre (cosmetique) dans les reglages.
+function renderTitleSelect() {
+  const sel = $('#set-title');
+  if (!sel || !STATE) return;
+  const titles = STATE.user.titles || [];
+  sel.innerHTML = '<option value="">— Aucun titre —</option>' +
+    titles.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  sel.value = STATE.user.titleId || '';
+}
+$('#set-title')?.addEventListener('change', async (e) => {
+  try { await api('/account/title', { method: 'POST', body: { title: e.target.value } }); flash('Titre mis à jour ✓'); await refresh(); }
+  catch (err) { flash(err.message, 'err'); }
+});
 $('#set-change-pass')?.addEventListener('click', async () => {
   const oldPassword = await promptDialog('Mot de passe actuel :', '', '');
   if (oldPassword == null) return;

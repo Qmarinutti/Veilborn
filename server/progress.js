@@ -46,6 +46,36 @@ export const ACHIEVEMENTS = [
 ];
 const ACH_IDS = new Set(ACHIEVEMENTS.map(a => a.id));
 
+// ---------- Titres (cosmetique) : debloques par un succes, selectionnables, affiches pres du pseudo ----------
+export const TITLES = [
+  { id: 'novice',     name: 'Novice',               ach: null },          // par defaut
+  { id: 'collector',  name: 'Collectionneur',       ach: 'collector50' },
+  { id: 'erudit',     name: 'Erudit',               ach: 'collector150' },
+  { id: 'dexmaster',  name: 'Maitre du Glumpdex',   ach: 'dexmaster' },
+  { id: 'shinyhunt',  name: 'Chasseur Chromatique', ach: 'shiny15' },
+  { id: 'veteran',    name: 'Veteran',              ach: 'level50' },
+  { id: 'apogee',     name: 'Apogee',               ach: 'level_max' },
+  { id: 'gladiateur', name: "Gladiateur",           ach: 'pvp1500' },
+  { id: 'champion',   name: "Champion d'Arene",     ach: 'pvp2000' },
+  { id: 'eleveur',    name: 'Maitre Eleveur',       ach: 'breeder100' },
+  { id: 'riche',      name: 'Millionnaire',         ach: 'millionaire' },
+  { id: 'genetiste',  name: 'Genetiste',            ach: 'perfect_iv' },
+  { id: 'legende',    name: 'Legende Vivante',      ach: 'legend_owner' },
+];
+const TITLE_BY_ID = Object.fromEntries(TITLES.map(t => [t.id, t]));
+// Titres disponibles pour un joueur selon ses succes debloques.
+export function availableTitles(achSet) {
+  return TITLES.filter(t => !t.ach || achSet.has(t.ach));
+}
+// Nom du titre selectionne (ou null si invalide/non debloque).
+export function titleName(titleId, achSet) {
+  const t = TITLE_BY_ID[titleId];
+  if (!t || (t.ach && !achSet.has(t.ach))) return null;
+  return t.name;
+}
+// Nom d'un titre par id, sans validation (pour l'affichage : un succes ne se reverrouille jamais).
+export function titleNameById(id) { return TITLE_BY_ID[id]?.name || null; }
+
 export function parseAchSet(user) {
   try { return new Set(JSON.parse(user.ach_json || '[]')); } catch { return new Set(); }
 }

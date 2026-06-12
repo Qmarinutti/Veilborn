@@ -26,6 +26,7 @@ import { moveButtons } from './moves.js';
 import {
   ACHIEVEMENTS, DEX_MILESTONES, SHINY_DEX_MILESTONES, PVP_MILESTONES, DAILY_POOL, parseAchSet, unlockAch,
   getDaily, progressDaily, dailyView, todayStr, dexClaimedCount,
+  TITLES, availableTitles, titleName,
 } from './progress.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -205,6 +206,16 @@ app.post('/api/recovery/regenerate', requireAuth, h(async (req, res) => {
   const rec = await hashPassword(canonRecovery(code));
   await run('UPDATE users SET recovery_hash = ?, recovery_salt = ? WHERE id = ?', [rec.hash, rec.salt, req.user.id]);
   res.json({ ok: true, recoveryCode: code });
+}));
+
+// Choisir son TITRE (cosmetique) parmi ceux debloques.
+app.post('/api/account/title', requireAuth, h(async (req, res) => {
+  const { title } = req.body || {};
+  const achSet = parseAchSet(req.user);
+  const avail = availableTitles(achSet).map(t => t.id);
+  if (title && !avail.includes(title)) return res.status(400).json({ error: 'Titre non debloque.' });
+  await run('UPDATE users SET title = ? WHERE id = ?', [title || null, req.user.id]);
+  res.json({ ok: true });
 }));
 
 // Definir/mettre a jour son email (connecte, optionnel).
@@ -637,12 +648,12 @@ let lbCache = { at: 0, board: [] };
 async function computeLeaderboard() {
   // 1 seule requete : on agrege en JS (la valeur depend de stats/genes/niveau).
   const rows = await all(
-    "SELECT u.id AS uid, u.username AS username, c.* FROM users u " +
+    "SELECT u.id AS uid, u.username AS username, u.title AS title, c.* FROM users u " +
     "LEFT JOIN creatures c ON c.owner_id = u.id AND c.stage NOT IN ('egg', 'mating')");
   const byUser = new Map();
   for (const r of rows) {
     let e = byUser.get(r.uid);
-    if (!e) { e = { id: r.uid, username: r.username, collection: 0, best: 0, count: 0 }; byUser.set(r.uid, e); }
+    if (!e) { e = { id: r.uid, username: r.username, title: titleNameById(r.title), collection: 0, best: 0, count: 0 }; byUser.set(r.uid, e); }
     if (r.species) { // a une creature
       const v = creatureValue(r);
       e.collection += v; e.count += 1; if (v > e.best) e.best = v;

@@ -153,6 +153,8 @@ export async function initDb() {
     // Saisons PvP : saison traitee (YYYY-MM) + pic de trophees de la saison en cours.
     'ALTER TABLE users ADD COLUMN pvp_season TEXT',
     'ALTER TABLE users ADD COLUMN pvp_peak INTEGER',
+    // Cosmetique : titre selectionne (affiche a cote du pseudo), debloque par les succes.
+    'ALTER TABLE users ADD COLUMN title TEXT',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }
