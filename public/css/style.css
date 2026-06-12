@@ -1136,3 +1136,6 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .gmsg-btn:hover { filter: brightness(1.4); }
 .gkick { background: none; border: 1px solid var(--danger, #ff6b7d); color: var(--danger, #ff6b7d); border-radius: 6px; cursor: pointer; font-size: 10px; padding: 0 5px; margin-left: 4px; }
 .gkick:hover { background: rgba(255,107,125,.15); }
+
+/* ---------- Probabilites (loot-box) ---------- */
+.odds-note { background: rgba(255,255,255,.04); border-left: 3px solid var(--accent); border-radius: 8px; padding: 8px 12px; font-size: 12px; }

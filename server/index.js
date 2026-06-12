@@ -234,6 +234,52 @@ app.post('/api/account/email', requireAuth, h(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// RGPD — portabilite : telecharger toutes ses donnees (JSON).
+app.get('/api/account/export', requireAuth, h(async (req, res) => {
+  const uid = req.user.id;
+  const u = await get('SELECT id, username, email, essence, pvp_trophies, login_streak, created_at, guild_id, title FROM users WHERE id = ?', [uid]);
+  const creatures = await all('SELECT * FROM creatures WHERE owner_id = ?', [uid]);
+  const discoveries = await all('SELECT species, variant FROM discoveries WHERE user_id = ?', [uid]);
+  const friends = await all('SELECT friend_id FROM friends WHERE user_id = ?', [uid]);
+  res.json({ exportedAt: Date.now(), account: u, creatures, discoveries, friends });
+}));
+
+// RGPD — droit a l'effacement : supprime le compte et TOUTES ses donnees (exige le mot de passe).
+app.post('/api/account/delete', requireAuth, h(async (req, res) => {
+  const { password } = req.body || {};
+  const user = await get('SELECT * FROM users WHERE id = ?', [req.user.id]);
+  if (!user || !(await verifyPassword(password || '', user.pass_salt, user.pass_hash))) {
+    return res.status(401).json({ error: 'Mot de passe incorrect.' });
+  }
+  const uid = req.user.id;
+  // Guilde : si chef, transferer au plus ancien membre restant, sinon dissoudre.
+  if (user.guild_id) {
+    const g = await get('SELECT leader_id FROM guilds WHERE id = ?', [user.guild_id]);
+    if (g && g.leader_id === uid) {
+      const next = await get('SELECT id FROM users WHERE guild_id = ? AND id != ? ORDER BY id LIMIT 1', [user.guild_id, uid]);
+      if (next) await run('UPDATE guilds SET leader_id = ? WHERE id = ?', [next.id, user.guild_id]);
+      else { await run('DELETE FROM guilds WHERE id = ?', [user.guild_id]); await run('DELETE FROM guild_messages WHERE guild_id = ?', [user.guild_id]); }
+    }
+  }
+  // Effacement explicite (les FK cascade ne sont pas garanties actives).
+  for (const sql of [
+    'DELETE FROM creatures WHERE owner_id = ?',
+    'DELETE FROM discoveries WHERE user_id = ?',
+    'DELETE FROM listings WHERE seller_id = ?',
+    'DELETE FROM friends WHERE user_id = ? OR friend_id = ?',
+    'DELETE FROM trades WHERE from_user = ? OR to_user = ?',
+    'DELETE FROM guild_messages WHERE user_id = ?',
+    'DELETE FROM guild_msg_reports WHERE user_id = ?',
+    'DELETE FROM sessions WHERE user_id = ?',
+  ]) {
+    const args = sql.includes('OR') ? [uid, uid] : [uid];
+    try { await run(sql, args); } catch {}
+  }
+  await run('DELETE FROM users WHERE id = ?', [uid]);
+  res.setHeader('Set-Cookie', 'sid=; HttpOnly; Path=/; Max-Age=0');
+  res.json({ ok: true });
+}));
+
 app.post('/api/logout', h(async (req, res) => {
   await destroySession(tokenFromRequest(req));
   res.setHeader('Set-Cookie', 'sid=; HttpOnly; Path=/; Max-Age=0');

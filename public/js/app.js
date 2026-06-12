@@ -2047,6 +2047,24 @@ $('#set-recovery')?.addEventListener('click', async () => {
   try { const r = await api('/recovery/regenerate', { method: 'POST' }); closeDrawer(); showRecovery(r.recoveryCode); }
   catch (err) { flash(err.message, 'err'); }
 });
+// RGPD : telecharger ses donnees.
+$('#set-export')?.addEventListener('click', async () => {
+  try {
+    const data = await api('/account/export');
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'veilborn-mes-donnees.json'; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) { flash(err.message, 'err'); }
+});
+// RGPD : suppression definitive du compte (exige le mot de passe).
+$('#set-delete')?.addEventListener('click', async () => {
+  if (!await confirmDialog('⚠️ Supprimer DÉFINITIVEMENT ton compte et toutes tes données ? Cette action est irréversible.')) return;
+  const pw = await promptDialog('Confirme avec ton mot de passe :', '', '');
+  if (pw == null || pw === '') return;
+  try { await api('/account/delete', { method: 'POST', body: { password: pw } }); STATE = null; flash('Compte supprimé.'); setTimeout(() => location.reload(), 800); }
+  catch (err) { flash(err.message, 'err'); }
+});
 
 // ============================================================
 //  Arene (PvP)

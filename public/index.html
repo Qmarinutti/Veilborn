@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=64" />
+  <link rel="stylesheet" href="css/style.css?v=65" />
 </head>
 <body>
   <!-- Ecran de connexion -->
@@ -119,6 +119,7 @@
         <div class="panel">
           <h2>💞 Reproduction <span id="breeding-info" class="prairie-info"></span></h2>
           <p class="hint">Choisis 2 parents : selon leurs <b>types</b>, le couple donne <b>2-3 espèces possibles</b> (toujours les mêmes, façon Dragon City) — affichées avant de lancer. Les <b>IV</b> sont hérités. 💞 accouplement → 🥚 éclosion (2 phases). Clique une espèce dans le 📖 Dex pour voir sa recette.</p>
+          <p class="hint odds-note">🎲 <b>Probabilités</b> — rareté du bébé : 72% Commun · 21% Rare · 6% Épique · 1% Légendaire. Chromatique ✨ : 0,2% de base, jusqu'à 5% avec la pitié (la chance monte à chaque éclosion non-chromatique, et retombe à l'obtention d'un ✨).</p>
           <p id="breed-msg" class="msg"></p>
           <div id="breeding-cells" class="breed-cells"></div>
         </div>
@@ -389,6 +390,12 @@
             <button id="set-change-pass" class="btn small">Changer le mot de passe</button>
             <button id="set-recovery" class="btn small">🔑 Régénérer mon code de récupération</button>
           </div>
+          <div class="set-sec">
+            <h4 class="set-h">⚖️ Légal & données (RGPD)</h4>
+            <p class="hint" style="font-size:12px;">Veilborn est un jeu gratuit non-commercial. Données conservées : pseudo, email (optionnel), progression de jeu. Aucune revente à des tiers. Un seul cookie de session (nécessaire à la connexion). Le chat est modéré.</p>
+            <button id="set-export" class="btn small">📥 Télécharger mes données</button>
+            <button id="set-delete" class="btn small danger">🗑️ Supprimer mon compte</button>
+          </div>
           <button id="replay-tuto" class="btn">❓ Revoir le tutoriel</button>
           <button id="logout" class="btn">Se deconnecter</button>
         </div>
@@ -432,6 +439,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=81" type="module"></script>
+  <script src="js/app.js?v=82" type="module"></script>
 </body>
 </html>
