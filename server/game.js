@@ -29,6 +29,9 @@ export const BALANCE = {
   maturationBaseSec: 180,
   // Revenu idle d'essence par seconde et par adulte EN PRAIRIE = rarete * ce facteur.
   essencePerRarityPerSec: 0.04, // double : early-game moins lent
+  // Dans un biome SPECIAL (non-Plaine), la production se partage : 80% en materiau du biome,
+  // 20% en essence (monnaie) -> on gagne toujours un peu de sous meme en farmant une ressource.
+  biomeEssenceShare: 0.2,
   // XP gagnee par seconde par un Glump en prairie (sert a monter de niveau).
   // 2/s (avant 1) : lisse le grind de niveau, notamment le mur 80->100 du end-game.
   xpPerSec: 2,

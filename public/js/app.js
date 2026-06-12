@@ -461,8 +461,8 @@ function renderExplore() {
           ? `<button class="btn small primary" data-explore-start="${z.id}" data-tier="${t.id}">Lancer</button>`
           : t.unlocked ? `<span class="ex-need">${t.owned}/${t.need} dispo</span>`
             : `<span class="ex-lock">🔒 ${t.owned}/${t.need}</span>`;
-        // Recompenses POSSIBLES (aleatoires) : ressource fixe + œuf(s) du type + objets aleatoires
-        const reward = `<b>+${rw.res} ${z.resEmoji}</b> · ${rw.eggs}× œuf ${z.typesLabel} 🥚 · ${rw.items}× objet (🍬/❤️/✨)`;
+        // Recompenses POSSIBLES (aleatoires) : essence fixe + œuf(s) du type + objets aleatoires
+        const reward = `<b>+${rw.res} ✨</b> · ${rw.eggs}× œuf ${z.typesLabel} 🥚 · ${rw.items}× objet (🍬/❤️/✨)`;
         return `<div class="ex-tier ${t.unlocked ? '' : 'locked'}" style="--tc:${TIER_COLOR[t.id]}">
           <div class="ex-main">
             <div class="ex-top"><span class="ex-tname">${t.name}</span>
@@ -475,7 +475,7 @@ function renderExplore() {
     }
     return `<div class="explore-zone">
       <div class="ez-head"><span class="ez-emoji">${z.emoji}</span>
-        <div class="ez-id"><div class="ez-name">${z.name}</div><div class="ez-sub">Types ${z.typesLabel} · récolte ${z.resName} ${z.resEmoji}</div></div>
+        <div class="ez-id"><div class="ez-name">${z.name}</div><div class="ez-sub">Types ${z.typesLabel} · récolte ✨ essence</div></div>
         ${badge}</div>
       <div class="explore-tiers">${body}</div>
     </div>`;
@@ -509,7 +509,7 @@ $('#explore-zones').addEventListener('click', async (e) => {
 function showReward(rw) {
   if (!rw) return;
   const rows = [];
-  if (rw.amount) rows.push(`<div class="rw-row"><span class="rw-ico">${rw.resEmoji}</span><span class="rw-lbl">${rw.resName || 'Ressource'}</span><b class="rw-amt">+${rw.amount}</b></div>`);
+  if (rw.essence) rows.push(`<div class="rw-row"><span class="rw-ico">✨</span><span class="rw-lbl">Essence</span><b class="rw-amt">+${rw.essence}</b></div>`);
   for (const [k, v] of Object.entries(rw.items || {})) {
     rows.push(`<div class="rw-row"><span class="rw-ico">${ITEM_EMOJI[k] || '🎁'}</span><span class="rw-lbl">${ITEM_NAME[k] || k}</span><b class="rw-amt">×${v}</b></div>`);
   }
@@ -1094,7 +1094,11 @@ function renderPrairieSlots() {
   const buyBtn = $('#buy-prairie');
   buyBtn.style.display = '';
   const inB = STATE.creatures.filter(c => c.biome); // tous les farmeurs (biome actif)
-  $('#prairie-info').innerHTML = `<b>${b.emoji} ${b.name}</b> actif — produit <b>${b.resName} ${b.resEmoji}</b> · <b>+${(b.ratePerSec * 60).toFixed(1)}/min</b> · ${inB.length}/${max} Glumps`;
+  // Biome special : 80% materiau + 20% essence. Plaine : 100% essence (pas de split a afficher).
+  const split = b.resource !== 'essence'
+    ? ` <span class="hint">(+ ✨ essence)</span>`
+    : '';
+  $('#prairie-info').innerHTML = `<b>${b.emoji} ${b.name}</b> actif — produit <b>${b.resName} ${b.resEmoji}</b> · <b>+${(b.ratePerSec * 60).toFixed(1)}/min</b>${split} · ${inB.length}/${max} Glumps`;
   if (max >= 12) { buyBtn.disabled = true; buyBtn.textContent = 'Max'; }
   else { buyBtn.disabled = false; buyBtn.textContent = '+ Emplacement'; }
 

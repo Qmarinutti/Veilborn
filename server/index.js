@@ -1119,9 +1119,9 @@ app.post('/api/explore/collect', requireAuth, h(async (req, res) => {
     if ((ex.readyAt || 0) > Date.now()) return { status: 400, error: 'Exploration pas encore terminee.' };
     const zone = EXPLORE_ZONE_BY_ID[ex.biome];
     const t = EXPLORE_TIER_BY_ID[ex.tier];
-    // Recompenses : ressource du biome + objets + oeufs typés (limites par les incubateurs libres).
-    const res2 = parseResources(user);
-    res2[zone.resource] = (res2[zone.resource] || 0) + t.res;
+    // Recompenses : ESSENCE (le materiau de biome se farme dans les biomes, plus en explo)
+    //  + objets + oeufs typés (limites par les incubateurs libres).
+    const essReward = t.res; // l'ancien gain de ressource devient de l'essence (monnaie)
     const items = parseItems(user);
     const gotItems = {};
     for (let i = 0; i < t.items; i++) { const it = EXPLORE_ITEMS[Math.floor(Math.random() * EXPLORE_ITEMS.length)]; items[it]++; gotItems[it] = (gotItems[it] || 0) + 1; }
@@ -1142,9 +1142,10 @@ app.post('/api/explore/collect', requireAuth, h(async (req, res) => {
       await run('UPDATE users SET shiny_pity = ? WHERE id = ?', [pity, req.user.id]);
     }
     const left = exps.filter(e => e.id !== id);
-    await run('UPDATE users SET expeditions_json = ?, items_json = ?, resources_json = ? WHERE id = ?',
-      [JSON.stringify(left), JSON.stringify(items), JSON.stringify(res2), req.user.id]);
-    return { ok: true, rewards: { resource: zone.resource, resName: zone.resName, resEmoji: zone.resEmoji, amount: t.res, items: gotItems, eggs: eggsLaid, zoneName: zone.name, zoneEmoji: zone.emoji, tier: t.name } };
+    // Essence en RELATIF (sous verrou) : ne pas effacer une depense concurrente.
+    await run('UPDATE users SET expeditions_json = ?, items_json = ?, essence = essence + ? WHERE id = ?',
+      [JSON.stringify(left), JSON.stringify(items), essReward, req.user.id]);
+    return { ok: true, rewards: { essence: essReward, items: gotItems, eggs: eggsLaid, zoneName: zone.name, zoneEmoji: zone.emoji, tier: t.name } };
   });
   if (out.error) return res.status(out.status).json({ error: out.error });
   res.json(out);

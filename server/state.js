@@ -136,8 +136,16 @@ export async function getPlayerState(user) {
       if (c.stage !== 'adult' || c.biome == null) continue;
       const b = BIOMES[c.biome]; if (!b) continue;
       const amt = farmRate(c.species, c.xp, c.biome) * secs;
-      if (b.resource === 'essence') essenceGain += amt;
-      else { res[b.resource] = (res[b.resource] || 0) + amt; resGain[b.resource] = (resGain[b.resource] || 0) + amt; }
+      if (b.resource === 'essence') {
+        essenceGain += amt;
+      } else {
+        // Biome special : 80% materiau, 20% essence.
+        const essShare = amt * BALANCE.biomeEssenceShare;
+        const resShare = amt - essShare;
+        res[b.resource] = (res[b.resource] || 0) + resShare;
+        resGain[b.resource] = (resGain[b.resource] || 0) + resShare;
+        essenceGain += essShare;
+      }
       if (xpGain > 0) c.xp = (c.xp || 0) + xpGain; // l'XP en memoire (pour l'affichage)
     }
     essence += essenceGain;
@@ -239,7 +247,15 @@ export async function getPlayerState(user) {
   for (const c of rows) {
     if (c.stage === 'adult' && c.biome && BIOMES[c.biome]) {
       biomeUsed[c.biome] = (biomeUsed[c.biome] || 0) + 1;
-      ratePerRes[BIOMES[c.biome].resource] += farmRate(c.species, c.xp, c.biome);
+      const b = BIOMES[c.biome];
+      const rate = farmRate(c.species, c.xp, c.biome);
+      if (b.resource === 'essence') {
+        ratePerRes.essence += rate;
+      } else {
+        // Reflete le split 80/20 : 80% sur la ressource du biome, 20% en essence.
+        ratePerRes[b.resource] += rate * (1 - BALANCE.biomeEssenceShare);
+        ratePerRes.essence += rate * BALANCE.biomeEssenceShare;
+      }
     }
   }
   const farmingCount = rows.filter(c => c.biome && BIOMES[c.biome]).length;
