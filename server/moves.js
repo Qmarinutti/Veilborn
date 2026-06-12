@@ -37,9 +37,9 @@ export function movesFor(type) {
   return [
     { id: 'charge', name: 'Charge', type: 'Neutre', power: 1.0, acc: 1.0, kind: 'attack' },
     { id: 'strike', name: `Frappe ${type}`, type, power: 1.35, acc: 0.95, kind: 'attack' },
-    // Deflagration nerfee : gros coup MAIS esperance (1.7*0.72=1.22) < Frappe (1.35*0.95=1.28).
-    // Devient un pari haut-risque au lieu d'etre le choix optimal a spammer.
-    { id: 'burst', name: `Déflagration ${type}`, type, power: 1.7, acc: 0.72, kind: 'attack' },
+    // Deflagration = pari : gros coup, esperance ~= Frappe (1.55*0.82=1.27 vs 1.28) mais variance
+    // plus haute (rate 18% du temps). Vrai choix risque/recompense, ni piege ni dominant.
+    { id: 'burst', name: `Déflagration ${type}`, type, power: 1.55, acc: 0.82, kind: 'attack' },
     fourth,
   ];
 }

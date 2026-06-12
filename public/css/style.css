@@ -137,7 +137,6 @@ input:focus, select:focus { outline: none; border-color: var(--primary); box-sha
 }
 .essence b { color: var(--gold); }
 .rate { color: var(--good); font-size: 13px; }
-.nav { display: flex; gap: 4px; margin-left: auto; background: rgba(0,0,0,.22); padding: 4px; border-radius: 12px; }
 .navbtn {
   padding: 9px 16px; background: transparent; border: none;
   color: var(--muted); border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 14px; transition: .15s;
@@ -212,10 +211,6 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 .drawer-body { overflow-y: auto; }
 .drawer-section { display: flex; flex-direction: column; gap: 14px; }
 
-@media (max-width: 560px) {
-  .bottomnav .navbtn { min-width: 0; flex: 1; padding: 8px 4px; }
-  .siderail { top: auto; bottom: 92px; transform: none; }
-}
 .panel {
   background: var(--panel); backdrop-filter: blur(10px);
   border: 1px solid var(--line); border-radius: 18px;
@@ -300,14 +295,9 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
 /* Modale de combat */
 #battle-modal { width: min(440px, 94vw); }
 .battle-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin: 10px 0 6px; }
-.bf { width: 88px; text-align: center; transition: transform .12s; position: relative; }
 .bf-sprite { width: 66px; height: 66px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
 .bf-hpbar { height: 7px; background: rgba(0,0,0,.35); border-radius: 4px; overflow: hidden; margin-top: 4px; }
 .bf-hpbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--good), #b6e84f); transition: width .25s; }
-.bf.ko { opacity: .35; filter: grayscale(1); }
-.bf.hit { animation: shake .18s; }
-.bf.atk { transform: translateY(-7px) scale(1.06); }
-@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 .dmg-pop { position: absolute; top: 0; left: 50%; font-weight: 700; color: #fff; font-size: 14px; text-shadow: 0 1px 3px #000; animation: dmgUp .65s ease-out forwards; pointer-events: none; }
 .dmg-pop.super { color: #ffe066; font-size: 17px; }
 .dmg-pop.weak { color: #9fb0c9; font-size: 12px; }

@@ -13,7 +13,7 @@ import {
   BALANCE, STARTER_IDS, SPECIES, SPECIES_COUNT, wildCreature, breed,
   incubationSeconds, nextSlotCost, creatureValue, evolutionOf, evolveLevelOf,
   levelFromXp, xpForLevel, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
-  breedingSeconds, reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, evolveResourceCost, shinyPityBonus, tierOf,
+  reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, evolveResourceCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
   EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS,
   BREED_RECIPES, BREED_CHART,
@@ -21,7 +21,7 @@ import {
 import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes, parseExpeditions, parseItems, exploringIds } from './state.js';
 import { withLock } from './lock.js';
 import { hasArt } from './art.js';
-import { simulateBattle, startSession, playTurn } from './battle.js';
+import { startSession, playTurn } from './battle.js';
 import { moveButtons } from './moves.js';
 import {
   ACHIEVEMENTS, DEX_MILESTONES, SHINY_DEX_MILESTONES, PVP_MILESTONES, DAILY_POOL, parseAchSet, unlockAch,

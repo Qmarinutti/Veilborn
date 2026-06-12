@@ -107,8 +107,19 @@ export async function getDaily(user) {
   let data; try { data = JSON.parse(user.daily_json || 'null'); } catch { data = null; }
   const today = todayStr();
   if (!data || data.day !== today) {
-    data = { day: today, quests: rollDailies() };
-    await run('UPDATE users SET daily_json = ? WHERE id = ?', [JSON.stringify(data), user.id]);
+    const fresh = { day: today, quests: rollDailies() };
+    // Ecriture CONDITIONNELLE (atomique) : on ne roule les quetes du jour que si elles ne l'ont pas
+    // deja ete (sinon deux /state|/progress concurrents genereraient 2 jeux differents et s'effaceraient).
+    const r = await run(
+      "UPDATE users SET daily_json = ? WHERE id = ? AND (daily_json IS NULL OR COALESCE(json_extract(daily_json, '$.day'), '') <> ?)",
+      [JSON.stringify(fresh), user.id, today]);
+    if (r.rowsAffected) {
+      data = fresh;
+    } else {
+      // Un concurrent a deja roule les quetes du jour -> on relit la valeur stockee.
+      const u = await get('SELECT daily_json FROM users WHERE id = ?', [user.id]);
+      try { data = JSON.parse(u.daily_json); } catch { data = fresh; }
+    }
   }
   return data;
 }

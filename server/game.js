@@ -18,7 +18,6 @@ export const BALANCE = {
   // Reproduction en 2 PHASES (chaque phase x rarete d'acquisition) :
   //  1) accouplement : les 2 parents sont occupes (ne farment pas) -> pond un oeuf
   //  2) eclosion : l'oeuf eclot en bebe.
-  breedingBaseSec: 300,        // (total indicatif, conserve pour compat)
   reproductionBaseSec: 120,    // phase 1 : accouplement
   breedHatchBaseSec: 180,      // phase 2 : eclosion de l'oeuf pondu
   breedingStartCells: 1,
@@ -29,9 +28,10 @@ export const BALANCE = {
   maturationBaseSec: 180,
   // Revenu idle d'essence par seconde et par adulte EN PRAIRIE = rarete * ce facteur.
   essencePerRarityPerSec: 0.04, // double : early-game moins lent
-  // Dans un biome SPECIAL (non-Plaine), la production se partage : 80% en materiau du biome,
-  // 20% en essence (monnaie) -> on gagne toujours un peu de sous meme en farmant une ressource.
-  biomeEssenceShare: 0.2,
+  // Dans un biome SPECIAL (non-Plaine), la production se partage : 90% en materiau du biome,
+  // 10% en essence (petit filet de monnaie). Volontairement faible pour que la Plaine (100% essence)
+  // reste le meilleur choix quand on veut farmer de l'essence pure.
+  biomeEssenceShare: 0.1,
   // XP gagnee par seconde par un Glump en prairie (sert a monter de niveau).
   // 2/s (avant 1) : lisse le grind de niveau, notamment le mur 80->100 du end-game.
   xpPerSec: 2,
@@ -71,11 +71,6 @@ export const BALANCE = {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const RAW_SPECIES = JSON.parse(readFileSync(join(__dirname, 'species.json'), 'utf8'));
 
-// Stats de base par defaut, deduites de la rarete (si "base" non fourni).
-function defaultBase(rarity) {
-  return { force: 6 + rarity * 3, vita: 6 + rarity * 3, speed: 6 + rarity * 2 };
-}
-
 export const SPECIES = {};
 for (const [id, sp] of Object.entries(RAW_SPECIES)) {
   const rarity = sp.rarity ?? 1;
@@ -83,7 +78,8 @@ for (const [id, sp] of Object.entries(RAW_SPECIES)) {
     name: sp.name ?? id,
     type: sp.type ?? '?',
     rarity,
-    base: sp.base ?? defaultBase(rarity),
+    // Base provisoire ; recalculee par balancedBase() en 2e passe (sauf base explicite dans le JSON).
+    base: sp.base ?? { force: 9, vita: 9, speed: 9 },
     color: sp.color ?? '#8aa0c0',
     shape: sp.shape ?? 'blob',
     line: sp.line ?? null,
@@ -148,7 +144,7 @@ export const NATURES = [
 export function randomNature() { return NATURES[Math.floor(Math.random() * NATURES.length)].name; }
 export function natureByName(name) { return NATURES.find(n => n.name === name) || NATURES[0]; }
 
-// PV max d'un Glump (doit matcher makeFighter dans battle.js).
+// PV max d'un Glump (doit matcher mkFighter dans battle.js).
 export function maxHpOf(creature) {
   return effectiveStats(creature).vita * 4 + 30;
 }
@@ -195,6 +191,8 @@ export function tierOf(speciesId) {
   // Les especes marquees rarity>=5 (legendaires "standalone" qui ne s'evoluent pas) sont
   // TOUJOURS de tier max : elles s'affichent en Legendaire et droppent au taux legendaire.
   if ((SPECIES[speciesId]?.rarity || 0) >= 5) return 4;
+  // Les lignees de DEPART (starters) sont toujours Commun -> les 3 starters sont EGAUX en stats.
+  if (STARTER_IDS.includes(lineOf(speciesId))) return 1;
   const r = hashStr(lineOf(speciesId)) % 100;
   if (r < 3) return 4;    // Legendaire 3%
   if (r < 15) return 3;   // Epique 12%
@@ -204,13 +202,14 @@ export function tierOf(speciesId) {
 export const TIER_NAMES = { 1: 'Commun', 2: 'Rare', 3: 'Epique', 4: 'Legendaire' };
 
 // ============================================================
-//  EQUILIBRAGE DES STATS PAR RARETE (affichee) + STADE + identite de TYPE.
-//  Avant : les stats ne dependaient que du stade (defaultBase) -> un Legendaire affiche
-//  n'etait pas plus fort qu'un Commun. Maintenant la stat de base depend de la rarete
-//  D'ACQUISITION (tierOf, ce que voit le joueur) ET du stade d'evolution.
+//  EQUILIBRAGE DES STATS : le STADE est le moteur principal (evoluer = devenir fort, une forme
+//  finale est toujours puissante), la rarete d'acquisition (tierOf) n'ajoute qu'un BONUS secondaire,
+//  + une identite de TYPE (biais a somme nulle). Les starters sont forces Commun -> egaux entre eux.
+//  Totaux de base (somme des 3 stats) : Commun 27/45/63, Rare 33/51/69, Epique 39/57/75,
+//  Legendaire 48/66/84 (par stade 1/2/3).
 // ============================================================
-const STAT_TIER_BASE = { 1: 8, 2: 11, 3: 14, 4: 18 }; // stat de base/par stat selon la rarete affichee
-const STAT_STAGE_BONUS = 5;                            // +5/stat par stade d'evolution franchi
+const STAT_STAGE_BASE = { 1: 9, 2: 15, 3: 21 };       // stat de base/par stat selon le STADE (principal)
+const STAT_TIER_BONUS = { 1: 0, 2: 2, 3: 4, 4: 7 };   // bonus/par stat selon la rarete d'acquisition
 // Biais de type (identite de combat) : somme nulle sur les 3 stats (force=ATK, vita=PV, speed=ordre).
 const TYPE_BIAS = {
   Feu:      { force: 3, vita: -1, speed: -2 },
@@ -233,7 +232,7 @@ export function balancedBase(id) {
   const legendary = (sp.rarity || 1) >= 5;            // standalone : pas d'evolution
   const tier = tierOf(id);                            // 4 pour un legendaire (cf. ci-dessus)
   const stage = legendary ? 3 : (sp.stage || 1);      // legendaire = deja a pleine puissance
-  const base = (STAT_TIER_BASE[tier] || 8) + STAT_STAGE_BONUS * (stage - 1);
+  const base = (STAT_STAGE_BASE[stage] || 9) + (STAT_TIER_BONUS[tier] || 0);
   const bias = TYPE_BIAS[sp.type] || { force: 0, vita: 0, speed: 0 };
   return {
     force: Math.max(1, base + bias.force),
@@ -350,10 +349,6 @@ export function wildCreature(speciesId, { adult = false, pityBonus = 0 } = {}) {
 
 export function incubationSeconds(speciesId) {
   return Math.round(BALANCE.incubationBaseSec * rarityOf(speciesId));
-}
-// Temps d'un oeuf de reproduction : depend de la rarete d'ACQUISITION (famille).
-export function breedingSeconds(speciesId) {
-  return Math.round(BALANCE.breedingBaseSec * tierOf(speciesId));
 }
 // Phase 1 (accouplement) puis phase 2 (eclosion de l'oeuf pondu), chacune x tier.
 export function reproductionSeconds(speciesId) {

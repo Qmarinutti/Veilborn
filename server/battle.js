@@ -56,16 +56,23 @@ export function startSession(rawA, rawB) {
 const aliveIdx = (team) => team.findIndex(f => f.hp > 0);
 const MAX_TURNS = 60; // plafond de tours du combat interactif (anti non-terminaison)
 
-// IA adverse : choisit une attaque selon la situation.
+// IA adverse : joue intelligemment.
+//  - se soigne si bas (types soigneurs) ;
+//  - tente parfois un statut si l'ennemi n'en a pas (variete) ;
+//  - sinon choisit l'attaque a la meilleure ESPERANCE de degats (power * precision * efficacite de type)
+//    -> exploite le typage et prefere Charge (neutre) quand l'ennemi resiste a son element.
 function aiPick(self, foe) {
-  const r = Math.random();
-  // Si l'ennemi est bas, tente la grosse attaque.
-  if (foe.hp <= foe.maxHp * 0.35 && r < 0.6) return self.moves.find(m => m.id === 'burst') || self.moves[1];
-  // Sinon : statut/soin parfois, frappe le plus souvent.
-  if (r < 0.18) return self.moves[3];
-  if (r < 0.40) return self.moves.find(m => m.id === 'burst') || self.moves[1];
-  if (r < 0.85) return self.moves.find(m => m.id === 'strike') || self.moves[1];
-  return self.moves[0];
+  const heal = self.moves.find(m => m.kind === 'heal');
+  if (heal && self.hp < self.maxHp * 0.4 && Math.random() < 0.7) return heal;
+  const statusMove = self.moves.find(m => m.kind === 'status');
+  if (statusMove && !foe.status && Math.random() < 0.22) return statusMove;
+  let best = self.moves[1], bestEv = -1;
+  for (const m of self.moves) {
+    if (m.power <= 0) continue;
+    const ev = m.power * m.acc * typeMult(m.type, foe.type);
+    if (ev > bestEv) { bestEv = ev; best = m; }
+  }
+  return best;
 }
 
 function applyMove(attacker, defender, move, events, sideLabel) {
@@ -191,57 +198,3 @@ export function playTurn(state, myMoveId) {
   return { events, over: state.over, winner: state.winner };
 }
 
-// Construit un combattant a partir d'une "fiche" (publicCreature + stats).
-// Attendu : { name, species, type, variant, color, shape, hasArt, rarity, level, stats:{force,vita,speed} }
-export function makeFighter(c) {
-  const s = c.stats;
-  const max = c.maxHp ?? (s.vita * 4 + 30);
-  const hp = Math.max(0, Math.min(max, c.hp ?? max)); // demarre aux PV actuels
-  return {
-    name: c.name, species: c.species, type: c.type, variant: c.variant,
-    color: c.color, shape: c.shape, hasArt: c.hasArt, rarity: c.rarity, level: c.level,
-    atk: s.force, spd: s.speed, maxHp: max, hp,
-  };
-}
-
-// Simule un combat entre deux equipes (tableaux de combattants).
-// Renvoie { winner:'a'|'b', log:[...], teamA, teamB }.
-export function simulateBattle(rawA, rawB) {
-  const A = rawA.map(makeFighter);
-  const B = rawB.map(makeFighter);
-  const log = [];
-  let turn = 0;
-
-  const alive = (team) => team.some(f => f.hp > 0);
-  while (alive(A) && alive(B) && turn < 80) {
-    turn++;
-    // Tous les vivants agissent, du plus rapide au plus lent.
-    const order = [
-      ...A.map((f, i) => ({ f, side: 'a', i })),
-      ...B.map((f, i) => ({ f, side: 'b', i })),
-    ].filter(x => x.f.hp > 0).sort((x, y) => y.f.spd - x.f.spd);
-
-    for (const { f, side, i } of order) {
-      if (f.hp <= 0) continue;
-      const foes = (side === 'a' ? B : A);
-      const ti = foes.findIndex(e => e.hp > 0);
-      if (ti === -1) break;
-      const target = foes[ti];
-      const mult = typeMult(f.type, target.type);
-      const variance = 0.85 + Math.random() * 0.3;
-      const dmg = Math.max(1, Math.round(f.atk * mult * variance));
-      target.hp = Math.max(0, target.hp - dmg);
-      log.push({ turn, side, ai: i, ti, dmg, mult, hp: target.hp, ko: target.hp === 0 });
-    }
-  }
-
-  const aHp = A.reduce((s, f) => s + f.hp, 0);
-  const bHp = B.reduce((s, f) => s + f.hp, 0);
-  const aAlive = A.filter(f => f.hp > 0).length;
-  const bAlive = B.filter(f => f.hp > 0).length;
-  let winner;
-  if (aAlive !== bAlive) winner = aAlive > bAlive ? 'a' : 'b';
-  else winner = aHp >= bHp ? 'a' : 'b';
-
-  return { winner, log, teamA: A, teamB: B };
-}

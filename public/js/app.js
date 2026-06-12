@@ -216,9 +216,10 @@ function switchView(view) {
   if (view === 'leaderboard') safe(loadLeaderboard());
   if (view === 'dex') safe(loadDex());
   if (view === 'arena') safe(loadArena());
-  if (view === 'explore') renderExplore();
   if (view === 'market') safe(loadMarket());
   if (view === 'prairie') startPrairie(); else stopPrairie();
+  // Rend immediatement la vue qu'on vient d'ouvrir (renderAll ne rend que la vue VISIBLE).
+  if (STATE) renderAll();
 }
 $$('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
 
@@ -353,8 +354,11 @@ async function refresh() {
     if (STATE.loginBonus > 0) flash(`Bonus du jour : +${STATE.loginBonus} ✨ (serie ${STATE.user.loginStreak} 🔥)`);
     for (const a of (STATE.newAchievements || [])) achievementToast(a);
   } catch (err) {
-    // session expiree -> retour login
+    // session expiree -> retour login. On stoppe TOUT (sinon la boucle RAF continue et l'essence
+    // fantome grimpe derriere l'ecran de login).
     clearInterval(pollTimer);
+    cancelAnimationFrame(tickRAF); tickRAF = 0;
+    STATE = null;
     $('#game-screen').classList.add('hidden');
     $('#auth-screen').classList.remove('hidden');
   }
@@ -385,15 +389,23 @@ function tickLoop() {
 const RES_EMOJI = { magma: '🌋', ecume: '🌊', spores: '🍃', sable: '🏜️', orage: '⚡', eclat: '🔮' };
 const RES_NAME = { magma: 'Magma', ecume: 'Écume', spores: 'Spores', sable: 'Sable', orage: 'Orage', eclat: 'Éclat' };
 
+// Vue actuellement visible (section .view sans .hidden).
+function activeView() {
+  const el = document.querySelector('.view:not(.hidden)');
+  return el ? el.id.replace('view-', '') : null;
+}
 function renderAll() {
+  // Toujours : topbar (essence/ressources) + pastilles de notif (peu coûteux).
   $('#rate').textContent = '+' + (STATE.essencePerSec * 60).toFixed(1) + '/min';
   renderResbar();
-  renderIncubators();
-  renderBreedingCells();
-  renderCollection();
   updateNavBadges();
-  renderExplore();
-  if (prairieActive) { renderBiomeTabs(); buildMeadow(); renderPrairieSlots(); }
+  // On ne reconstruit QUE la vue visible (avant : tout etait re-rendu a chaque poll, meme hors ecran).
+  const v = activeView();
+  if (v === 'box') renderCollection();
+  else if (v === 'eggs') renderIncubators();
+  else if (v === 'breed') renderBreedingCells();
+  else if (v === 'explore') renderExplore();
+  else if (v === 'prairie' && prairieActive) { renderBiomeTabs(); buildMeadow(); renderPrairieSlots(); }
 }
 
 // Barre des ressources de biome (en plus de l'essence dans la topbar).
@@ -784,6 +796,7 @@ function fmt(ms) {
 //  Actions
 // ============================================================
 $('#buy-slot').addEventListener('click', async () => {
+  if (!await confirmDialog('Acheter un incubateur supplémentaire ?')) return;
   try { await api('/incubator/buy', { method: 'POST' }); await refresh(); }
   catch (err) { flash(err.message, "err"); }
 });
@@ -1223,6 +1236,7 @@ function pickCardHtml(c) {
 }
 
 $('#buy-prairie').addEventListener('click', async () => {
+  if (!await confirmDialog('Acheter un emplacement de farm supplémentaire ?')) return;
   try { const r = await api('/prairie/buy', { method: 'POST' }); flash(`Emplacement achete (-${r.cost} ✨)`); await refresh(); }
   catch (err) { flash(err.message, "err"); }
 });
@@ -1666,6 +1680,7 @@ function renderShopBonus() {
 $('#shop-modal').addEventListener('click', async (e) => {
   const terr = e.target.closest('[data-buy-terrain]');
   if (terr) {
+    if (!await confirmDialog('Débloquer ce terrain ?')) return;
     try { const r = await api('/biome/buy', { method: 'POST', body: { biome: terr.dataset.buyTerrain } }); flash('Terrain débloqué ! 🗺️'); await refresh(); renderShopTerrain(); renderShopEgg(); }
     catch (err) { flash(err.message, "err"); }
     return;
@@ -1746,6 +1761,29 @@ $$('.menu-item').forEach(b => b.addEventListener('click', () => {
 }));
 $('#drawer-close').addEventListener('click', closeDrawer);
 $('#drawer-overlay').addEventListener('click', closeDrawer);
+
+// ---------- Echap ferme la modale ouverte (la plus au-dessus d'abord) ----------
+// (confirm/prompt gerent leur propre Echap.)
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const open = (id) => { const el = $(id); return el && !el.classList.contains('hidden'); };
+  if (open('#picker')) closePicker();
+  else if (open('#menu-modal')) closeMenu();
+  else if (open('#shop-modal')) closeShop();
+  else if (open('#detail')) closeDetail();
+  else if (open('#battle-modal') && !$('#battle-close').classList.contains('hidden')) closeBattle();
+  else if (open('#reward-modal')) closeReward();
+  else if (open('#recipe-modal')) closeRecipe();
+  else if (open('#drawer')) closeDrawer();
+  else if (open('#tutorial')) hideTuto();
+});
+
+// ---------- Pause le polling /state quand l'onglet est en arriere-plan (reseau/batterie) ----------
+document.addEventListener('visibilitychange', () => {
+  if (!STATE) return;
+  if (document.hidden) { clearInterval(pollTimer); pollTimer = null; }
+  else if (!pollTimer) { refresh(); pollTimer = setInterval(refresh, 4000); }
+});
 
 // ============================================================
 //  Tutoriel

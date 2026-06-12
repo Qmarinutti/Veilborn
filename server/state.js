@@ -7,7 +7,7 @@ import {
   BALANCE, SPECIES, effectiveStats, power, creatureValue, rarityOf,
   evolutionOf, evolveLevelOf, levelFromXp, xpForLevel, natureByName,
   tierOf, TIER_NAMES, breedingCellCost, maxHpOf, evolveCost, evolveResourceCost,
-  incubationSeconds, breedingSeconds, maturationSeconds,
+  incubationSeconds, maturationSeconds,
   reproductionSeconds, breedHatchSeconds,
   BIOMES, BIOME_LIST, RESOURCES, SYNERGY_BONUS, isSynergy,
   EXPLORE_ZONES, EXPLORE_TIERS,
