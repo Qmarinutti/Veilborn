@@ -155,8 +155,12 @@ export async function initDb() {
     'ALTER TABLE users ADD COLUMN pvp_peak INTEGER',
     // Cosmetique : titre selectionne (affiche a cote du pseudo), debloque par les succes.
     'ALTER TABLE users ADD COLUMN title TEXT',
-    // Guilde du joueur (NULL si aucune).
+    // Guilde du joueur (NULL si aucune) + contribution cumulee a la guilde actuelle.
     'ALTER TABLE users ADD COLUMN guild_id INTEGER',
+    'ALTER TABLE users ADD COLUMN guild_contrib INTEGER NOT NULL DEFAULT 0',
+    // Progression cooperative de guilde (pour les bases creees avant cet ajout).
+    'ALTER TABLE guilds ADD COLUMN level INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE guilds ADD COLUMN pool INTEGER NOT NULL DEFAULT 0',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }
@@ -199,6 +203,8 @@ export async function initDb() {
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
       name        TEXT NOT NULL,
       leader_id   INTEGER NOT NULL,
+      level       INTEGER NOT NULL DEFAULT 1,
+      pool        INTEGER NOT NULL DEFAULT 0,
       created_at  INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS guild_messages (

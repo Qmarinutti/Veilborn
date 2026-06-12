@@ -12,7 +12,7 @@ import {
   BIOMES, BIOME_LIST, RESOURCES, SYNERGY_BONUS, isSynergy,
   EXPLORE_ZONES, EXPLORE_TIERS,
   leagueOf, currentSeason, seasonSoftReset,
-  activeEvent, eventMul,
+  activeEvent, eventMul, guildFarmBonus,
 } from './game.js';
 import { progressDaily, todayStr, ACHIEVEMENTS, parseAchSet, ACH_INSERT_SQL, availableTitles, titleNameById } from './progress.js';
 const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
@@ -137,6 +137,13 @@ export async function getPlayerState(user) {
     W.push({ sql: 'UPDATE users SET pvp_season=?, pvp_peak=COALESCE(pvp_peak, pvp_trophies) WHERE id=? AND pvp_season IS NULL', args: [season, user.id] });
   }
 
+  // Bonus de farm partage de la guilde (+2%/niveau au-dela de 1), applique a l'essence.
+  let guildBonus = 1;
+  if (user.guild_id) {
+    const gg = await get('SELECT level FROM guilds WHERE id = ?', [user.guild_id]);
+    if (gg) guildBonus = guildFarmBonus(gg.level);
+  }
+
   // --- Tick farming : 1 biome actif, gains de ressource + XP (en memoire) ---
   const activeBiome = user.active_biome || 'plaine';
   const res = parseResources(user);
@@ -170,6 +177,7 @@ export async function getPlayerState(user) {
       }
       if (xpGain > 0) c.xp = (c.xp || 0) + xpGain; // l'XP en memoire (pour l'affichage)
     }
+    essenceGain *= guildBonus; // bonus de farm de guilde sur l'essence
     essence += essenceGain;
     W.push({ sql: "UPDATE creatures SET biome=? WHERE owner_id=? AND biome IS NOT NULL AND biome != ?", args: [activeBiome, user.id, activeBiome] });
     if (xpGain > 0) W.push({ sql: "UPDATE creatures SET xp=xp+? WHERE owner_id=? AND biome IS NOT NULL AND stage='adult'", args: [xpGain, user.id] });
@@ -306,8 +314,8 @@ export async function getPlayerState(user) {
       biomeUsed[c.biome] = (biomeUsed[c.biome] || 0) + 1;
       const b = BIOMES[c.biome];
       const rate = farmRate(c.species, c.xp, c.biome);
-      // Inclut les bonus d'event (essence/ressource) pour que le compteur live colle au gain reel.
-      const evEss2 = eventMul('essence', now), evRes2 = eventMul('resource', now);
+      // Inclut les bonus d'event + de guilde (essence) pour que le compteur live colle au gain reel.
+      const evEss2 = eventMul('essence', now) * guildBonus, evRes2 = eventMul('resource', now);
       if (b.resource === 'essence') {
         ratePerRes.essence += rate * evEss2;
       } else {

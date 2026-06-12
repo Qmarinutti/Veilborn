@@ -480,6 +480,10 @@ export function eventMul(key, now = Date.now()) {
   return activeEvent(now).mul[key] || 1;
 }
 
+// --- Guildes : objectif cooperatif (contribution d'essence -> niveau -> bonus de farm partage) ---
+export function guildTarget(level) { return 20000 * Math.max(1, level || 1); } // essence pour le prochain niveau
+export function guildFarmBonus(level) { return 1 + 0.02 * Math.max(0, (level || 1) - 1); } // +2% farm par niveau au-dela de 1
+
 // Zones d'exploration : une par biome special (hors Plaine).
 // Les types ACCEPTES sont tous ceux du biome (ex. Foret = Plante OU Insecte) ; le compte
 // requis est le TOTAL parmi ces types (3 Glumps Plante/Insecte au total, pas 3 d'un seul).

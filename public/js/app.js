@@ -1852,9 +1852,19 @@ async function loadGuild() {
         <button class="btn small primary" data-join-guild="${x.id}">Rejoindre</button></div>`).join('') : '<p class="hint">Aucune guilde — crée la première !</p>'}</div>`;
     return;
   }
+  const pct = Math.min(100, Math.round(100 * g.pool / g.target));
   body.innerHTML = `
-    <div class="guild-head"><h3>🏰 ${esc(g.name)}</h3><button id="guild-leave-btn" class="btn small">Quitter</button></div>
-    <div class="guild-members">${g.members.map(m => `<span class="gmember ${m.isLeader ? 'leader' : ''}">${m.isLeader ? '👑 ' : ''}${esc(m.username)}${m.title ? ` <small>${esc(m.title)}</small>` : ''} · 🏆${m.trophies}</span>`).join('')}</div>
+    <div class="guild-head"><h3>🏰 ${esc(g.name)} <span class="guild-lvl">Niv ${g.level}</span></h3><button id="guild-leave-btn" class="btn small">Quitter</button></div>
+    <div class="guild-coop">
+      <div class="gc-top">🎯 <b>Objectif commun</b> · bonus de farm partagé : <b>+${g.farmBonus}%</b> ✨</div>
+      <div class="gc-bar"><i style="width:${pct}%"></i></div>
+      <div class="gc-sub">${g.pool.toLocaleString('fr-FR')} / ${g.target.toLocaleString('fr-FR')} ✨ vers le niveau ${g.level + 1}</div>
+      <div class="gc-contrib">
+        <input id="guild-contrib-amt" type="number" min="100" placeholder="Montant ✨" />
+        <button id="guild-contrib-btn" class="btn small primary">Contribuer</button>
+      </div>
+    </div>
+    <div class="guild-members">${g.members.map(m => `<span class="gmember ${m.isLeader ? 'leader' : ''}">${m.isLeader ? '👑 ' : ''}${esc(m.username)}${m.title ? ` <small>${esc(m.title)}</small>` : ''} · ${m.contrib.toLocaleString('fr-FR')} ✨</span>`).join('')}</div>
     <div id="guild-chat" class="guild-chat"></div>
     <div class="guild-chat-bar"><input id="guild-msg" type="text" placeholder="Message…" maxlength="200" /><button id="guild-send" class="btn small primary">Envoyer</button></div>`;
   await loadGuildChat();
@@ -1888,6 +1898,16 @@ $('#guild-body')?.addEventListener('click', async (e) => {
     if (!await confirmDialog('Quitter ta guilde ?')) return;
     try { await api('/guild/leave', { method: 'POST' }); loadGuild(); }
     catch (err) { flash(err.message, 'err'); }
+  } else if (e.target.closest('#guild-contrib-btn')) {
+    const amt = Math.floor(Number($('#guild-contrib-amt').value));
+    if (!amt || amt < 100) { flash('Contribue au moins 100 ✨.', 'err'); return; }
+    if (!await confirmDialog(`Contribuer ${amt.toLocaleString('fr-FR')} ✨ à la guilde ?`)) return;
+    try {
+      const r = await api('/guild/contribute', { method: 'POST', body: { amount: amt } });
+      if (r.leveled > 0) flash(`🏰 Guilde niveau ${r.level} ! Bonus de farm augmenté pour tous les membres.`);
+      else flash('Contribution enregistrée ✓');
+      await refresh(); loadGuild();
+    } catch (err) { flash(err.message, 'err'); }
   } else if (e.target.closest('#guild-send')) { sendGuildMsg(); }
 });
 $('#guild-body')?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.id === 'guild-msg') { e.preventDefault(); sendGuildMsg(); } });

@@ -15,7 +15,7 @@ import {
   levelFromXp, xpForLevel, prairieSlotCost, ELEMENTS, SHOP_EGG_PRICE, randomBaseOfType, accelerateCost,
   reproductionSeconds, breedHatchSeconds, breedingCellCost, evolveCost, evolveResourceCost, shinyPityBonus, tierOf,
   BIOMES, BIOME_LIST, BIOME_OF_TYPE, biomeBuyCost, TYPE_EGG_COST, randomBase, RESOURCES,
-  EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS, eventMul,
+  EXPLORE_ZONE_BY_ID, EXPLORE_TIER_BY_ID, EXPLORE_ITEMS, eventMul, guildTarget, guildFarmBonus,
   BREED_RECIPES, BREED_CHART,
 } from './game.js';
 import { getPlayerState, publicCreature, reloadUser, parseResources, parseBiomes, parseExpeditions, parseItems, exploringIds } from './state.js';
@@ -1300,7 +1300,7 @@ app.post('/api/guild/create', requireAuth, h(async (req, res) => {
     if (user.guild_id) return { status: 400, error: 'Tu es deja dans une guilde.' };
     if (!(await spend(req.user.id, GUILD_COST))) return { status: 400, error: `Pas assez d'essence (besoin de ${GUILD_COST}).` };
     const gid = await insert('INSERT INTO guilds (name, leader_id, created_at) VALUES (?, ?, ?)', [name, req.user.id, Date.now()]);
-    await run('UPDATE users SET guild_id = ? WHERE id = ?', [gid, req.user.id]);
+    await run('UPDATE users SET guild_id = ?, guild_contrib = 0 WHERE id = ?', [gid, req.user.id]);
     return { ok: true, guildId: gid };
   });
   if (out.error) return res.status(out.status).json({ error: out.error });
@@ -1316,7 +1316,7 @@ app.post('/api/guild/join', requireAuth, h(async (req, res) => {
     if (!g) return { status: 404, error: 'Guilde introuvable.' };
     const count = (await get('SELECT COUNT(*) AS n FROM users WHERE guild_id = ?', [gid])).n;
     if (count >= GUILD_MAX) return { status: 400, error: 'Cette guilde est pleine.' };
-    await run('UPDATE users SET guild_id = ? WHERE id = ?', [gid, req.user.id]);
+    await run('UPDATE users SET guild_id = ?, guild_contrib = 0 WHERE id = ?', [gid, req.user.id]);
     return { ok: true };
   });
   if (out.error) return res.status(out.status).json({ error: out.error });
@@ -1327,7 +1327,7 @@ app.post('/api/guild/leave', requireAuth, h(async (req, res) => {
   const user = await reloadUser(req.user.id);
   if (!user.guild_id) return res.status(400).json({ error: "Tu n'es dans aucune guilde." });
   const gid = user.guild_id;
-  await run('UPDATE users SET guild_id = NULL WHERE id = ?', [req.user.id]);
+  await run('UPDATE users SET guild_id = NULL, guild_contrib = 0 WHERE id = ?', [req.user.id]);
   const g = await get('SELECT leader_id FROM guilds WHERE id = ?', [gid]);
   if (g && g.leader_id === req.user.id) {
     // Le chef part : on transfere au plus ancien membre restant, sinon on dissout.
@@ -1343,9 +1343,43 @@ app.get('/api/guild', requireAuth, h(async (req, res) => {
   if (!user.guild_id) return res.json({ guild: null });
   const g = await get('SELECT * FROM guilds WHERE id = ?', [user.guild_id]);
   if (!g) { await run('UPDATE users SET guild_id = NULL WHERE id = ?', [req.user.id]); return res.json({ guild: null }); }
-  const members = await all('SELECT id, username, title, pvp_trophies FROM users WHERE guild_id = ? ORDER BY pvp_trophies DESC', [user.guild_id]);
-  res.json({ guild: { id: g.id, name: g.name, leaderId: g.leader_id,
-    members: members.map(m => ({ id: m.id, username: m.username, title: titleNameById(m.title), trophies: m.pvp_trophies, isLeader: m.id === g.leader_id })) } });
+  const members = await all('SELECT id, username, title, pvp_trophies, guild_contrib FROM users WHERE guild_id = ? ORDER BY guild_contrib DESC, pvp_trophies DESC', [user.guild_id]);
+  res.json({ guild: {
+    id: g.id, name: g.name, leaderId: g.leader_id,
+    level: g.level || 1, pool: g.pool || 0, target: guildTarget(g.level || 1),
+    farmBonus: Math.round((guildFarmBonus(g.level || 1) - 1) * 100), // % de bonus de farm partage
+    members: members.map(m => ({ id: m.id, username: m.username, title: titleNameById(m.title),
+      trophies: m.pvp_trophies, contrib: m.guild_contrib || 0, isLeader: m.id === g.leader_id })),
+  } });
+}));
+
+// Contribuer de l'essence a la guilde -> remplit le pool ; au seuil, la guilde monte de niveau
+// (bonus de farm permanent pour TOUS les membres).
+app.post('/api/guild/contribute', requireAuth, h(async (req, res) => {
+  const amount = Math.floor(Number(req.body?.amount));
+  if (!Number.isInteger(amount) || amount < 100) return res.status(400).json({ error: 'Contribue au moins 100 ✨.' });
+  const out = await withLock(req.user.id, async () => {
+    const user = await reloadUser(req.user.id);
+    if (!user.guild_id) return { status: 400, error: "Tu n'es dans aucune guilde." };
+    if (!(await spend(req.user.id, amount))) return { status: 400, error: 'Pas assez d\'essence.' };
+    await run('UPDATE users SET guild_contrib = guild_contrib + ? WHERE id = ?', [amount, req.user.id]);
+    await run('UPDATE guilds SET pool = pool + ? WHERE id = ?', [amount, user.guild_id]);
+    return { ok: true, gid: user.guild_id };
+  });
+  if (out.error) return res.status(out.status).json({ error: out.error });
+  // Montee de niveau (hors verrou joueur ; UPDATE conditionnel atomique sur la guilde).
+  let leveled = 0;
+  for (let i = 0; i < 20; i++) {
+    const g = await get('SELECT level, pool FROM guilds WHERE id = ?', [out.gid]);
+    if (!g) break;
+    const target = guildTarget(g.level);
+    if (g.pool < target) break;
+    const r = await run('UPDATE guilds SET level = level + 1, pool = pool - ? WHERE id = ? AND pool >= ?', [target, out.gid, target]);
+    if (!(r.rowsAffected > 0)) break;
+    leveled++;
+  }
+  const g2 = await get('SELECT level, pool FROM guilds WHERE id = ?', [out.gid]);
+  res.json({ ok: true, leveled, level: g2?.level || 1, pool: g2?.pool || 0, target: guildTarget(g2?.level || 1) });
 }));
 
 app.get('/api/guild/list', requireAuth, h(async (req, res) => {
