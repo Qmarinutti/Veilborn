@@ -161,6 +161,8 @@ export async function initDb() {
     // Progression cooperative de guilde (pour les bases creees avant cet ajout).
     'ALTER TABLE guilds ADD COLUMN level INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE guilds ADD COLUMN pool INTEGER NOT NULL DEFAULT 0',
+    // Moderation : message masque (signale/supprime).
+    'ALTER TABLE guild_messages ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0',
   ]) {
     try { await db.execute(sql); } catch { /* colonne deja presente */ }
   }
@@ -213,9 +215,15 @@ export async function initDb() {
       user_id     INTEGER NOT NULL,
       username    TEXT NOT NULL,
       text        TEXT NOT NULL,
+      hidden      INTEGER NOT NULL DEFAULT 0,
       created_at  INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_gmsg_guild ON guild_messages(guild_id, id);
+    CREATE TABLE IF NOT EXISTS guild_msg_reports (
+      msg_id      INTEGER NOT NULL,
+      user_id     INTEGER NOT NULL,
+      PRIMARY KEY (msg_id, user_id)
+    );
   `);
 
   // Nettoyage des sessions trop vieilles (>30 jours) pour eviter l'accumulation.

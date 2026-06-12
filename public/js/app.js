@@ -1864,7 +1864,8 @@ async function loadGuild() {
         <button id="guild-contrib-btn" class="btn small primary">Contribuer</button>
       </div>
     </div>
-    <div class="guild-members">${g.members.map(m => `<span class="gmember ${m.isLeader ? 'leader' : ''}">${m.isLeader ? '👑 ' : ''}${esc(m.username)}${m.title ? ` <small>${esc(m.title)}</small>` : ''} · ${m.contrib.toLocaleString('fr-FR')} ✨</span>`).join('')}</div>
+    <div class="guild-members">${(() => { const meId = STATE?.user?.id, iAmLeader = g.leaderId === meId;
+      return g.members.map(m => `<span class="gmember ${m.isLeader ? 'leader' : ''}">${m.isLeader ? '👑 ' : ''}${esc(m.username)}${m.title ? ` <small>${esc(m.title)}</small>` : ''} · ${m.contrib.toLocaleString('fr-FR')} ✨${iAmLeader && !m.isLeader ? ` <button class="gkick" data-kick="${m.id}" data-kickname="${esc(m.username)}" title="Exclure">✕</button>` : ''}</span>`).join(''); })()}</div>
     <div id="guild-chat" class="guild-chat"></div>
     <div class="guild-chat-bar"><input id="guild-msg" type="text" placeholder="Message…" maxlength="200" /><button id="guild-send" class="btn small primary">Envoyer</button></div>`;
   await loadGuildChat();
@@ -1872,10 +1873,16 @@ async function loadGuild() {
 async function loadGuildChat() {
   const box = $('#guild-chat');
   if (!box) return;
-  let msgs = [];
-  try { msgs = (await api('/guild/chat')).messages; } catch { return; }
+  let r;
+  try { r = await api('/guild/chat'); } catch { return; }
+  const myId = r.myId;
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
-  box.innerHTML = msgs.map(m => `<div class="gmsg"><b>${esc(m.username)}</b> ${esc(m.text)}</div>`).join('') || '<p class="hint">Pas encore de message. Dis bonjour !</p>';
+  box.innerHTML = r.messages.map(m => {
+    const mine = m.user_id === myId;
+    const canDel = mine || r.isLeader;
+    const acts = `${!mine ? `<button class="gmsg-btn" data-report="${m.id}" title="Signaler">⚑</button>` : ''}${canDel ? `<button class="gmsg-btn" data-delmsg="${m.id}" title="Supprimer">🗑</button>` : ''}`;
+    return `<div class="gmsg"><span class="gmsg-txt"><b>${esc(m.username)}</b> ${esc(m.text)}</span><span class="gmsg-act">${acts}</span></div>`;
+  }).join('') || '<p class="hint">Pas encore de message. Dis bonjour !</p>';
   if (atBottom) box.scrollTop = box.scrollHeight;
 }
 async function sendGuildMsg() {
@@ -1909,6 +1916,21 @@ $('#guild-body')?.addEventListener('click', async (e) => {
       await refresh(); loadGuild();
     } catch (err) { flash(err.message, 'err'); }
   } else if (e.target.closest('#guild-send')) { sendGuildMsg(); }
+  else if (e.target.closest('[data-report]')) {
+    const id = Number(e.target.closest('[data-report]').dataset.report);
+    if (!await confirmDialog('Signaler ce message ? (3 signalements le masquent)')) return;
+    try { const r = await api('/guild/chat/report', { method: 'POST', body: { msgId: id } }); flash(r.hidden ? 'Message masqué (3 signalements).' : 'Message signalé ✓'); loadGuildChat(); }
+    catch (err) { flash(err.message, 'err'); }
+  } else if (e.target.closest('[data-delmsg]')) {
+    const id = Number(e.target.closest('[data-delmsg]').dataset.delmsg);
+    try { await api('/guild/chat/delete', { method: 'POST', body: { msgId: id } }); loadGuildChat(); }
+    catch (err) { flash(err.message, 'err'); }
+  } else if (e.target.closest('[data-kick]')) {
+    const btn = e.target.closest('[data-kick]');
+    if (!await confirmDialog(`Exclure ${btn.dataset.kickname} de la guilde ?`)) return;
+    try { await api('/guild/kick', { method: 'POST', body: { userId: Number(btn.dataset.kick) } }); loadGuild(); }
+    catch (err) { flash(err.message, 'err'); }
+  }
 });
 $('#guild-body')?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.id === 'guild-msg') { e.preventDefault(); sendGuildMsg(); } });
 $$('.railbtn').forEach(b => b.addEventListener('click', () => {

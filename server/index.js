@@ -28,6 +28,7 @@ import {
   getDaily, progressDaily, dailyView, todayStr, dexClaimedCount,
   TITLES, availableTitles, titleName, titleNameById,
 } from './progress.js';
+import { chatReject } from './moderation.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -1396,23 +1397,72 @@ app.get('/api/guild/list', requireAuth, h(async (req, res) => {
 
 app.get('/api/guild/chat', requireAuth, h(async (req, res) => {
   const user = await reloadUser(req.user.id);
-  if (!user.guild_id) return res.json({ messages: [] });
-  const msgs = await all('SELECT id, user_id, username, text, created_at FROM guild_messages WHERE guild_id = ? ORDER BY id DESC LIMIT 40', [user.guild_id]);
-  res.json({ messages: msgs.reverse() });
+  if (!user.guild_id) return res.json({ messages: [], isLeader: false });
+  const g = await get('SELECT leader_id FROM guilds WHERE id = ?', [user.guild_id]);
+  const isLeader = !!g && g.leader_id === req.user.id;
+  // On masque les messages signales/supprimes (hidden = 1).
+  const msgs = await all('SELECT id, user_id, username, text, created_at FROM guild_messages WHERE guild_id = ? AND hidden = 0 ORDER BY id DESC LIMIT 40', [user.guild_id]);
+  res.json({ messages: msgs.reverse(), isLeader, myId: req.user.id });
 }));
 
+const lastMsgText = new Map(); // userId -> dernier texte (anti-flood doublon)
 app.post('/api/guild/chat', requireAuth, h(async (req, res) => {
   const user = await reloadUser(req.user.id);
   if (!user.guild_id) return res.status(400).json({ error: "Tu n'es dans aucune guilde." });
   const text = cleanFreeText(req.body?.text, 200); // strip HTML + max 200
   if (!text) return res.status(400).json({ error: 'Message vide.' });
+  // MODERATION : insultes / liens.
+  const reject = chatReject(text);
+  if (reject) return res.status(400).json({ error: reject });
   const now = Date.now();
   if (now - (lastChat.get(req.user.id) || 0) < 1500) return res.status(429).json({ error: 'Doucement !' });
+  if (lastMsgText.get(req.user.id) === text) return res.status(429).json({ error: 'Evite de repeter le meme message.' });
   lastChat.set(req.user.id, now);
+  lastMsgText.set(req.user.id, text);
   await run('INSERT INTO guild_messages (guild_id, user_id, username, text, created_at) VALUES (?, ?, ?, ?, ?)',
     [user.guild_id, req.user.id, user.username, text, now]);
   // Purge : garde ~100 derniers messages par guilde.
   await run('DELETE FROM guild_messages WHERE guild_id = ? AND id <= (SELECT MAX(id) - 100 FROM guild_messages WHERE guild_id = ?)', [user.guild_id, user.guild_id]);
+  res.json({ ok: true });
+}));
+
+// Signaler un message : 3 signalements distincts -> masque automatiquement (moderation communautaire).
+app.post('/api/guild/chat/report', requireAuth, h(async (req, res) => {
+  const msgId = Number(req.body?.msgId);
+  const user = await reloadUser(req.user.id);
+  const m = await get('SELECT guild_id, user_id FROM guild_messages WHERE id = ?', [msgId]);
+  if (!m || m.guild_id !== user.guild_id) return res.status(404).json({ error: 'Message introuvable.' });
+  if (m.user_id === req.user.id) return res.status(400).json({ error: 'Tu ne peux pas signaler ton propre message.' });
+  await run('INSERT OR IGNORE INTO guild_msg_reports (msg_id, user_id) VALUES (?, ?)', [msgId, req.user.id]);
+  const n = (await get('SELECT COUNT(*) AS n FROM guild_msg_reports WHERE msg_id = ?', [msgId])).n;
+  if (n >= 3) await run('UPDATE guild_messages SET hidden = 1 WHERE id = ?', [msgId]);
+  res.json({ ok: true, reports: n, hidden: n >= 3 });
+}));
+
+// Supprimer un message : son auteur OU le chef de guilde.
+app.post('/api/guild/chat/delete', requireAuth, h(async (req, res) => {
+  const msgId = Number(req.body?.msgId);
+  const user = await reloadUser(req.user.id);
+  const m = await get('SELECT guild_id, user_id FROM guild_messages WHERE id = ?', [msgId]);
+  if (!m || m.guild_id !== user.guild_id) return res.status(404).json({ error: 'Message introuvable.' });
+  const g = await get('SELECT leader_id FROM guilds WHERE id = ?', [user.guild_id]);
+  const allowed = m.user_id === req.user.id || (g && g.leader_id === req.user.id);
+  if (!allowed) return res.status(403).json({ error: 'Action reservee a l\'auteur ou au chef.' });
+  await run('UPDATE guild_messages SET hidden = 1 WHERE id = ?', [msgId]);
+  res.json({ ok: true });
+}));
+
+// Exclure un membre de la guilde (chef uniquement, pas lui-meme).
+app.post('/api/guild/kick', requireAuth, h(async (req, res) => {
+  const targetId = Number(req.body?.userId);
+  const user = await reloadUser(req.user.id);
+  if (!user.guild_id) return res.status(400).json({ error: "Tu n'es dans aucune guilde." });
+  const g = await get('SELECT leader_id FROM guilds WHERE id = ?', [user.guild_id]);
+  if (!g || g.leader_id !== req.user.id) return res.status(403).json({ error: 'Seul le chef peut exclure.' });
+  if (targetId === req.user.id) return res.status(400).json({ error: 'Tu ne peux pas t\'exclure toi-meme.' });
+  const t = await get('SELECT guild_id FROM users WHERE id = ?', [targetId]);
+  if (!t || t.guild_id !== user.guild_id) return res.status(404).json({ error: 'Membre introuvable.' });
+  await run('UPDATE users SET guild_id = NULL, guild_contrib = 0 WHERE id = ?', [targetId]);
   res.json({ ok: true });
 }));
 
