@@ -145,6 +145,13 @@ app.post('/api/register', authThrottle, h(async (req, res) => {
   // Le joueur commence avec le starter choisi (adulte), place dans la Plaine pour farmer.
   await insertCreature(userId, wildCreature(starter, { adult: true }));
   await run("UPDATE creatures SET in_prairie = 1, biome = 'plaine' WHERE owner_id = ?", [userId]);
+  // Pack de depart : 2 oeufs bonus (especes de base aleatoires) deja en incubation -> de quoi
+  // jouer et progresser des la 1re minute (l'onboarding etait trop maigre avec 1 seul Glump).
+  for (let i = 0; i < 2; i++) {
+    const sp = randomBase();
+    await insertCreature(userId, { ...wildCreature(sp, { adult: false }), stage: 'egg' },
+      { hatch_at: now + incubationSeconds(sp) * 1000, from_breeding: 0 });
+  }
 
   const token = await createSession(userId);
   setCookie(res, token);

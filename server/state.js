@@ -21,6 +21,18 @@ const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
 function levelIncomeMul(xp) { return 1 + 0.05 * (levelFromXp(xp) - 1); }
 import { hasArt } from './art.js';
 
+// Cache du niveau de guilde (TTL 60s) : le niveau bouge rarement, inutile de requeter a chaque /state.
+const _guildLvlCache = new Map(); // gid -> { level, at }
+async function guildLevelCached(gid) {
+  const c = _guildLvlCache.get(gid);
+  const now = Date.now();
+  if (c && now - c.at < 60000) return c.level;
+  const g = await get('SELECT level FROM guilds WHERE id = ?', [gid]);
+  const level = g ? g.level : null;
+  _guildLvlCache.set(gid, { level, at: now });
+  return level;
+}
+
 const HOUR_MS = 3600 * 1000;
 
 // Lit les ressources de biome stockees (JSON) avec 0 par defaut.
@@ -137,11 +149,12 @@ export async function getPlayerState(user) {
     W.push({ sql: 'UPDATE users SET pvp_season=?, pvp_peak=COALESCE(pvp_peak, pvp_trophies) WHERE id=? AND pvp_season IS NULL', args: [season, user.id] });
   }
 
-  // Bonus de farm partage de la guilde (+2%/niveau au-dela de 1), applique a l'essence.
+  // Bonus de farm partage de la guilde (+2%/niveau, plafonne), applique a l'essence.
+  // Niveau MIS EN CACHE 60s : evite une requete Turso a chaque /state sur la hot path.
   let guildBonus = 1;
   if (user.guild_id) {
-    const gg = await get('SELECT level FROM guilds WHERE id = ?', [user.guild_id]);
-    if (gg) guildBonus = guildFarmBonus(gg.level);
+    const lvl = await guildLevelCached(user.guild_id);
+    if (lvl != null) guildBonus = guildFarmBonus(lvl);
   }
 
   // --- Tick farming : 1 biome actif, gains de ressource + XP (en memoire) ---

@@ -1959,7 +1959,7 @@ document.addEventListener('visibilitychange', () => {
 //  Tutoriel
 // ============================================================
 const TUTO = [
-  { icon: '🥚', title: 'Bienvenue dans Veilborn !', text: "Tu eleves des creatures appelees Glumps : fais-les eclore, grandir, evoluer, et complete ton Glumpdex de 300 Glumps. Tu demarres avec ton starter.", view: 'box', color: '#6c8cff' },
+  { icon: '🥚', title: 'Bienvenue dans Veilborn !', text: "Tu eleves des creatures appelees Glumps : fais-les eclore, grandir, evoluer, et complete ton Glumpdex de 300 Glumps. Tu demarres avec ton starter et 2 oeufs offerts qui eclosent dans l'onglet Oeufs 🥚.", view: 'box', color: '#6c8cff' },
   { icon: '📦', title: 'Collection', text: "Voici tous tes Glumps. Clique sur l'un d'eux pour sa fiche (IV, stats, nature, PV). Tu peux les renommer, les relacher, ou les faire evoluer une fois le niveau requis atteint.", view: 'box', color: '#34e1c4' },
   { icon: '🥚', title: 'Oeufs', text: "Tes incubateurs. Un oeuf eclot avec le temps (meme hors-ligne !) en bebe, qui devient adulte. Achete des incubateurs pour en faire eclore plusieurs a la fois.", view: 'eggs', color: '#ffb347' },
   { icon: '💞', title: 'Reproduction', text: "Choisis deux Glumps adultes pour pondre un oeuf. L'enfant herite des genes des parents, avec une chance d'etre shiny ✨ ou d'une espece plus rare. Debloque des cellules pour reproduire en parallele.", view: 'breed', color: '#ff7bd5' },

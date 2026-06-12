@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 // --- Reglages d'equilibrage (modifiables facilement) ---
 // Temps volontairement courts pour un prototype testable.
 export const BALANCE = {
-  startEssence: 300, // de quoi acheter un 1er oeuf sans soft-lock au demarrage
+  startEssence: 500, // pack de depart : de quoi acheter quelques oeufs tout de suite
   startSlots: 2,
   maxSlots: 8,
   slotCostBase: 250, // cout du prochain slot = base * (slots possedes ^ 1.6)
@@ -481,8 +481,12 @@ export function eventMul(key, now = Date.now()) {
 }
 
 // --- Guildes : objectif cooperatif (contribution d'essence -> niveau -> bonus de farm partage) ---
+export const GUILD_BONUS_MAX_LEVEL = 26; // au-dela, les niveaux sont du prestige (plus de bonus de farm)
 export function guildTarget(level) { return 20000 * Math.max(1, level || 1); } // essence pour le prochain niveau
-export function guildFarmBonus(level) { return 1 + 0.02 * Math.max(0, (level || 1) - 1); } // +2% farm par niveau au-dela de 1
+// +2% farm/niveau, PLAFONNE a +50% (niveau 26) pour eviter un bonus illimite (x event = compose).
+export function guildFarmBonus(level) {
+  return 1 + 0.02 * Math.min(GUILD_BONUS_MAX_LEVEL - 1, Math.max(0, (level || 1) - 1));
+}
 
 // Zones d'exploration : une par biome special (hors Plaine).
 // Les types ACCEPTES sont tous ceux du biome (ex. Foret = Plante OU Insecte) ; le compte
