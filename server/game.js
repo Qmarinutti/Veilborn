@@ -187,6 +187,9 @@ export function creatureValue(creature) {
 function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
 export function lineOf(speciesId) { return SPECIES[speciesId]?.line || speciesId; }
 export function tierOf(speciesId) {
+  // Les especes marquees rarity>=5 (legendaires "standalone" qui ne s'evoluent pas) sont
+  // TOUJOURS de tier max : elles s'affichent en Legendaire et droppent au taux legendaire.
+  if ((SPECIES[speciesId]?.rarity || 0) >= 5) return 4;
   const r = hashStr(lineOf(speciesId)) % 100;
   if (r < 3) return 4;    // Legendaire 3%
   if (r < 15) return 3;   // Epique 12%
@@ -194,6 +197,49 @@ export function tierOf(speciesId) {
   return 1;               // Commun 60%
 }
 export const TIER_NAMES = { 1: 'Commun', 2: 'Rare', 3: 'Epique', 4: 'Legendaire' };
+
+// ============================================================
+//  EQUILIBRAGE DES STATS PAR RARETE (affichee) + STADE + identite de TYPE.
+//  Avant : les stats ne dependaient que du stade (defaultBase) -> un Legendaire affiche
+//  n'etait pas plus fort qu'un Commun. Maintenant la stat de base depend de la rarete
+//  D'ACQUISITION (tierOf, ce que voit le joueur) ET du stade d'evolution.
+// ============================================================
+const STAT_TIER_BASE = { 1: 8, 2: 11, 3: 14, 4: 18 }; // stat de base/par stat selon la rarete affichee
+const STAT_STAGE_BONUS = 5;                            // +5/stat par stade d'evolution franchi
+// Biais de type (identite de combat) : somme nulle sur les 3 stats (force=ATK, vita=PV, speed=ordre).
+const TYPE_BIAS = {
+  Feu:      { force: 3, vita: -1, speed: -2 },
+  Eau:      { force: 0, vita: 2,  speed: -2 },
+  Plante:   { force: -1, vita: 3, speed: -2 },
+  Foudre:   { force: 0, vita: -2, speed: 2 },
+  Roche:    { force: 1, vita: 3,  speed: -4 },
+  Glace:    { force: 1, vita: 1,  speed: -2 },
+  Ombre:    { force: 2, vita: -1, speed: -1 },
+  Lumiere:  { force: -1, vita: 1, speed: 0 },
+  Mystique: { force: 1, vita: 1,  speed: -2 },
+  Acier:    { force: 0, vita: 4,  speed: -4 },
+  Poison:   { force: 1, vita: 1,  speed: -2 },
+  Vent:     { force: -1, vita: -2, speed: 3 },
+  Insecte:  { force: 0, vita: -1, speed: 1 },
+  Dragon:   { force: 3, vita: 1,  speed: -4 },
+};
+export function balancedBase(id) {
+  const sp = SPECIES[id];
+  const legendary = (sp.rarity || 1) >= 5;            // standalone : pas d'evolution
+  const tier = tierOf(id);                            // 4 pour un legendaire (cf. ci-dessus)
+  const stage = legendary ? 3 : (sp.stage || 1);      // legendaire = deja a pleine puissance
+  const base = (STAT_TIER_BASE[tier] || 8) + STAT_STAGE_BONUS * (stage - 1);
+  const bias = TYPE_BIAS[sp.type] || { force: 0, vita: 0, speed: 0 };
+  return {
+    force: Math.max(1, base + bias.force),
+    vita:  Math.max(1, base + bias.vita),
+    speed: Math.max(1, base + bias.speed),
+  };
+}
+// 2e passe : on (re)calcule la base de CHAQUE espece sans base explicite dans le JSON.
+for (const id of SPECIES_IDS) {
+  if (!RAW_SPECIES[id]?.base) SPECIES[id].base = balancedBase(id);
+}
 
 // Formes de BASE (stade 1) regroupees par rarete d'acquisition.
 const BASE_BY_TIER = { 1: [], 2: [], 3: [], 4: [] };
