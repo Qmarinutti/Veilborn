@@ -53,6 +53,9 @@ export const BALANCE = {
   // remis a zero quand un shiny apparait. Recompense la perseverance.
   shinyPityStep: 0.0004, // +0.04% par eclosion non-shiny
   shinyPityMax: 0.05,    // plafond du bonus de pitie (5%)
+  // Calendrier de connexion : recompense d'essence du jour 1 a 7 (le streak cycle 1->7->1...).
+  // Auto-creditee au 1er /state du jour. Le jour 7 est un gros pic pour inciter a tenir la serie.
+  loginCalendar: [100, 200, 350, 500, 800, 1200, 2500],
   // PvP / Arene
   pvpStartTrophies: 1000,
   pvpWinTrophies: 25,

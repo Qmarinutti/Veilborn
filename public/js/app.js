@@ -1469,6 +1469,20 @@ async function loadProgress() {
   let p;
   try { p = await api('/progress'); } catch { return; }
   $('#prog-streak').innerHTML = `🔥 Série de connexion : <b>${p.streak} jour${p.streak > 1 ? 's' : ''}</b>`;
+  // Calendrier de connexion (7 jours) : recompense auto au 1er passage du jour.
+  if (p.calendar) {
+    const c = p.calendar;
+    $('#prog-calendar').innerHTML = c.rewards.map((rw, i) => {
+      const day = i + 1;
+      const isToday = day === c.day && c.gotToday;
+      const past = day < c.day || (day === c.day && c.gotToday);
+      return `<div class="cal-day ${isToday ? 'today' : ''} ${past ? 'got' : ''}">
+        <div class="cal-d">J${day}</div>
+        <div class="cal-rw">✨${rw}</div>
+        ${past ? '<div class="cal-check">✓</div>' : ''}
+      </div>`;
+    }).join('');
+  }
   // Quetes du jour
   $('#prog-daily').innerHTML = p.daily.quests.map(q => {
     const pct = Math.min(100, Math.round(100 * q.progress / q.goal));

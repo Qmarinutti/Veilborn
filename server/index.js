@@ -893,12 +893,19 @@ app.get('/api/progress', requireAuth, h(async (req, res) => {
     trophies: m.trophies, essence: m.essence, cell: !!m.cell, prairie: !!m.prairie, title: m.title || null,
     reached: trophies >= m.trophies, claimed: m.trophies <= pvpClaimed, claimable: trophies >= m.trophies && m.trophies > pvpClaimed,
   }));
+  const streak = user.login_streak || 0;
+  const cal = BALANCE.loginCalendar;
   res.json({
     daily, achievements,
     dex: { discovered: discCount, total: SPECIES_COUNT, milestones },
     shinyDex: { discovered: shinyCount, milestones: shinyMilestones },
     pvp: { trophies, milestones: pvpMilestones },
-    streak: user.login_streak || 0,
+    streak,
+    calendar: {
+      rewards: cal,
+      day: streak > 0 ? ((streak - 1) % cal.length) + 1 : 0, // jour actuel dans le cycle (0 si jamais connecte)
+      gotToday: user.last_login_day === todayStr(),          // bonus du jour deja recu ?
+    },
   });
 }));
 

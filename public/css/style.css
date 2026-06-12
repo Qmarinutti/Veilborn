@@ -1058,3 +1058,13 @@ main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 110px; }
   background: rgba(255,255,255,.04); border-left: 3px solid var(--primary); border-radius: 8px;
   padding: 10px 12px; margin: 0 0 12px; }
 .recipe-desc { font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.5; text-align: center; margin: 0 0 10px; }
+
+/* ---------- Calendrier de connexion (7 jours) ---------- */
+.prog-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 4px 0 14px; }
+.cal-day { position: relative; text-align: center; padding: 8px 2px; border-radius: 10px;
+  background: var(--panel2); border: 1px solid var(--line-strong); font-size: 11px; }
+.cal-day .cal-d { font-weight: 700; color: var(--muted); }
+.cal-day .cal-rw { color: var(--gold, #ffd23f); font-weight: 700; margin-top: 2px; font-size: 10px; }
+.cal-day.got { opacity: .85; border-color: var(--good); }
+.cal-day.got .cal-check { position: absolute; top: 2px; right: 4px; color: var(--good); font-weight: 800; font-size: 11px; }
+.cal-day.today { border-color: var(--gold, #ffd23f); box-shadow: 0 0 0 1px var(--gold, #ffd23f) inset; }
