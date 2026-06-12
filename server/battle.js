@@ -178,11 +178,14 @@ export function playTurn(state, myMoveId) {
     state.over = true;
     state.winner = !bAlive ? 'a' : 'b';
   } else if (state.turn >= MAX_TURNS) {
-    // Garde-fou anti combat non-terminant (ex. 2 Glumps qui se soignent) : on tranche aux PV restants.
+    // Garde-fou anti combat non-terminant : on tranche au % de PV restants (pas aux PV absolus,
+    // sinon un tank a enormement de PV gagnerait toujours par timeout -> Acier/Roche dominants).
     state.over = true;
-    const aHp = state.A.reduce((s, f) => s + f.hp, 0);
-    const bHp = state.B.reduce((s, f) => s + f.hp, 0);
-    state.winner = aHp >= bHp ? 'a' : 'b';
+    const frac = (team) => {
+      const max = team.reduce((s, f) => s + f.maxHp, 0) || 1;
+      return team.reduce((s, f) => s + f.hp, 0) / max;
+    };
+    state.winner = frac(state.A) >= frac(state.B) ? 'a' : 'b';
     events.push({ t: 'timeout', winner: state.winner });
   }
   return { events, over: state.over, winner: state.winner };

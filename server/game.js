@@ -173,11 +173,16 @@ export function power(creature) {
   return s.force + s.vita + s.speed + rarityOf(creature.species) * 10;
 }
 
-// Valeur de collection d'une creature (pour le classement / marche).
+// Valeur de collection d'une creature (pour le classement / marche / remboursement de relache).
+// Reflete la RARETE AFFICHEE (tierOf), le STADE (rarityOf), le NIVEAU investi et les genes.
+// Avant : ne dependait que du stade -> un Legendaire valait autant qu'un Commun de meme stade.
 export function creatureValue(creature) {
-  const genes = creature.gene_force + creature.gene_vita + creature.gene_speed;
-  const r = rarityOf(creature.species);
-  return Math.round((genes + r * 25) * (creature.variant === 1 ? 2 : 1));
+  const genes = creature.gene_force + creature.gene_vita + creature.gene_speed; // 0-93
+  const tier = tierOf(creature.species);            // 1-4 rarete affichee (Commun..Legendaire)
+  const stage = rarityOf(creature.species);         // stade d'evolution (puissance)
+  const level = levelFromXp(creature.xp || 0);      // 1-100 (investissement)
+  const base = genes + tier * 30 + stage * 12 + level * 2;
+  return Math.round(base * (creature.variant === 1 ? 2 : 1));
 }
 
 // --- Rarete d'ACQUISITION (taux de drop) par lignee/famille ---

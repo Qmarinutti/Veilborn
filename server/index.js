@@ -659,11 +659,16 @@ async function topTeam(userId) {
 }
 
 app.get('/api/pvp/opponent', requireAuth, h(async (req, res) => {
+  const me = await reloadUser(req.user.id);
+  const myTr = me.pvp_trophies ?? 1000;
   const candidates = await all(
     "SELECT DISTINCT u.id, u.username, u.pvp_trophies FROM users u JOIN creatures c ON c.owner_id = u.id AND c.stage = 'adult' WHERE u.id != ?",
     [req.user.id]);
   if (!candidates.length) return res.status(404).json({ error: 'Aucun adversaire disponible (invite des amis !).' });
-  const opp = candidates[Math.floor(Math.random() * candidates.length)];
+  // Matchmaking par bande de trophees (evite debutant vs equipe legendaire). On elargit si vide.
+  const within = (d) => candidates.filter(c => Math.abs((c.pvp_trophies ?? 1000) - myTr) <= d);
+  const pool = within(200).length ? within(200) : within(500).length ? within(500) : candidates;
+  const opp = pool[Math.floor(Math.random() * pool.length)];
   res.json({ id: opp.id, username: opp.username, trophies: opp.pvp_trophies, team: await topTeam(opp.id) });
 }));
 
